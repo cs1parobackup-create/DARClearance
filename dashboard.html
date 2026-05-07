@@ -322,19 +322,19 @@
                     <div class="mt-5"><span class="font-bold text-[11pt] border-b-[1.5px] border-black pb-0.5">APPROVED</span></div>
                 </div>
 
-                <p class="mb-4 text-justify leading-relaxed page-break-avoid">
+                <p class="mb-4 text-justify leading-relaxed page-break-avoid indent-10">
                     based on the Attestation of the CARPO-LTS/FOD and from the report and recommendation of the Chief Legal Division/Authorized Legal Officer pursuant to Administrative Order (AO) No. 4 Series of 2021.
                 </p>
 
-                <p class="mb-4 text-justify leading-relaxed page-break-avoid">
+                <p class="mb-4 text-justify leading-relaxed page-break-avoid indent-10">
                     Any actual change in the use of the land and/or development over the subject land, requires a prior Order of Conversion or Exemption/Exclusion from the Office of the DAR Regional Director.
                 </p>
 
-                <p class="mb-4 text-justify leading-relaxed page-break-avoid">
+                <p class="mb-4 text-justify leading-relaxed page-break-avoid indent-10">
                     This Office reserves the right to revoke this Certification of LTC in case of findings of misrepresentation or submission of falsified documents by either or both parties to the Deed of Transfer and any third person who may be affected by the transfer.
                 </p>
 
-                <p class="mb-6 text-justify leading-relaxed page-break-avoid">
+                <p class="mb-6 text-justify leading-relaxed page-break-avoid indent-10">
                     This Certification is hereby issued only for the purpose stated in the application/request for issuance of LTC.
                 </p>
 
@@ -475,12 +475,12 @@
                                 <button onclick='openPrint("${item.id}", "rec")' class="bg-[#8b5cf6] text-white w-full py-1.5 rounded shadow text-[9px] font-black tracking-wide hover:bg-purple-800 uppercase transition-colors text-center">Recommendation</button>
                                 <button onclick='openPrint("${item.id}", "cert")' class="bg-[#d97706] text-white w-full py-1.5 rounded shadow text-[9px] font-black tracking-wide hover:bg-amber-700 uppercase transition-colors text-center">Certification</button>`;
                         }
-                        if (isParpo || (!isLegal && !isParpo)) {
+                        if (isParpo) {
                             actions += `<button onclick='processToNext("${item.id}", "SIGNED")' class="bg-cyan-600 text-white w-full py-1.5 rounded shadow text-[10px] font-bold hover:bg-cyan-700 uppercase transition-colors text-center mt-1">Sign</button>`;
                         }
                         actions += `</div>`;
                     } else if (st === 'SIGNED') {
-                        if (isParpo || (!isLegal && !isParpo)) {
+                        if (isParpo) {
                             actions += `<button onclick='processToNext("${item.id}", "TO LEGAL")' class="bg-cyan-600 text-white px-4 py-1.5 rounded shadow text-[10px] font-bold hover:bg-cyan-700 uppercase transition-colors w-full max-w-[120px]">Forward to Legal</button>`;
                         }
                     } else if (st !== 'DISAPPROVED') {
@@ -554,7 +554,6 @@
         }
 
         function generateQRs(identifier) {
-            // Update this base URL to wherever you host verify.html
             const baseUrl = window.location.origin + "/verify.html?id=";
             const scanUrl = baseUrl + encodeURIComponent(identifier || 'NO-ID');
 
