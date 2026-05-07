@@ -17,24 +17,24 @@
         
         .compact-table td, .compact-table th { padding: 0.5rem 1rem !important; }
 
-        /* PRINT CONFIGURATION: Folio (8.5 x 13) - 1 INCH MARGINS */
+        /* PRINT CONFIGURATION: Folio (8.5 x 13) - STRICTLY COMPRESSED */
         @media print {
-            @page { size: 8.5in 13in; margin: 1in; }
+            @page { size: 8.5in 13in; margin: 0.4in; }
             body { background: white !important; }
-            nav, header, .no-print, #actionButtons, #remarksSection { display: none !important; }
+            nav, header, .no-print, #actionButtons { display: none !important; }
             #reviewModal { position: static; display: block; background: transparent; padding: 0; box-shadow: none; }
             
             #printSection { 
                 visibility: visible !important;
                 display: block !important;
-                width: 6.5in !important; /* Adjusted for 1 inch margins */
+                width: 7.7in !important;
                 margin: 0 auto !important;
                 font-family: 'Roboto', sans-serif !important;
                 font-size: 10pt !important;
-                line-height: 1.1 !important;
+                line-height: 1.1 !important; /* Compressed Line Height */
                 color: black !important;
-                border: none !important;
             }
+            .underline-data { border-bottom: 1.5px solid black !important; }
         }
 
         .doc-format { font-family: 'Roboto', sans-serif; font-size: 10pt; color: black; line-height: 1.1; }
@@ -60,44 +60,40 @@
         <header class="bg-white shadow-sm border-b px-6 py-3 flex justify-between items-center no-print">
             <h1 class="text-md font-bold text-[#003811] uppercase tracking-tight">Clearance Monitor</h1>
             <div class="flex gap-2">
-                <input type="text" id="searchInput" placeholder="Search Title/Owner..." class="border rounded px-3 py-1 text-xs focus:outline-none w-64" onkeyup="refreshDashboard()">
+                <input type="text" id="searchInput" placeholder="Search TCT/Owner..." class="border rounded px-3 py-1 text-xs focus:outline-none w-64" onkeyup="refreshDashboard()">
                 <button onclick="fetchClearanceData()" class="bg-[#003811] text-white px-3 py-1 rounded text-xs font-bold uppercase">Refresh</button>
             </div>
         </header>
 
         <div class="flex-1 overflow-y-auto p-4 space-y-4 no-print">
-            <div class="grid grid-cols-4 lg:grid-cols-8 gap-2">
+            <div class="grid grid-cols-4 lg:grid-cols-7 gap-2">
                 <div class="bg-white p-2 rounded border-l-4 border-blue-500 text-center shadow-sm">
                     <p class="text-[7px] font-bold text-gray-400 uppercase">Received</p>
-                    <h3 id="stat-received" class="text-md font-black text-blue-600">0</h3>
+                    <h3 id="stat-received-legal" class="text-md font-black text-blue-600">0</h3>
                 </div>
                 <div class="bg-white p-2 rounded border-l-4 border-purple-500 text-center shadow-sm">
-                    <p class="text-[7px] font-bold text-gray-400 uppercase">Recommended</p>
-                    <h3 id="stat-recommended" class="text-md font-black text-purple-600">0</h3>
+                    <p class="text-[7px] font-bold text-gray-400 uppercase">Reviewed</p>
+                    <h3 id="stat-reviewed" class="text-md font-black text-purple-600">0</h3>
                 </div>
                 <div class="bg-white p-2 rounded border-l-4 border-cyan-500 text-center shadow-sm">
-                    <p class="text-[7px] font-bold text-gray-400 uppercase">Certified</p>
-                    <h3 id="stat-certified" class="text-md font-black text-cyan-600">0</h3>
+                    <p class="text-[7px] font-bold text-gray-400 uppercase">Processed</p>
+                    <h3 id="stat-processed" class="text-md font-black text-cyan-600">0</h3>
                 </div>
                 <div class="bg-white p-2 rounded border-l-4 border-orange-500 text-center shadow-sm">
-                    <p class="text-[7px] font-bold text-gray-400 uppercase">Signed</p>
-                    <h3 id="stat-signed" class="text-md font-black text-orange-600">0</h3>
+                    <p class="text-[7px] font-bold text-gray-400 uppercase">For Sign</p>
+                    <h3 id="stat-signature" class="text-md font-black text-orange-600">0</h3>
                 </div>
                 <div class="bg-white p-2 rounded border-l-4 border-red-500 text-center shadow-sm">
-                    <p class="text-[7px] font-bold text-gray-400 uppercase">To Legal</p>
-                    <h3 id="stat-legal" class="text-md font-black text-red-600">0</h3>
+                    <p class="text-[7px] font-bold text-gray-400 uppercase">Disapproved</p>
+                    <h3 id="stat-disapproved" class="text-md font-black text-red-600">0</h3>
                 </div>
                 <div class="bg-white p-2 rounded border-l-4 border-green-500 text-center shadow-sm">
-                    <p class="text-[7px] font-bold text-gray-400 uppercase">To Records</p>
-                    <h3 id="stat-records" class="text-md font-black text-green-600">0</h3>
+                    <p class="text-[7px] font-bold text-gray-400 uppercase">Forwarded</p>
+                    <h3 id="stat-forwarded" class="text-md font-black text-green-600">0</h3>
                 </div>
                 <div class="bg-white p-2 rounded border-l-4 border-teal-500 text-center shadow-sm">
                     <p class="text-[7px] font-bold text-gray-400 uppercase">Released</p>
                     <h3 id="stat-released" class="text-md font-black text-teal-600">0</h3>
-                </div>
-                <div class="bg-white p-2 rounded border-l-4 border-gray-400 text-center shadow-sm">
-                    <p class="text-[7px] font-bold text-gray-400 uppercase">Disapproved</p>
-                    <h3 id="stat-disapproved" class="text-md font-black text-gray-600">0</h3>
                 </div>
             </div>
 
@@ -105,12 +101,11 @@
                 <table class="w-full text-left border-collapse text-[11px] compact-table">
                     <thead class="bg-gray-50 border-b uppercase font-bold text-[#003811] tracking-wider">
                         <tr>
-                            <th class="w-[15%]">LTC Number</th>
-                            <th class="w-[15%]">Title</th>
-                            <th class="w-[25%]">Land Owner</th>
-                            <th class="w-[15%]">Status</th>
-                            <th class="w-[15%] text-center">Action</th>
-                            <th class="w-[15%] text-right">Date Updated</th>
+                            <th class="w-1/6">TCT/Lot Number</th>
+                            <th class="w-2/6">Owner Name</th>
+                            <th class="w-1/6">Status</th>
+                            <th class="w-1/6 text-right">Updated</th>
+                            <th class="w-1/6 text-center">Action</th>
                         </tr>
                     </thead>
                     <tbody id="clearanceTableBody" class="divide-y"></tbody>
@@ -123,17 +118,12 @@
         <div class="bg-white max-w-4xl w-full p-6 shadow-2xl relative my-4 no-print">
             <button onclick="closeReview()" class="absolute top-4 right-4 text-gray-400 hover:text-black text-xl no-print">&times;</button>
             
-            <div id="remarksSection" class="mb-4 no-print hidden">
-                <label class="block text-[10px] font-bold text-gray-700 uppercase mb-1">Remarks (Required for Disapproval)</label>
-                <textarea id="reviewRemarks" class="w-full border rounded p-2 text-xs focus:outline-none focus:border-[#003811]" rows="3" placeholder="Enter remarks here..."></textarea>
-            </div>
-
             <div class="flex justify-between items-center mb-6 border-b pb-4 no-print">
                 <div id="actionButtons" class="flex gap-2">
-                    <button onclick="decideStatus('RECOMMENDED')" class="bg-green-700 text-white px-5 py-2 rounded text-[10px] font-black uppercase hover:bg-green-800">Approve</button>
+                    <button onclick="decideStatus('REVIEWED')" class="bg-green-700 text-white px-5 py-2 rounded text-[10px] font-black uppercase hover:bg-green-800">Approve</button>
                     <button onclick="decideStatus('DISAPPROVED')" class="bg-red-700 text-white px-5 py-2 rounded text-[10px] font-black uppercase hover:bg-red-800">Disapprove</button>
                 </div>
-                <button id="btnPrint" onclick="printAndCertify()" class="bg-blue-600 text-white px-5 py-2 rounded text-[10px] font-black uppercase hidden hover:bg-blue-700">Print Official Document</button>
+                <button id="btnPrint" onclick="window.print()" class="bg-blue-600 text-white px-5 py-2 rounded text-[10px] font-black uppercase hidden hover:bg-blue-700">Print Official Document</button>
             </div>
             
             <div id="printSection" class="bg-white p-10 text-black doc-format border mx-auto">
@@ -187,23 +177,21 @@
                     Done this <span id="pdf-today" class="font-bold underline">---</span> Naga City, Camarines Sur.
                 </div>
 
-                <div class="flex justify-between items-start mt-12">
-                    <div class="space-y-10 w-1/2">
+                <div class="flex justify-between items-end mt-12">
+                    <div class="space-y-10">
+                        <div>
+                            <p class="text-xs mb-6">Prepared by:</p>
+                            <p id="preparedByName" class="font-bold uppercase border-b border-black min-w-[220px]">---</p>
+                            <p id="preparedByPosition" class="text-[10pt] italic">---</p>
+                        </div>
                         <div>
                             <p class="text-xs mb-6">Reviewed and Noted by:</p>
-                            <p class="font-bold uppercase border-b border-black min-w-[220px] inline-block">ATTY. JAIME G. RESOCO, JR.</p>
+                            <p class="font-bold uppercase border-b border-black min-w-[220px]">ATTY. JAIME G. RESOCO, JR.</p>
                             <p class="text-[10pt] italic">Chief, Legal Division</p>
                         </div>
-                        <div>
-                            <img id="pdf-qrcode" src="" class="w-24 h-24 inline-block bg-gray-100" alt="QR Code">
-                        </div>
                     </div>
-                    <div class="w-1/2 text-right">
-                        <div class="inline-block text-left">
-                            <p class="text-xs mb-6">Prepared by:</p>
-                            <p id="preparedByName" class="font-bold uppercase border-b border-black min-w-[220px] inline-block text-center">---</p>
-                            <p id="preparedByPosition" class="text-[10pt] italic text-center">---</p>
-                        </div>
+                    <div class="text-right">
+                        <img id="pdf-qrcode" src="" class="w-24 h-24 inline-block bg-gray-100" alt="QR Code">
                     </div>
                 </div>
             </div>
@@ -213,13 +201,12 @@
     <script>
         let currentSelection = null;
         let rawData = [];
-        const statusFlow = ['RECEIVED', 'RECOMMENDED', 'CERTIFIED', 'SIGNED', 'TO LEGAL', 'TO RECORDS', 'RELEASE TO CLIENT'];
 
         async function loadMenu() {
             const menuContainer = document.getElementById('dynamicMenu');
             const user = JSON.parse(sessionStorage.getItem('currentUser'));
             const { data: items, error } = await supabaseClient.from('clearance_menu').select('*').eq('is_active', true).order('sort_order', { ascending: true });
-            if (!error && items) {
+            if (!error) {
                 menuContainer.innerHTML = '';
                 items.forEach(item => {
                     if (item.required_roles.includes(user.role.toUpperCase()) || item.required_roles.length === 0) {
@@ -235,63 +222,30 @@
             if (!error) { rawData = data || []; refreshDashboard(); }
         }
 
-        function getWorkingDays(startDate, endDate) {
-            let count = 0;
-            let curDate = new Date(startDate);
-            curDate.setHours(0,0,0,0);
-            let end = new Date(endDate);
-            end.setHours(0,0,0,0);
-            
-            while (curDate < end) {
-                const dayOfWeek = curDate.getDay();
-                if (dayOfWeek !== 0 && dayOfWeek !== 6) count++;
-                curDate.setDate(curDate.getDate() + 1);
-            }
-            return count;
-        }
-
         function refreshDashboard() {
             const query = document.getElementById('searchInput').value.toLowerCase();
             const tbody = document.getElementById('clearanceTableBody');
             tbody.innerHTML = '';
-            let stats = { rec: 0, rev: 0, cer: 0, sig: 0, leg: 0, recd: 0, rel: 0, dis: 0 };
+            let stats = { rl: 0, rev: 0, pro: 0, sig: 0, dis: 0, fwd: 0, rel: 0 };
             
             rawData.forEach(item => {
                 if ((item.registered_under || '').toLowerCase().includes(query) || (item.owner_name || '').toLowerCase().includes(query)) {
-                    let st = item.status || 'RECEIVED';
-                    
-                    if (st === 'RECEIVED' || st === 'RECEIVED - Legal') { stats.rec++; st = 'RECEIVED'; }
-                    else if (st === 'RECOMMENDED' || st === 'REVIEWED AND RECOMMENDED' || st === 'REVIEWED') { stats.rev++; st = 'RECOMMENDED'; }
-                    else if (st === 'CERTIFIED' || st === 'PROCESSED') { stats.cer++; st = 'CERTIFIED'; }
-                    else if (st === 'SIGNED' || st === 'FOR SIGNATURE - PARPO II') { stats.sig++; st = 'SIGNED'; }
-                    else if (st === 'TO LEGAL' || st === 'FORWARDED - Records') { stats.leg++; st = 'TO LEGAL'; }
-                    else if (st === 'TO RECORDS') { stats.recd++; st = 'TO RECORDS'; }
-                    else if (st === 'RELEASE TO CLIENT' || st === 'RELEASED - Client') { stats.rel++; st = 'RELEASE TO CLIENT'; }
-                    else if (st === 'DISAPPROVED') { stats.dis++; st = 'DISAPPROVED'; }
-
-                    let daysPassed = item.updated_at ? getWorkingDays(new Date(item.updated_at), new Date()) : 0;
-                    let warningHTML = daysPassed > 5 ? `<span class="text-red-600 font-black ml-1 text-[12px]" title="Exceeded 5 working days!">⚠️</span>` : '';
-
-                    let actions = `<button onclick='showReview("${item.id}")' class="bg-[#003811] text-white px-3 py-1 rounded text-[8px] font-bold hover:bg-black uppercase mr-1">Review</button>`;
-                    
-                    if (st !== 'RECEIVED' && st !== 'DISAPPROVED') {
-                        actions += `<button onclick='printRecord("${item.id}")' class="bg-blue-600 text-white px-3 py-1 rounded text-[8px] font-bold hover:bg-blue-700 uppercase mr-1">Print</button>`;
-                        
-                        let currentIndex = statusFlow.indexOf(st);
-                        if (currentIndex >= 2 && currentIndex < statusFlow.length - 1) {
-                            let nextStatus = statusFlow[currentIndex + 1];
-                            actions += `<button onclick='processToNext("${item.id}", "${nextStatus}")' class="bg-cyan-600 text-white px-3 py-1 rounded text-[8px] font-bold hover:bg-cyan-700 uppercase">Process</button>`;
-                        }
-                    }
+                    const st = item.status || 'RECEIVED - Legal';
+                    if (st === 'RECEIVED - Legal') stats.rl++; 
+                    else if (st === 'REVIEWED') stats.rev++; 
+                    else if (st === 'PROCESSED') stats.pro++; 
+                    else if (st === 'FOR SIGNATURE - PARPO II') stats.sig++; 
+                    else if (st === 'DISAPPROVED') stats.dis++; 
+                    else if (st === 'FORWARDED - Records') stats.fwd++; 
+                    else if (st === 'RELEASED - Client') stats.rel++;
 
                     tbody.innerHTML += `
                         <tr class="hover:bg-gray-50">
-                            <td class="font-bold">${item.ltc_no || '---'}</td>
                             <td class="font-bold">${item.registered_under || '---'}</td>
                             <td class="uppercase font-semibold">${item.owner_name}</td>
-                            <td><span class="px-2 py-0.5 rounded text-[7px] font-black uppercase ${getStatusStyle(st)}">${st}</span>${warningHTML}</td>
-                            <td class="text-center">${actions}</td>
+                            <td><span class="px-2 py-0.5 rounded text-[7px] font-black uppercase ${getStatusStyle(st)}">${st}</span></td>
                             <td class="text-right font-mono text-gray-400">${item.updated_at ? new Date(item.updated_at).toLocaleString('en-US', { hour12: true }) : '---'}</td>
+                            <td class="text-center"><button onclick='showReview("${item.id}")' class="bg-[#003811] text-white px-3 py-1 rounded text-[8px] font-bold hover:bg-black uppercase">Review</button></td>
                         </tr>`;
                 }
             });
@@ -299,38 +253,18 @@
         }
 
         function getStatusStyle(s) {
-            const colors = { 
-                'RECEIVED': 'bg-blue-100 text-blue-800', 
-                'RECOMMENDED': 'bg-purple-100 text-purple-800', 
-                'CERTIFIED': 'bg-cyan-100 text-cyan-800', 
-                'SIGNED': 'bg-orange-100 text-orange-800', 
-                'TO LEGAL': 'bg-red-100 text-red-800', 
-                'TO RECORDS': 'bg-green-100 text-green-800', 
-                'RELEASE TO CLIENT': 'bg-teal-100 text-teal-800',
-                'DISAPPROVED': 'bg-gray-200 text-gray-800'
-            };
-            return colors[s] || 'bg-gray-100 text-gray-800';
+            const colors = { 'RECEIVED - Legal': 'bg-blue-100 text-blue-800', 'REVIEWED': 'bg-purple-100 text-purple-800', 'PROCESSED': 'bg-cyan-100 text-cyan-800', 'FOR SIGNATURE - PARPO II': 'bg-orange-100 text-orange-800', 'DISAPPROVED': 'bg-red-100 text-red-800', 'FORWARDED - Records': 'bg-green-100 text-green-800', 'RELEASED - Client': 'bg-teal-100 text-teal-800' };
+            return colors[s] || 'bg-gray-100';
         }
 
         function showReview(id) {
             currentSelection = rawData.find(r => r.id === id);
             const user = JSON.parse(sessionStorage.getItem('currentUser'));
 
+            // Map data
             const fields = ['lot_no', 'owner_name', 'registered_under', 'area', 'td_no', 'location', 'deed_type', 'executed_by', 'in_favor_of', 'doc_no', 'page_no', 'book_no', 'series_of', 'dated', 'notary_public', 'retention_area_names'];
             const pdfMap = ['lot', 'owner', 'tct', 'area', 'td', 'location', 'deed', 'executed', 'favor', 'doc', 'page', 'book', 'series', 'dated', 'notary', 'retention'];
-            
-            pdfMap.forEach((p, i) => {
-                let el = document.getElementById(`pdf-${p}`);
-                let val = currentSelection[fields[i]];
-                
-                if (!val || val.trim() === '' || val === '---') {
-                    el.innerText = ' ';
-                    el.style.borderBottom = 'none';
-                } else {
-                    el.innerText = val;
-                    el.style.borderBottom = '1.5px solid black';
-                }
-            });
+            pdfMap.forEach((p, i) => document.getElementById(`pdf-${p}`).innerText = currentSelection[fields[i]] || ' ');
 
             document.getElementById('preparedByName').innerText = user.full_name;
             document.getElementById('preparedByPosition').innerText = user.role || 'Personnel';
@@ -339,67 +273,21 @@
             const now = new Date();
             document.getElementById('pdf-today').innerText = `${now.getDate()}${getOrdinal(now.getDate())} day of ${["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"][now.getMonth()]}, ${now.getFullYear()}.`;
 
-            let st = currentSelection.status || 'RECEIVED';
-            if (st === 'REVIEWED AND RECOMMENDED' || st === 'REVIEWED') st = 'RECOMMENDED';
-            
-            const isReceived = (st === 'RECEIVED' || st === 'RECEIVED - Legal');
-
-            // Handle remarks visibility
-            document.getElementById('reviewRemarks').value = currentSelection.remarks || '';
-            document.getElementById('reviewRemarks').disabled = !isReceived;
-            document.getElementById('remarksSection').classList.toggle('hidden', !isReceived && !currentSelection.remarks);
-
-            document.getElementById('actionButtons').classList.toggle('hidden', !isReceived);
-            document.getElementById('btnPrint').classList.toggle('hidden', isReceived || st === 'DISAPPROVED');
-            
+            // Logic: Buttons for RECEIVED, Print for Evaluated
+            const isEvaluated = currentSelection.status !== 'RECEIVED - Legal' && currentSelection.status !== 'RECEIVED';
+            document.getElementById('btnPrint').classList.toggle('hidden', !isEvaluated);
+            document.getElementById('actionButtons').classList.toggle('hidden', isEvaluated);
             document.getElementById('reviewModal').classList.remove('hidden');
         }
 
         async function decideStatus(newSt) {
-            const remarks = document.getElementById('reviewRemarks').value;
-            if (newSt === 'DISAPPROVED' && !remarks.trim()) {
-                alert('Please provide remarks for disapproval.');
-                return;
-            }
-            
-            const updateData = { status: newSt, updated_at: new Date() };
-            if (remarks.trim()) updateData.remarks = remarks;
-
-            const { error } = await supabaseClient.from('land_records').update(updateData).eq('id', currentSelection.id);
-            if (!error) { await fetchClearanceData(); closeReview(); }
-        }
-
-        async function printAndCertify() {
-            window.print();
-            let st = currentSelection.status || '';
-            if (st === 'RECOMMENDED' || st === 'REVIEWED AND RECOMMENDED') {
-                await supabaseClient.from('land_records').update({ status: 'CERTIFIED', updated_at: new Date() }).eq('id', currentSelection.id);
-                fetchClearanceData();
-            }
-        }
-
-        window.processToNext = async function(id, nextStatus) {
-            const { error } = await supabaseClient.from('land_records').update({ status: nextStatus, updated_at: new Date() }).eq('id', id);
-            if (!error) { await fetchClearanceData(); }
-        }
-
-        window.printRecord = function(id) {
-            showReview(id);
-            setTimeout(() => printAndCertify(), 300);
+            const { error } = await supabaseClient.from('land_records').update({ status: newSt, updated_at: new Date() }).eq('id', currentSelection.id);
+            if (!error) { await fetchClearanceData(); showReview(currentSelection.id); }
         }
 
         function closeReview() { document.getElementById('reviewModal').classList.add('hidden'); }
         function getOrdinal(d) { if (d > 3 && d < 21) return 'th'; switch (d % 10) { case 1: return "st"; case 2: return "nd"; case 3: return "rd"; default: return "th"; } }
-        function updateStats(s) { 
-            document.getElementById('stat-received').innerText = s.rec; 
-            document.getElementById('stat-recommended').innerText = s.rev; 
-            document.getElementById('stat-certified').innerText = s.cer; 
-            document.getElementById('stat-signed').innerText = s.sig; 
-            document.getElementById('stat-legal').innerText = s.leg; 
-            document.getElementById('stat-records').innerText = s.recd; 
-            document.getElementById('stat-released').innerText = s.rel; 
-            document.getElementById('stat-disapproved').innerText = s.dis;
-        }
+        function updateStats(s) { document.getElementById('stat-received-legal').innerText = s.rl; document.getElementById('stat-reviewed').innerText = s.rev; document.getElementById('stat-processed').innerText = s.pro; document.getElementById('stat-signature').innerText = s.sig; document.getElementById('stat-disapproved').innerText = s.dis; document.getElementById('stat-forwarded').innerText = s.fwd; document.getElementById('stat-released').innerText = s.rel; }
         function logout() { sessionStorage.removeItem('currentUser'); window.location.href = 'index.html'; }
         window.onload = () => { fetchClearanceData(); loadMenu(); };
     </script>
