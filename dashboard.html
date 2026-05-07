@@ -22,8 +22,7 @@
             <p id="userRoleBadge" class="text-[10px] text-gray-300 uppercase tracking-widest mt-1 font-bold">---</p>
         </div>
         
-        <div id="dynamicMenu" class="flex-1 overflow-y-auto py-2">
-            </div>
+        <div id="dynamicMenu" class="flex-1 overflow-y-auto py-2"></div>
 
         <div class="p-4 bg-black/20">
             <p id="activeUser" class="text-xs text-gray-300 truncate mb-2 font-bold"></p>
@@ -40,8 +39,8 @@
             </div>
         </header>
 
-        <div class="flex-1 overflow-y-auto p-8 space-y-8">
-            <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
+        <div class="flex-1 overflow-y-auto p-8 space-y-6">
+            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
                 <div class="bg-white p-4 rounded shadow-sm border-l-4 border-blue-500">
                     <p class="text-[10px] font-bold text-gray-400 uppercase">Received</p>
                     <h3 id="stat-received" class="text-2xl font-black text-blue-600">0</h3>
@@ -52,7 +51,7 @@
                 </div>
                 <div class="bg-white p-4 rounded shadow-sm border-l-4 border-orange-500">
                     <p class="text-[10px] font-bold text-gray-400 uppercase">For Sign</p>
-                    <h3 id="stat-signature" class="text-2xl font-black text-orange-600">0</h3>
+                    <h3 id="stat-signature" class="text-xl font-black text-orange-600">0</h3>
                 </div>
                 <div class="bg-white p-4 rounded shadow-sm border-l-4 border-red-500">
                     <p class="text-[10px] font-bold text-gray-400 uppercase">Returned</p>
@@ -62,6 +61,10 @@
                     <p class="text-[10px] font-bold text-gray-400 uppercase">To Records</p>
                     <h3 id="stat-records" class="text-2xl font-black text-green-600">0</h3>
                 </div>
+                <div class="bg-white p-4 rounded shadow-sm border-l-4 border-teal-500">
+                    <p class="text-[10px] font-bold text-gray-400 uppercase">Released</p>
+                    <h3 id="stat-released" class="text-2xl font-black text-teal-600">0</h3>
+                </div>
             </div>
 
             <div class="bg-white rounded shadow-sm overflow-hidden border">
@@ -70,7 +73,7 @@
                         <tr class="text-[11px] font-bold text-[#003811] uppercase tracking-wider">
                             <th class="px-6 py-4">Lot Details</th>
                             <th class="px-6 py-4">Owner Name</th>
-                            <th class="px-6 py-4">Current Status</th>
+                            <th class="px-6 py-4">Status</th>
                             <th class="px-6 py-4 text-right">Last Update</th>
                         </tr>
                     </thead>
@@ -83,7 +86,7 @@
     <script>
         const supabaseUrl = 'https://tqeueibigqwxcizhvdty.supabase.co';
         const supabaseKey = 'sb_publishable_oXBtC1VgBlO07oEmqpcFpw_gBtVMpvT';
-        const supabase = supabase.createClient(supabaseUrl, supabaseKey);
+        const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 
         const userData = sessionStorage.getItem('currentUser');
         if (!userData) { window.location.href = 'index.html'; }
@@ -95,7 +98,7 @@
             const menuContainer = document.getElementById('dynamicMenu');
             const userRole = currentUser.role.toUpperCase();
 
-            const { data: menuItems, error } = await supabase
+            const { data: menuItems, error } = await supabaseClient
                 .from('clearance_menu')
                 .select('*')
                 .eq('is_active', true)
@@ -116,18 +119,20 @@
             });
         }
 
+        // Updated status mapping
         const statusColors = {
             'RECEIVED': 'bg-blue-100 text-blue-800 border-blue-200',
             'PROCESSED': 'bg-indigo-100 text-indigo-800 border-indigo-200',
-            'FOR SIGNATURE - CHIEF LEGAL and PARPO': 'bg-orange-100 text-orange-800 border-orange-200',
+            'FOR SIGN - PARPO': 'bg-orange-100 text-orange-800 border-orange-200',
             'RETURN TO LEGAL': 'bg-red-100 text-red-800 border-red-200',
-            'FORWARDED TO RECORDS SECTION': 'bg-green-100 text-green-800 border-green-200'
+            'FORWARDED TO RECORDS': 'bg-green-100 text-green-800 border-green-200',
+            'RELEASED TO CLIENTS': 'bg-teal-100 text-teal-800 border-teal-200'
         };
 
         let rawData = [];
 
         async function fetchClearanceData() {
-            const { data, error } = await supabase.from('land_records').select('*').order('updated_at', { ascending: false });
+            const { data, error } = await supabaseClient.from('land_records').select('*').order('updated_at', { ascending: false });
             if (!error) { rawData = data || []; refreshDashboard(); }
         }
 
@@ -135,16 +140,19 @@
             const query = document.getElementById('searchInput').value.toLowerCase();
             const tbody = document.getElementById('clearanceTableBody');
             tbody.innerHTML = '';
-            let stats = { rec: 0, pro: 0, sig: 0, ret: 0, recs: 0 };
+            let stats = { rec: 0, pro: 0, sig: 0, ret: 0, recs: 0, rel: 0 };
 
             rawData.forEach(item => {
                 if ((item.lot_no || '').toLowerCase().includes(query) || (item.owner_name || '').toLowerCase().includes(query)) {
                     const status = item.status || 'RECEIVED';
+                    
+                    // Increment specific stats
                     if (status === 'RECEIVED') stats.rec++;
                     else if (status === 'PROCESSED') stats.pro++;
-                    else if (status.includes('SIGNATURE')) stats.sig++;
-                    else if (status.includes('RETURN')) stats.ret++;
-                    else if (status.includes('RECORDS')) stats.recs++;
+                    else if (status === 'FOR SIGN - PARPO') stats.sig++;
+                    else if (status === 'RETURN TO LEGAL') stats.ret++;
+                    else if (status === 'FORWARDED TO RECORDS') stats.recs++;
+                    else if (status === 'RELEASED TO CLIENTS') stats.rel++;
 
                     const lastUpdated = item.updated_at ? new Date(item.updated_at).toLocaleString('en-US', { hour12: true }) : '---';
                     
@@ -153,17 +161,19 @@
                     tr.innerHTML = `
                         <td class="px-6 py-4 font-bold text-gray-900">${item.lot_no || 'N/A'}</td>
                         <td class="px-6 py-4 whitespace-pre-wrap">${item.owner_name || 'Unknown'}</td>
-                        <td class="px-6 py-4"><span class="px-2 py-1 rounded border text-[9px] font-black uppercase ${statusColors[status]}">${status}</span></td>
+                        <td class="px-6 py-4"><span class="px-2 py-1 rounded border text-[9px] font-black uppercase ${statusColors[status] || 'bg-gray-100'}">${status}</span></td>
                         <td class="px-6 py-4 text-right font-mono text-gray-400">${lastUpdated}</td>`;
                     tbody.appendChild(tr);
                 }
             });
 
+            // Update UI Counters
             document.getElementById('stat-received').innerText = stats.rec;
             document.getElementById('stat-processed').innerText = stats.pro;
             document.getElementById('stat-signature').innerText = stats.sig;
             document.getElementById('stat-returned').innerText = stats.ret;
             document.getElementById('stat-records').innerText = stats.recs;
+            document.getElementById('stat-released').innerText = stats.rel;
         }
 
         function logout() { sessionStorage.removeItem('currentUser'); window.location.href = 'index.html'; }
