@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verify Certification - DARPO-CS</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-config.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Roboto', sans-serif; background-color: #F3F4F6; color: #1F2937; }
+        .data-value { 
+            font-weight: bold; 
+            border-bottom: 1.5px solid black; 
+            display: inline-block; 
+            min-width: 40px; 
+            text-transform: uppercase; 
+            line-height: 1.1; 
+            padding-bottom: 1px;
+            width: 100%;
+        }
+    </style>
+</head>
+<body class="p-4 md:p-8 flex justify-center items-start min-h-screen">
+
+    <div id="loading" class="text-center mt-20 font-bold text-gray-500 w-full">
+        Verifying Document... Please wait.
+    </div>
+
+    <div id="errorMsg" class="text-center mt-20 font-bold text-red-600 hidden w-full">
+        Invalid QR Code or Record Not Found.
+    </div>
+
+    <div id="certificationContainer" class="bg-white p-6 shadow-lg w-full max-w-2xl hidden rounded-md border border-gray-200">
+        
+        <div class="text-right font-bold mb-4 text-xs">
+            <span class="italic font-normal">LTC Form No. 5</span><br>
+            <span id="header-id">LTC-PENDING</span>
+        </div>
+
+        <div class="text-center mb-6">
+            <div class="font-bold text-lg">CERTIFICATION</div>
+            <div class="text-sm">(Land Transfer Clearance)</div>
+        </div>
+        
+        <p class="mb-4 text-justify indent-6 text-sm">
+            This is to certify that the application/request for Issuance of Land Transfer Clearance (LTC) filed to this Office with the following pertinent information, to wit:
+        </p>
+
+        <div class="grid grid-cols-[120px_1fr] gap-y-2 mb-4 text-sm">
+            <div class="italic">Lot No/s</div> <div class="data-value" id="cert-lot">---</div>
+            <div class="italic">In the Name of</div> <div class="data-value" id="cert-owner">---</div>
+            <div class="italic">Registered under</div> <div class="data-value" id="cert-tct">---</div>
+            <div class="italic">Area (in has.)</div> <div class="data-value" id="cert-area">---</div>
+            <div class="italic">Under T.D. No.</div> <div class="data-value" id="cert-td">---</div>
+            <div class="italic">Located at</div> <div class="data-value" id="cert-location">---</div>
+            <div class="italic">Deed of</div> <div class="data-value" id="cert-deed">---</div>
+            <div class="italic">Executed by</div> <div class="data-value" id="cert-executed">---</div>
+            <div class="italic">In favor of</div> <div class="data-value" id="cert-favor">---</div>
+            <div class="italic">Doc. No.</div> <div class="data-value" id="cert-doc">---</div>
+            <div class="italic">Page No.</div> <div class="data-value" id="cert-page">---</div>
+            <div class="italic">Book No.</div> <div class="data-value" id="cert-book">---</div>
+            <div class="italic">Series of</div> <div class="data-value" id="cert-series">---</div>
+            <div class="italic">Dated</div> <div class="data-value" id="cert-dated">---</div>
+            <div class="italic">Notary Public</div> <div class="data-value" id="cert-notary">---</div>
+            <div class="italic text-[8pt]">Retention area</div> <div class="data-value" id="cert-retention">---</div>
+            
+            <div class="italic mt-4">is hereby:</div>
+            <div class="mt-4"><span class="font-bold text-[11pt] border-b-[1.5px] border-black pb-0.5">APPROVED</span></div>
+        </div>
+
+        <p class="mt-8 text-center italic text-xs text-[#003811] font-bold border-t pt-4">
+            This is a verified digital record from the DARPO-CS System.
+        </p>
+    </div>
+
+    <script>
+        async function loadCertification() {
+            // Kunin ang ID galing sa URL na na-scan ng QR Code
+            const urlParams = new URLSearchParams(window.location.search);
+            const recordId = urlParams.get('id');
+
+            if (!recordId) {
+                document.getElementById('loading').classList.add('hidden');
+                document.getElementById('errorMsg').classList.remove('hidden');
+                return;
+            }
+
+            // Hanapin ang record sa Supabase
+            const { data, error } = await supabaseClient
+                .from('land_records')
+                .select('*')
+                .or(`LTC_ID_NUMBER.eq."${recordId}",ltc_no.eq."${recordId}"`)
+                .single();
+
+            document.getElementById('loading').classList.add('hidden');
+
+            if (error || !data) {
+                document.getElementById('errorMsg').classList.remove('hidden');
+            } else {
+                // Pag may nahanap, i-display ang data
+                document.getElementById('certificationContainer').classList.remove('hidden');
+                
+                const dbToHtmlMap = {
+                    'lot_no': 'cert-lot',
+                    'owner_name': 'cert-owner',
+                    'registered_under': 'cert-tct',
+                    'area': 'cert-area',
+                    'td_no': 'cert-td',
+                    'location': 'cert-location',
+                    'deed_type': 'cert-deed',
+                    'executed_by': 'cert-executed',
+                    'in_favor_of': 'cert-favor',
+                    'doc_no': 'cert-doc',
+                    'page_no': 'cert-page',
+                    'book_no': 'cert-book',
+                    'series_of': 'cert-series',
+                    'dated': 'cert-dated',
+                    'notary_public': 'cert-notary',
+                    'retention_area_names': 'cert-retention'
+                };
+
+                for (let dbCol in dbToHtmlMap) {
+                    let el = document.getElementById(dbToHtmlMap[dbCol]);
+                    if (el) {
+                        el.innerText = data[dbCol] || '---';
+                    }
+                }
+
+                document.getElementById('header-id').innerText = data.LTC_ID_NUMBER || data.ltc_no || 'LTC-PENDING';
+            }
+        }
+
+        window.onload = loadCertification;
+    </script>
+</body>
+</html>
