@@ -11,6 +11,8 @@
         :root { --dar-green: #003811; --dar-gold: #D4AF37; }
         body { font-family: 'Segoe UI', sans-serif; background-color: #F3F4F6; }
         .sidebar { background-color: var(--dar-green); }
+        ::-webkit-scrollbar { width: 5px; }
+        ::-webkit-scrollbar-thumb { background: #888; border-radius: 10px; }
     </style>
 </head>
 <body class="flex h-screen overflow-hidden text-gray-800">
@@ -33,33 +35,39 @@
                 <button onclick="fetchClearanceData()" class="bg-[#003811] text-white px-4 py-1 rounded text-sm font-bold uppercase">Refresh</button>
             </div>
         </header>
+        
         <div class="flex-1 overflow-y-auto p-8 space-y-6">
-            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-                <div class="bg-white p-4 rounded shadow-sm border-l-4 border-blue-500 text-center">
-                    <p class="text-[9px] font-bold text-gray-400 uppercase">Received</p>
-                    <h3 id="stat-received" class="text-xl font-black text-blue-600">0</h3>
+            <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
+                <div class="bg-white p-3 rounded shadow-sm border-l-4 border-blue-500 text-center">
+                    <p class="text-[8px] font-bold text-gray-400 uppercase">Received (Legal)</p>
+                    <h3 id="stat-received-legal" class="text-lg font-black text-blue-600">0</h3>
                 </div>
-                <div class="bg-white p-4 rounded shadow-sm border-l-4 border-indigo-500 text-center">
-                    <p class="text-[9px] font-bold text-gray-400 uppercase">Processed</p>
-                    <h3 id="stat-processed" class="text-xl font-black text-indigo-600">0</h3>
+                <div class="bg-white p-3 rounded shadow-sm border-l-4 border-purple-500 text-center">
+                    <p class="text-[8px] font-bold text-gray-400 uppercase">Reviewed</p>
+                    <h3 id="stat-reviewed" class="text-lg font-black text-purple-600">0</h3>
                 </div>
-                <div class="bg-white p-4 rounded shadow-sm border-l-4 border-orange-500 text-center">
-                    <p class="text-[9px] font-bold text-gray-400 uppercase text-xs">For Sign</p>
-                    <h3 id="stat-signature" class="text-xl font-black text-orange-600">0</h3>
+                <div class="bg-white p-3 rounded shadow-sm border-l-4 border-cyan-500 text-center">
+                    <p class="text-[8px] font-bold text-gray-400 uppercase">Processed</p>
+                    <h3 id="stat-processed" class="text-lg font-black text-cyan-600">0</h3>
                 </div>
-                <div class="bg-white p-4 rounded shadow-sm border-l-4 border-red-500 text-center">
-                    <p class="text-[9px] font-bold text-gray-400 uppercase">Returned</p>
-                    <h3 id="stat-returned" class="text-xl font-black text-red-600">0</h3>
+                <div class="bg-white p-3 rounded shadow-sm border-l-4 border-orange-500 text-center">
+                    <p class="text-[8px] font-bold text-gray-400 uppercase">For Sign (PARPO)</p>
+                    <h3 id="stat-signature" class="text-lg font-black text-orange-600">0</h3>
                 </div>
-                <div class="bg-white p-4 rounded shadow-sm border-l-4 border-green-500 text-center">
-                    <p class="text-[9px] font-bold text-gray-400 uppercase">To Records</p>
-                    <h3 id="stat-records" class="text-xl font-black text-green-600">0</h3>
+                <div class="bg-white p-3 rounded shadow-sm border-l-4 border-red-500 text-center">
+                    <p class="text-[8px] font-bold text-gray-400 uppercase">Returned (Legal)</p>
+                    <h3 id="stat-returned-legal" class="text-lg font-black text-red-600">0</h3>
                 </div>
-                <div class="bg-white p-4 rounded shadow-sm border-l-4 border-teal-500 text-center">
-                    <p class="text-[9px] font-bold text-gray-400 uppercase">Released</p>
-                    <h3 id="stat-released" class="text-xl font-black text-teal-600">0</h3>
+                <div class="bg-white p-3 rounded shadow-sm border-l-4 border-green-500 text-center">
+                    <p class="text-[8px] font-bold text-gray-400 uppercase">Forwarded (Rec)</p>
+                    <h3 id="stat-forwarded" class="text-lg font-black text-green-600">0</h3>
+                </div>
+                <div class="bg-white p-3 rounded shadow-sm border-l-4 border-teal-500 text-center">
+                    <p class="text-[8px] font-bold text-gray-400 uppercase">Released (Client)</p>
+                    <h3 id="stat-released" class="text-lg font-black text-teal-600">0</h3>
                 </div>
             </div>
+
             <div class="bg-white rounded shadow-sm overflow-hidden border">
                 <table class="w-full text-left border-collapse text-xs">
                     <thead class="bg-gray-50 border-b">
@@ -95,7 +103,16 @@
             });
         }
 
-        const statusColors = { 'RECEIVED': 'bg-blue-100 text-blue-800', 'PROCESSED': 'bg-indigo-100 text-indigo-800', 'FOR SIGN - PARPO': 'bg-orange-100 text-orange-800', 'RETURN TO LEGAL': 'bg-red-100 text-red-800', 'FORWARDED TO RECORDS': 'bg-green-100 text-green-800', 'RELEASED TO CLIENTS': 'bg-teal-100 text-teal-800' };
+        // Exact mapping for 7 stages
+        const statusColors = { 
+            'RECEIVED - Legal': 'bg-blue-100 text-blue-800', 
+            'REVIEWED': 'bg-purple-100 text-purple-800', 
+            'PROCESSED': 'bg-cyan-100 text-cyan-800', 
+            'FOR SIGNATURE - PARPO II': 'bg-orange-100 text-orange-800', 
+            'RETURNED - Legal': 'bg-red-100 text-red-800', 
+            'FORWARDED - Records': 'bg-green-100 text-green-800', 
+            'RELEASED - Client': 'bg-teal-100 text-teal-800' 
+        };
 
         let rawData = [];
         async function fetchClearanceData() {
@@ -107,16 +124,48 @@
             const query = document.getElementById('searchInput').value.toLowerCase();
             const tbody = document.getElementById('clearanceTableBody');
             tbody.innerHTML = '';
-            let stats = { rec: 0, pro: 0, sig: 0, ret: 0, recs: 0, rel: 0 };
+            
+            // Reset 7 stage counters
+            let stats = { rl: 0, rev: 0, pro: 0, sig: 0, rtl: 0, fwd: 0, rel: 0 };
+            
             rawData.forEach(item => {
                 if ((item.lot_no || '').toLowerCase().includes(query) || (item.owner_name || '').toLowerCase().includes(query)) {
-                    const status = item.status || 'RECEIVED';
-                    if (status === 'RECEIVED') stats.rec++; else if (status === 'PROCESSED') stats.pro++; else if (status === 'FOR SIGN - PARPO') stats.sig++; else if (status === 'RETURN TO LEGAL') stats.ret++; else if (status === 'FORWARDED TO RECORDS') stats.recs++; else if (status === 'RELEASED TO CLIENTS') stats.rel++;
+                    const status = item.status || 'RECEIVED - Legal';
+                    
+                    // Logic to count each specific stage
+                    if (status === 'RECEIVED - Legal') stats.rl++; 
+                    else if (status === 'REVIEWED') stats.rev++; 
+                    else if (status === 'PROCESSED') stats.pro++; 
+                    else if (status === 'FOR SIGNATURE - PARPO II') stats.sig++; 
+                    else if (status === 'RETURNED - Legal') stats.rtl++; 
+                    else if (status === 'FORWARDED - Records') stats.fwd++; 
+                    else if (status === 'RELEASED - Client') stats.rel++;
+
+                    // 12-hour format display [cite: 2026-02-15]
                     const updated = item.updated_at ? new Date(item.updated_at).toLocaleString('en-US', { hour12: true }) : '---';
-                    tbody.innerHTML += `<tr class="hover:bg-gray-50"><td class="px-6 py-4 font-bold">${item.lot_no}</td><td class="px-6 py-4 whitespace-pre-wrap">${item.owner_name}</td><td class="px-6 py-4"><span class="px-2 py-1 rounded text-[9px] font-black uppercase ${statusColors[status] || 'bg-gray-100'}">${status}</span></td><td class="px-6 py-4 text-right font-mono text-gray-400">${updated}</td></tr>`;
+                    
+                    tbody.innerHTML += `
+                        <tr class="hover:bg-gray-50">
+                            <td class="px-6 py-4 font-bold">${item.lot_no}</td>
+                            <td class="px-6 py-4 whitespace-pre-wrap">${item.owner_name}</td>
+                            <td class="px-6 py-4">
+                                <span class="px-2 py-1 rounded text-[9px] font-black uppercase ${statusColors[status] || 'bg-gray-100'}">
+                                    ${status}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 text-right font-mono text-gray-400">${updated}</td>
+                        </tr>`;
                 }
             });
-            document.getElementById('stat-received').innerText = stats.rec; document.getElementById('stat-processed').innerText = stats.pro; document.getElementById('stat-signature').innerText = stats.sig; document.getElementById('stat-returned').innerText = stats.ret; document.getElementById('stat-records').innerText = stats.recs; document.getElementById('stat-released').innerText = stats.rel;
+
+            // Update 7 Counter IDs
+            document.getElementById('stat-received-legal').innerText = stats.rl;
+            document.getElementById('stat-reviewed').innerText = stats.rev;
+            document.getElementById('stat-processed').innerText = stats.pro;
+            document.getElementById('stat-signature').innerText = stats.sig;
+            document.getElementById('stat-returned-legal').innerText = stats.rtl;
+            document.getElementById('stat-forwarded').innerText = stats.fwd;
+            document.getElementById('stat-released').innerText = stats.rel;
         }
 
         function logout() { sessionStorage.removeItem('currentUser'); window.location.href = 'index.html'; }
