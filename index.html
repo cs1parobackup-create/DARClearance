@@ -6,14 +6,15 @@
     <title>Login - DARPO-CS Clearance</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-config.js"></script>
     <script>
-        // AUTO-REDIRECT: Check if user is already logged in before page loads
+        // Check if user is already logged in [cite: 2026-02-17]
         if (sessionStorage.getItem('currentUser')) {
             window.location.href = 'dashboard.html';
         }
     </script>
 </head>
-<body class="bg-gray-100 h-screen flex items-center justify-center p-4">
+<body class="bg-gray-100 h-screen flex items-center justify-center p-4 text-[#1F2937]">
     <div class="bg-white w-full max-w-md rounded-lg shadow-2xl overflow-hidden border-t-8 border-[#D4AF37]">
         <div class="p-8">
             <div class="text-center mb-8">
@@ -31,9 +32,7 @@
                     <input type="password" id="password" required class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded focus:ring-2 focus:ring-[#003811] focus:outline-none font-bold">
                 </div>
                 
-                <p id="errorMessage" class="text-red-600 text-[10px] font-bold hidden text-center uppercase tracking-tight">
-                    Authentication failed. Check credentials or database connection.
-                </p>
+                <p id="errorMessage" class="text-red-600 text-[10px] font-bold hidden text-center uppercase">Authentication failed. Check credentials.</p>
 
                 <button type="submit" id="loginBtn" class="w-full bg-[#003811] text-white py-4 rounded font-black text-sm hover:bg-[#005c1c] transition-all shadow-lg active:scale-95 uppercase tracking-widest">
                     Log In
@@ -46,11 +45,6 @@
     </div>
 
     <script>
-        // Supabase Initialization with unique variable name
-        const sbUrl = 'https://tqeueibigqwxcizhvdty.supabase.co';
-        const sbKey = 'sb_publishable_oXBtC1VgBlO07oEmqpcFpw_gBtVMpvT';
-        const supabaseClient = supabase.createClient(sbUrl, sbKey);
-
         document.getElementById('loginForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const btn = document.getElementById('loginBtn');
@@ -63,7 +57,7 @@
             err.classList.add('hidden');
 
             try {
-                // Queries the public.Users table
+                // Fetch user from Users table
                 const { data, error } = await supabaseClient
                     .from('Users')
                     .select('*')
@@ -71,15 +65,10 @@
                     .eq('password', passVal)
                     .single();
 
-                if (error || !data) {
-                    console.error("Login Error:", error);
-                    throw new Error("Invalid login");
-                }
+                if (error || !data) throw new Error("Invalid login");
 
                 // Store user session [cite: 2026-02-14]
                 sessionStorage.setItem('currentUser', JSON.stringify(data));
-                
-                // Success Redirect
                 window.location.href = 'dashboard.html';
 
             } catch (fail) {
