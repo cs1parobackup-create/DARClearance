@@ -12,10 +12,8 @@
         :root { --dar-green: #003811; --dar-gold: #D4AF37; }
         body { font-family: 'Segoe UI', sans-serif; background-color: #F3F4F6; }
         .sidebar { background-color: var(--dar-green); }
-        ::-webkit-scrollbar { width: 5px; }
-        ::-webkit-scrollbar-thumb { background: #888; border-radius: 10px; }
         
-        /* Document Print Styles - Strictly Roboto 11pt */
+        /* Document Print Styles - Roboto 11pt Standard */
         @media print {
             body * { visibility: hidden; }
             #printSection, #printSection * { visibility: visible; }
@@ -28,7 +26,8 @@
             .no-print { display: none !important; }
         }
 
-        .document-font { font-family: 'Roboto', sans-serif; font-size: 11pt; line-height: 1.5; }
+        .document-font { font-family: 'Roboto', sans-serif; font-size: 11pt; line-height: 1.6; }
+        .underline-data { border-bottom: 1px solid black; display: inline-block; min-width: 50px; font-weight: bold; padding: 0 4px; }
         .uppercase-bold { text-transform: uppercase; font-weight: 700; }
     </style>
 </head>
@@ -69,7 +68,7 @@
                     <h3 id="stat-processed" class="text-lg font-black text-cyan-600">0</h3>
                 </div>
                 <div class="bg-white p-3 rounded shadow-sm border-l-4 border-orange-500 text-center">
-                    <p class="text-[8px] font-bold text-gray-400 uppercase">For Sign (PARPO)</p>
+                    <p class="text-[8px] font-bold text-gray-400 uppercase text-[7px]">For Sign (PARPO II)</p>
                     <h3 id="stat-signature" class="text-lg font-black text-orange-600">0</h3>
                 </div>
                 <div class="bg-white p-3 rounded shadow-sm border-l-4 border-red-500 text-center">
@@ -107,63 +106,63 @@
         <div class="bg-white max-w-4xl w-full p-8 shadow-2xl relative">
             <button onclick="closeReview()" class="absolute top-4 right-4 text-gray-400 hover:text-black text-xl">&times;</button>
             
-            <div class="flex justify-between items-center mb-6 border-b pb-4">
-                <div class="flex gap-2">
-                    <button id="btnApprove" onclick="decideStatus('REVIEWED')" class="bg-green-700 text-white px-6 py-2 rounded text-[10px] font-black uppercase hover:bg-green-800">Approve</button>
-                    <button onclick="goToStatusPage()" class="bg-red-700 text-white px-6 py-2 rounded text-[10px] font-black uppercase hover:bg-red-800">Disapprove</button>
+            <div class="flex justify-between items-center mb-6 border-b pb-4 no-print">
+                <div id="decisionActions" class="flex gap-2">
+                    <button onclick="decideStatus('REVIEWED')" class="bg-green-700 text-white px-6 py-2 rounded text-[10px] font-black uppercase hover:bg-green-800 transition-all">Approve</button>
+                    <button onclick="goToStatusPage()" class="bg-red-700 text-white px-6 py-2 rounded text-[10px] font-black uppercase hover:bg-red-800 transition-all">Disapprove</button>
                 </div>
-                <button id="btnPrint" onclick="window.print()" class="bg-blue-600 text-white px-6 py-2 rounded text-[10px] font-black uppercase hover:bg-blue-700 hidden">Print Official Document</button>
+                <button id="btnPrint" onclick="window.print()" class="bg-blue-600 text-white px-6 py-2 rounded text-[10px] font-black uppercase hover:bg-blue-700 hidden transition-all">Print / Download PDF</button>
             </div>
             
             <div id="printSection" class="bg-white p-12 text-black document-font shadow-inner border mx-auto" style="width: 8.5in; min-height: 11in;">
-                <div class="text-center mb-8 font-bold text-lg">
+                <div class="text-center mb-10 uppercase font-bold text-lg">
                     RECOMMENDATION<br>
                     <span class="text-sm font-normal">(Land Transfer Clearance)</span>
                 </div>
                 
-                <p class="mb-6 text-justify">
+                <p class="mb-8 text-justify">
                     This is to recommend that the application/request for issuance of Land Transfer Clearance (LTC) be <strong>APPROVED</strong> on the parcel of agricultural land with the following pertinent information, to wit;
                 </p>
 
-                <div class="grid grid-cols-[250px_1fr] gap-y-2 mb-8">
-                    <div class="italic">Lot No/s</div> <div id="pdf-lot" class="font-bold underline">---</div>
-                    <div class="italic">In the Name of</div> <div id="pdf-owner" class="uppercase-bold">---</div>
-                    <div class="italic">Registered under</div> <div id="pdf-tct">---</div>
-                    <div class="italic">With an area (in has.) of</div> <div id="pdf-area">---</div>
-                    <div class="italic">Declared under T.D. No.</div> <div id="pdf-td">---</div>
-                    <div class="italic">Located at</div> <div id="pdf-location" class="uppercase">---</div>
-                    <div class="italic">Subjected of the Deed of</div> <div id="pdf-deed" class="uppercase">---</div>
-                    <div class="italic">Executed by</div> <div id="pdf-executed" class="uppercase text-[10pt]">---</div>
-                    <div class="italic">In favor of</div> <div id="pdf-favor" class="uppercase text-[10pt]">---</div>
+                <div class="grid grid-cols-[250px_1fr] gap-y-3 mb-10">
+                    <div class="italic">Lot No/s</div> <div class="underline-data w-full" id="pdf-lot">---</div>
+                    <div class="italic">In the Name of</div> <div class="uppercase-bold underline-data w-full" id="pdf-owner">---</div>
+                    <div class="italic">Registered under</div> <div class="underline-data w-full" id="pdf-tct">---</div>
+                    <div class="italic">With an area (in has.) of</div> <div class="underline-data w-full" id="pdf-area">---</div>
+                    <div class="italic">Declared under T.D. No.</div> <div class="underline-data w-full" id="pdf-td">---</div>
+                    <div class="italic">Located at</div> <div class="uppercase underline-data w-full" id="pdf-location">---</div>
+                    <div class="italic">Subjected of the Deed of</div> <div class="uppercase underline-data w-full" id="pdf-deed">---</div>
+                    <div class="italic">Executed by</div> <div class="uppercase underline-data w-full" id="pdf-executed">---</div>
+                    <div class="italic">In favor of</div> <div class="uppercase underline-data w-full" id="pdf-favor">---</div>
                     
                     <div class="italic">Under Doc. No.</div> 
-                    <div class="flex gap-12">
-                        <span id="pdf-doc" class="font-bold underline min-w-[50px]">---</span>
-                        <span>Page No. <span id="pdf-page" class="font-bold underline min-w-[50px]">---</span></span>
-                        <span>Book No. <span id="pdf-book" class="font-bold underline min-w-[50px]">---</span></span>
+                    <div class="flex gap-10">
+                        <span class="underline-data" id="pdf-doc">---</span>
+                        <span>Page No. <span class="underline-data" id="pdf-page">---</span></span>
+                        <span>Book No. <span class="underline-data" id="pdf-book">---</span></span>
                     </div>
 
                     <div class="italic">Series of</div> 
-                    <div class="flex gap-12">
-                        <span id="pdf-series" class="font-bold underline min-w-[50px]">---</span>
-                        <span>Dated <span id="pdf-dated" class="uppercase font-bold underline">---</span></span>
+                    <div class="flex gap-10">
+                        <span class="underline-data" id="pdf-series">---</span>
+                        <span>Dated <span class="uppercase underline-data" id="pdf-dated">---</span></span>
                     </div>
 
-                    <div class="italic">of Notary Public</div> <div id="pdf-notary" class="uppercase-bold">---</div>
-                    <div class="italic">of a retention area of vendor/transferor</div> <div id="pdf-retention" class="uppercase text-[10pt]">---</div>
+                    <div class="italic">of Notary Public</div> <div class="uppercase-bold underline-data w-full" id="pdf-notary">---</div>
+                    <div class="italic">of a retention area of vendor/transferor</div> <div class="uppercase underline-data w-full" id="pdf-retention">---</div>
                 </div>
 
-                <div class="mb-8 flex gap-4 font-bold items-end">
+                <div class="mb-10 flex gap-4 font-bold items-center">
                     <span>is hereby:</span>
-                    <span class="border-b-2 border-black px-16 text-lg tracking-widest">APPROVED</span>
+                    <span class="border-b-2 border-black px-20 py-1 text-xl tracking-widest">APPROVED</span>
                 </div>
 
-                <p class="mb-8 text-xs text-justify italic leading-relaxed">
+                <p class="mb-10 text-[9pt] text-justify italic leading-relaxed">
                     The applicant submitted all the necessary requirements for the issuance of Land Transfer Clearance in compliance with DAR Administrative Order No. 4, series of 2021.
                 </p>
 
-                <div class="mt-12">
-                    Done this <span id="pdf-today" class="font-bold">---</span> Naga City, Camarines Sur.
+                <div class="mt-16">
+                    Done this <span id="pdf-today" class="font-bold border-b border-black px-2">---</span> Naga City, Camarines Sur.
                 </div>
             </div>
         </div>
@@ -171,11 +170,17 @@
 
     <script>
         let rawData = [];
-        let selectedItemId = null;
-        const supabase = supabaseClient; // From config
+        let selectedId = null;
+
+        const statusColors = { 
+            'RECEIVED - Legal': 'bg-blue-100 text-blue-800', 'REVIEWED': 'bg-purple-100 text-purple-800', 
+            'PROCESSED': 'bg-cyan-100 text-cyan-800', 'FOR SIGNATURE - PARPO II': 'bg-orange-100 text-orange-800', 
+            'RETURNED - Legal': 'bg-red-100 text-red-800', 'FORWARDED - Records': 'bg-green-100 text-green-800', 
+            'RELEASED - Client': 'bg-teal-100 text-teal-800' 
+        };
 
         async function fetchClearanceData() {
-            const { data, error } = await supabase.from('land_records').select('*').order('updated_at', { ascending: false });
+            const { data, error } = await supabaseClient.from('land_records').select('*').order('updated_at', { ascending: false });
             if (!error) { rawData = data || []; refreshDashboard(); }
         }
 
@@ -209,82 +214,72 @@
                             </td>
                             <td class="px-4 py-4 text-right font-mono text-gray-400">${updated}</td>
                             <td class="px-4 py-4 text-center">
-                                <button onclick='showReview("${item.id}")' class="bg-[#003811] text-white px-3 py-1 rounded text-[9px] font-bold hover:bg-black uppercase">Review</button>
+                                <button onclick='showReview("${item.id}")' class="bg-[#003811] text-white px-3 py-1 rounded text-[9px] font-bold hover:bg-black transition-colors uppercase">Review</button>
                             </td>
                         </tr>`;
                 }
             });
-            updateCounters(stats);
+            updateStats(stats);
         }
 
-        const statusColors = { 
-            'RECEIVED - Legal': 'bg-blue-100 text-blue-800', 'REVIEWED': 'bg-purple-100 text-purple-800', 
-            'PROCESSED': 'bg-cyan-100 text-cyan-800', 'FOR SIGNATURE - PARPO II': 'bg-orange-100 text-orange-800', 
-            'RETURNED - Legal': 'bg-red-100 text-red-800', 'FORWARDED - Records': 'bg-green-100 text-green-800', 
-            'RELEASED - Client': 'bg-teal-100 text-teal-800' 
-        };
-
         function showReview(id) {
-            selectedItemId = id;
+            selectedId = id;
             const item = rawData.find(r => r.id === id);
             if (!item) return;
 
-            // Map data to Template
-            document.getElementById('pdf-lot').innerText = item.lot_no || 'N/A';
-            document.getElementById('pdf-owner').innerText = item.owner_name || 'N/A';
-            document.getElementById('pdf-tct').innerText = item.registered_under || 'N/A';
-            document.getElementById('pdf-area').innerText = item.area || 'N/A';
-            document.getElementById('pdf-td').innerText = item.td_no || 'N/A';
-            document.getElementById('pdf-location').innerText = item.location || 'N/A';
-            document.getElementById('pdf-deed').innerText = item.deed_type || 'N/A';
-            document.getElementById('pdf-executed').innerText = item.executed_by || 'N/A';
-            document.getElementById('pdf-favor').innerText = item.in_favor_of || 'N/A';
-            document.getElementById('pdf-doc').innerText = item.doc_no || '---';
-            document.getElementById('pdf-page').innerText = item.page_no || '---';
-            document.getElementById('pdf-book').innerText = item.book_no || '---';
-            document.getElementById('pdf-series').innerText = item.series_of || '---';
-            document.getElementById('pdf-dated').innerText = item.dated || '---';
-            document.getElementById('pdf-notary').innerText = item.notary_public || '---';
-            document.getElementById('pdf-retention').innerText = item.retention_area_names || '---';
+            // Map data
+            document.getElementById('pdf-lot').innerText = item.lot_no || ' ';
+            document.getElementById('pdf-owner').innerText = item.owner_name || ' ';
+            document.getElementById('pdf-tct').innerText = item.registered_under || ' ';
+            document.getElementById('pdf-area').innerText = item.area || ' ';
+            document.getElementById('pdf-td').innerText = item.td_no || ' ';
+            document.getElementById('pdf-location').innerText = item.location || ' ';
+            document.getElementById('pdf-deed').innerText = item.deed_type || ' ';
+            document.getElementById('pdf-executed').innerText = item.executed_by || ' ';
+            document.getElementById('pdf-favor').innerText = item.in_favor_of || ' ';
+            document.getElementById('pdf-doc').innerText = item.doc_no || ' ';
+            document.getElementById('pdf-page').innerText = item.page_no || ' ';
+            document.getElementById('pdf-book').innerText = item.book_no || ' ';
+            document.getElementById('pdf-series').innerText = item.series_of || ' ';
+            document.getElementById('pdf-dated').innerText = item.dated || ' ';
+            document.getElementById('pdf-notary').innerText = item.notary_public || ' ';
+            document.getElementById('pdf-retention').innerText = item.retention_area_names || ' ';
             
-            // Auto Date Logic
             const now = new Date();
-            const day = now.getDate();
             const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
-            document.getElementById('pdf-today').innerText = `${day}${getOrdinal(day)} day of ${months[now.getMonth()]}, ${now.getFullYear()}.`;
+            document.getElementById('pdf-today').innerText = `${now.getDate()}${getOrdinal(now.getDate())} day of ${months[now.getMonth()]}, ${now.getFullYear()}.`;
 
-            // Logic: Review = Decide to Approve
-            const isApproved = item.status === 'REVIEWED' || item.status === 'PROCESSED';
+            // Button Visibility Logic
+            const isApproved = item.status !== 'RECEIVED - Legal' && item.status !== 'RETURNED - Legal';
             document.getElementById('btnPrint').classList.toggle('hidden', !isApproved);
-            document.getElementById('btnApprove').classList.toggle('hidden', isApproved);
+            document.getElementById('decisionActions').classList.toggle('hidden', isApproved);
 
             document.getElementById('reviewModal').classList.remove('hidden');
         }
 
         async function decideStatus(newStatus) {
-            if (!confirm(`Are you sure you want to set this as ${newStatus}?`)) return;
-            const { error } = await supabase.from('land_records').update({ status: newStatus }).eq('id', selectedItemId);
+            const { error } = await supabaseClient.from('land_records').update({ status: newStatus }).eq('id', selectedId);
             if (!error) {
-                alert(`Status updated to ${newStatus}. Printing is now enabled.`);
+                alert(`Application Approved. Printing is now enabled.`);
                 await fetchClearanceData();
-                showReview(selectedItemId); // Refresh modal to show print button
+                showReview(selectedId);
             }
         }
 
-        function goToStatusPage() { window.location.href = 'status_update.html?id=' + selectedItemId; }
+        function goToStatusPage() { window.location.href = `status_update.html?id=${selectedId}`; }
         function closeReview() { document.getElementById('reviewModal').classList.add('hidden'); }
         function getOrdinal(d) { if (d > 3 && d < 21) return 'th'; switch (d % 10) { case 1: return "st"; case 2: return "nd"; case 3: return "rd"; default: return "th"; } }
-        function updateCounters(s) { document.getElementById('stat-received-legal').innerText = s.rl; document.getElementById('stat-reviewed').innerText = s.rev; document.getElementById('stat-processed').innerText = s.pro; document.getElementById('stat-signature').innerText = s.sig; document.getElementById('stat-returned-legal').innerText = s.rtl; document.getElementById('stat-forwarded').innerText = s.fwd; document.getElementById('stat-released').innerText = s.rel; }
+        function updateStats(s) { document.getElementById('stat-received-legal').innerText = s.rl; document.getElementById('stat-reviewed').innerText = s.rev; document.getElementById('stat-processed').innerText = s.pro; document.getElementById('stat-signature').innerText = s.sig; document.getElementById('stat-returned-legal').innerText = s.rtl; document.getElementById('stat-forwarded').innerText = s.fwd; document.getElementById('stat-released').innerText = s.rel; }
         function logout() { sessionStorage.removeItem('currentUser'); window.location.href = 'index.html'; }
         
-        window.onload = async () => { 
-            const userData = sessionStorage.getItem('currentUser');
-            if (!userData) window.location.href = 'index.html';
-            const user = JSON.parse(userData);
+        window.onload = () => { 
+            const ud = sessionStorage.getItem('currentUser');
+            if (!ud) window.location.href = 'index.html';
+            const user = JSON.parse(ud);
             document.getElementById('activeUser').innerText = user.full_name;
             document.getElementById('userRoleBadge').innerText = user.role;
-            await fetchClearanceData();
-            loadMenu(); // Shared logic
+            fetchClearanceData(); 
+            loadMenu(); 
         };
     </script>
 </body>
