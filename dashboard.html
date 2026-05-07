@@ -389,7 +389,6 @@
         }
 
         async function fetchDynamicSignatories() {
-            // Fetch users mapping to roles. Adjust the role strings to match your exact USERS table records.
             const { data, error } = await supabaseClient.from('users').select('full_name, role').in('role', ['Chief, Legal Division', 'DIVISION CHIEF', 'PARPO II', 'PARPO']);
             if (data && !error) {
                 const chief = data.find(u => u.role.toUpperCase().includes('CHIEF'));
@@ -539,7 +538,7 @@
             currentSelection = currentNavList[currentNavIndex];
 
             // Setup QR
-            const qrIdentifier = currentSelection.ltc_no || currentSelection.LTC_ID_NUMBER || 'PENDING';
+            const qrIdentifier = currentSelection.LTC_ID_NUMBER || currentSelection.ltc_no || 'PENDING';
             generateQRs(qrIdentifier);
 
             document.getElementById('btnPrev').disabled = currentNavIndex <= 0;
@@ -548,24 +547,43 @@
             document.getElementById('btnNext').disabled = currentNavIndex >= currentNavList.length - 1;
             document.getElementById('btnNext').className = currentNavIndex >= currentNavList.length - 1 ? 'bg-gray-100 text-gray-400 px-4 py-2 rounded text-xs font-black uppercase cursor-not-allowed' : 'bg-gray-200 hover:bg-gray-300 px-4 py-2 rounded text-xs font-black uppercase transition-colors text-gray-800';
 
-            const fields = ['lot_no', 'owner_name', 'registered_under', 'area', 'td_no', 'location', 'deed_type', 'executed_by', 'in_favor_of', 'doc_no', 'page_no', 'book_no', 'series_of', 'dated', 'notary_public', 'retention_area_names'];
-            
-            fields.forEach(field => {
-                let editEl = document.getElementById(`edit-${field.replace(/_no|_name|_under|_type|_of|s_of|_public|_area_names/g, '')}`);
+            // EXACT DATABASE TO HTML MAPPING
+            const dbToHtmlMap = {
+                'lot_no': 'lot',
+                'owner_name': 'owner',
+                'registered_under': 'tct',
+                'area': 'area',
+                'td_no': 'td',
+                'location': 'location',
+                'deed_type': 'deed',
+                'executed_by': 'executed',
+                'in_favor_of': 'favor',
+                'doc_no': 'doc',
+                'page_no': 'page',
+                'book_no': 'book',
+                'series_of': 'series',
+                'dated': 'dated',
+                'notary_public': 'notary',
+                'retention_area_names': 'retention'
+            };
+
+            for (let dbCol in dbToHtmlMap) {
+                let htmlSuffix = dbToHtmlMap[dbCol];
+                
+                // Set Big Edit Fields
+                let editEl = document.getElementById(`edit-${htmlSuffix}`);
                 if(editEl) {
-                    editEl.innerText = currentSelection[field] || '---';
+                    editEl.innerText = currentSelection[dbCol] || '---';
                     editEl.contentEditable = "true";
                 }
-            });
 
-            const pdfMap = ['lot', 'owner', 'tct', 'area', 'td', 'location', 'deed', 'executed', 'favor', 'doc', 'page', 'book', 'series', 'dated', 'notary', 'retention'];
-            pdfMap.forEach((p, i) => {
-                let recEl = document.getElementById(`rec-${p}`);
-                let certEl = document.getElementById(`cert-${p}`);
-                let val = currentSelection[fields[i]] || ' ';
+                // Set Print Fields
+                let val = currentSelection[dbCol] || ' ';
+                let recEl = document.getElementById(`rec-${htmlSuffix}`);
+                let certEl = document.getElementById(`cert-${htmlSuffix}`);
                 if(recEl) recEl.innerText = val;
                 if(certEl) certEl.innerText = val;
-            });
+            }
 
             // Set Header LTC NO
             const recHeaderId = document.getElementById('rec-header-id');
@@ -588,7 +606,9 @@
             document.getElementById('reviewSection').classList.remove('hidden');
             document.getElementById('actionButtons').classList.remove('hidden');
             document.getElementById('editNotice').classList.remove('hidden');
-            document.getElementById('reviewRemarks').value = currentSelection.remarks || '';
+            
+            // Support both cases for Remarks based on Database
+            document.getElementById('reviewRemarks').value = currentSelection.Remarks || currentSelection.remarks || '';
             document.getElementById('reviewModal').classList.remove('hidden');
         }
 
@@ -639,10 +659,10 @@
             if (newSt === 'DISAPPROVED' && !remarks.trim()) { alert('Please provide remarks for disapproval.'); return; }
             
             const updateData = { status: newSt, updated_at: new Date() };
-            if (remarks.trim()) updateData.remarks = remarks;
+            if (remarks.trim()) updateData.Remarks = remarks; // Explicitly use uppercase Remarks to match DB
 
             if (newSt === 'RECOMMENDED') {
-                const fieldsMap = {
+                const dbToHtmlMap = {
                     'lot_no': 'edit-lot', 'owner_name': 'edit-owner', 'registered_under': 'edit-tct', 
                     'area': 'edit-area', 'td_no': 'edit-td', 'location': 'edit-location', 
                     'deed_type': 'edit-deed', 'executed_by': 'edit-executed', 'in_favor_of': 'edit-favor', 
@@ -650,9 +670,10 @@
                     'series_of': 'edit-series', 'dated': 'edit-dated', 'notary_public': 'edit-notary', 
                     'retention_area_names': 'edit-retention'
                 };
-                for (let key in fieldsMap) {
-                    let el = document.getElementById(fieldsMap[key]);
-                    if (el && el.innerText.trim() !== '---') { updateData[key] = el.innerText.trim(); }
+
+                for (let dbCol in dbToHtmlMap) {
+                    let el = document.getElementById(dbToHtmlMap[dbCol]);
+                    if (el && el.innerText.trim() !== '---') { updateData[dbCol] = el.innerText.trim(); }
                 }
             }
 
