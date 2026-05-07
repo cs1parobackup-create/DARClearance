@@ -203,11 +203,7 @@
             </div>
 
             <div id="actionButtons" class="flex justify-between items-center no-print">
-                <div class="flex gap-2">
-                    <button onclick="decideStatus('RECOMMENDED')" class="bg-green-700 text-white px-8 py-3 rounded text-sm font-black uppercase shadow-lg hover:bg-green-800 transition-colors">Approve</button>
-                    <button onclick="decideStatus('DISAPPROVED')" class="bg-red-700 text-white px-8 py-3 rounded text-sm font-black uppercase shadow-lg hover:bg-red-800 transition-colors">Disapprove</button>
                 </div>
-            </div>
 
             <div id="docRecommendation" class="bg-white text-black doc-print-area mx-auto hidden pt-8">
                 <div class="text-right font-bold mb-4 mr-10" id="rec-header-id">LTC-PENDING</div>
@@ -437,7 +433,6 @@
 
             rawData.forEach(item => {
                 if ((item.registered_under || '').toLowerCase().includes(query) || (item.owner_name || '').toLowerCase().includes(query)) {
-                    // Added trim and toUpperCase to handle space typos in db
                     let st = (item.status || 'RECEIVED').trim().toUpperCase();
                     
                     if (st === 'RECEIVED' || st === 'RECEIVED - LEGAL') { stats.rec++; st = 'RECEIVED'; }
@@ -453,48 +448,48 @@
                     let daysPassed = item.updated_at ? getWorkingDays(new Date(item.updated_at), new Date()) : 0;
                     let warningHTML = daysPassed > 5 ? `<span class="text-red-600 font-black ml-2 text-[12px]" title="Exceeded 5 working days!">⚠️</span>` : '';
 
-                    let actions = '';
+                    let actions = '<div class="flex flex-col gap-1 w-full max-w-[120px] mx-auto">';
                     
                     if (!isEncoder) {
                         if (st === 'RECEIVED') {
                             if (isChief || isLegal) {
-                                actions += `<button onclick='showReview("${item.id}")' class="bg-[#003811] text-white px-5 py-1.5 rounded shadow text-[10px] font-bold tracking-wide hover:bg-black uppercase transition-colors w-full max-w-[120px]">Review</button>`;
-                                actions += `<button onclick='createVariant("${item.id}")' class="bg-gray-500 text-white px-2 py-1 mt-1 rounded shadow text-[9px] font-bold hover:bg-gray-700 uppercase transition-colors w-full max-w-[120px]">+ Variant</button>`;
+                                actions += `<button onclick='showReview("${item.id}")' class="bg-[#003811] text-white w-full py-1.5 rounded shadow text-[10px] font-bold tracking-wide hover:bg-black uppercase transition-colors text-center">Review</button>`;
+                                actions += `<button onclick='createVariant("${item.id}")' class="bg-gray-500 text-white w-full py-1 mt-1 rounded shadow text-[9px] font-bold hover:bg-gray-700 uppercase transition-colors text-center">+ Variant</button>`;
                             }
-                        } else if (st === 'RECOMMENDED') {
+                        } else {
+                            // SHOW PRINTS FOR LEGAL AND CHIEF ON ALL STAGES AFTER RECEIVED
                             if (isChief || isLegal) {
-                                actions += `
-                                <div class="flex flex-col gap-1 w-full max-w-[140px] mx-auto">
-                                    <button onclick='openPrint("${item.id}", "rec")' class="bg-[#8b5cf6] text-white w-full py-1.5 rounded shadow text-[9px] font-black tracking-wide hover:bg-purple-800 uppercase transition-colors text-center">Recommendation</button>
-                                    <button onclick='openPrint("${item.id}", "cert")' class="bg-[#d97706] text-white w-full py-1.5 rounded shadow text-[9px] font-black tracking-wide hover:bg-amber-700 uppercase transition-colors text-center">Certification</button>
-                                    <button onclick='createVariant("${item.id}")' class="bg-gray-500 text-white w-full py-1 rounded shadow text-[9px] font-bold hover:bg-gray-700 uppercase transition-colors text-center mt-1">+ Variant</button>
-                                </div>`;
+                                actions += `<button onclick='openPrint("${item.id}", "rec")' class="bg-[#8b5cf6] text-white w-full py-1.5 rounded shadow text-[9px] font-black tracking-wide hover:bg-purple-800 uppercase transition-colors text-center">Recommendation</button>`;
+                                actions += `<button onclick='openPrint("${item.id}", "cert")' class="bg-[#d97706] text-white w-full py-1.5 rounded shadow text-[9px] font-black tracking-wide hover:bg-amber-700 uppercase transition-colors text-center">Certification</button>`;
+                                
+                                if (st === 'RECOMMENDED') {
+                                    actions += `<button onclick='createVariant("${item.id}")' class="bg-gray-500 text-white w-full py-1 rounded shadow text-[9px] font-bold hover:bg-gray-700 uppercase transition-colors text-center mt-1">+ Variant</button>`;
+                                }
                             }
-                        } else if (st === 'CERTIFIED') {
-                            actions += `<div class="flex flex-col gap-1 w-full max-w-[140px] mx-auto">`;
-                            if (isChief || isLegal) {
-                                actions += `
-                                    <button onclick='openPrint("${item.id}", "rec")' class="bg-[#8b5cf6] text-white w-full py-1.5 rounded shadow text-[9px] font-black tracking-wide hover:bg-purple-800 uppercase transition-colors text-center">Recommendation</button>
-                                    <button onclick='openPrint("${item.id}", "cert")' class="bg-[#d97706] text-white w-full py-1.5 rounded shadow text-[9px] font-black tracking-wide hover:bg-amber-700 uppercase transition-colors text-center">Certification</button>`;
-                            }
-                            if (isParpo) {
-                                actions += `<button onclick='processToNext("${item.id}", "SIGNED")' class="bg-cyan-600 text-white w-full py-1.5 rounded shadow text-[10px] font-bold hover:bg-cyan-700 uppercase transition-colors text-center mt-1">Sign</button>`;
-                            }
-                            actions += `</div>`;
-                        } else if (st === 'SIGNED') {
-                            if (isParpo) {
-                                actions += `<button onclick='processToNext("${item.id}", "TO LEGAL")' class="bg-cyan-600 text-white px-4 py-1.5 rounded shadow text-[10px] font-bold hover:bg-cyan-700 uppercase transition-colors w-full max-w-[120px]">Forward to Legal</button>`;
-                            }
-                        } else if (st === 'TO LEGAL') {
-                            if (isChief || (isLegal && item.encoded_by === userFullName)) {
-                                actions += `<button onclick='processToNext("${item.id}", "TO RECORDS")' class="bg-cyan-600 text-white px-4 py-1.5 rounded shadow text-[10px] font-bold hover:bg-cyan-700 uppercase transition-colors w-full max-w-[120px]">Process to Records</button>`;
-                            }
-                        } else if (st === 'TO RECORDS') {
-                            if (isRecords || isChief) {
-                                actions += `<button onclick='processToNext("${item.id}", "RELEASE TO CLIENT")' class="bg-cyan-600 text-white px-4 py-1.5 rounded shadow text-[10px] font-bold hover:bg-cyan-700 uppercase transition-colors w-full max-w-[120px]">Release</button>`;
+
+                            if (st === 'CERTIFIED') {
+                                if (isParpo) {
+                                    actions += `<button onclick='showReview("${item.id}")' class="bg-[#003811] text-white w-full py-1.5 rounded shadow text-[9px] font-black tracking-wide hover:bg-black uppercase transition-colors text-center">Review (Edit)</button>`;
+                                    actions += `<button onclick='openPrint("${item.id}", "rec")' class="bg-[#8b5cf6] text-white w-full py-1.5 rounded shadow text-[9px] font-black tracking-wide hover:bg-purple-800 uppercase transition-colors text-center">Recommendation</button>`;
+                                    actions += `<button onclick='openPrint("${item.id}", "cert")' class="bg-[#d97706] text-white w-full py-1.5 rounded shadow text-[9px] font-black tracking-wide hover:bg-amber-700 uppercase transition-colors text-center">Certification</button>`;
+                                    actions += `<button onclick='processToNext("${item.id}", "SIGNED")' class="bg-cyan-600 text-white w-full py-1.5 rounded shadow text-[10px] font-bold hover:bg-cyan-700 uppercase transition-colors text-center mt-1">Sign</button>`;
+                                }
+                            } else if (st === 'SIGNED') {
+                                if (isParpo) {
+                                    actions += `<button onclick='processToNext("${item.id}", "TO LEGAL")' class="bg-cyan-600 text-white w-full py-1.5 rounded shadow text-[10px] font-bold hover:bg-cyan-700 uppercase transition-colors text-center">Forward to Legal</button>`;
+                                }
+                            } else if (st === 'TO LEGAL') {
+                                if (isChief || (isLegal && item.encoded_by === userFullName)) {
+                                    actions += `<button onclick='processToNext("${item.id}", "TO RECORDS")' class="bg-cyan-600 text-white w-full py-1.5 rounded shadow text-[10px] font-bold hover:bg-cyan-700 uppercase transition-colors text-center">RECORDS</button>`;
+                                }
+                            } else if (st === 'TO RECORDS') {
+                                if (isRecords || isChief) {
+                                    actions += `<button onclick='processToNext("${item.id}", "RELEASE TO CLIENT")' class="bg-cyan-600 text-white w-full py-1.5 rounded shadow text-[10px] font-bold hover:bg-cyan-700 uppercase transition-colors text-center">Release</button>`;
+                                }
                             }
                         }
                     }
+                    actions += `</div>`;
 
                     let encodedBy = item.encoded_by || item.created_by || '---'; 
 
@@ -651,8 +646,28 @@
             document.getElementById('reviewSection').classList.remove('hidden');
             document.getElementById('actionButtons').classList.remove('hidden');
             document.getElementById('editNotice').classList.remove('hidden');
-            
             document.getElementById('reviewRemarks').value = currentSelection.Remarks || currentSelection.remarks || '';
+            
+            // DYNAMIC ACTION BUTTONS (PARPO Edit vs Normal Approve)
+            const actionDiv = document.getElementById('actionButtons');
+            const st = (currentSelection.status || 'RECEIVED').trim().toUpperCase();
+            const uRole = currentUser.role.toUpperCase();
+            
+            if (st === 'CERTIFIED' && (uRole === 'PARPO II' || uRole === 'PARPO')) {
+                actionDiv.innerHTML = `
+                    <div class="flex gap-2 w-full justify-end">
+                        <button onclick="decideStatus('CERTIFIED')" class="bg-green-700 text-white px-8 py-3 rounded text-sm font-black uppercase shadow-lg hover:bg-green-800 transition-colors">Update Details</button>
+                    </div>
+                `;
+            } else {
+                actionDiv.innerHTML = `
+                    <div class="flex gap-2">
+                        <button onclick="decideStatus('RECOMMENDED')" class="bg-green-700 text-white px-8 py-3 rounded text-sm font-black uppercase shadow-lg hover:bg-green-800 transition-colors">Approve</button>
+                        <button onclick="decideStatus('DISAPPROVED')" class="bg-red-700 text-white px-8 py-3 rounded text-sm font-black uppercase shadow-lg hover:bg-red-800 transition-colors">Disapprove</button>
+                    </div>
+                `;
+            }
+
             document.getElementById('reviewModal').classList.remove('hidden');
         }
 
@@ -706,7 +721,8 @@
             const updateData = { status: newSt, updated_at: new Date() };
             if (remarks.trim()) updateData.Remarks = remarks; 
 
-            if (newSt === 'RECOMMENDED') {
+            // Include CERTIFIED here so PARPO can update details without changing status back to RECOMMENDED
+            if (newSt === 'RECOMMENDED' || newSt === 'CERTIFIED') {
                 const dbToHtmlMap = {
                     'lot_no': 'edit-lot', 'owner_name': 'edit-owner', 'registered_under': 'edit-tct', 
                     'area': 'edit-area', 'td_no': 'edit-td', 'location': 'edit-location', 
