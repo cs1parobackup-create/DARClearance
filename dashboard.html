@@ -60,7 +60,7 @@
         <header class="bg-white shadow-sm border-b px-6 py-3 flex justify-between items-center no-print">
             <h1 class="text-md font-bold text-[#003811] uppercase tracking-tight">Clearance Monitor</h1>
             <div class="flex gap-2">
-                <input type="text" id="searchInput" placeholder="Search TCT/Owner..." class="border rounded px-3 py-1 text-xs focus:outline-none w-64" onkeyup="refreshDashboard()">
+                <input type="text" id="searchInput" placeholder="Search Title/Owner..." class="border rounded px-3 py-1 text-xs focus:outline-none w-64" onkeyup="refreshDashboard()">
                 <button onclick="fetchClearanceData()" class="bg-[#003811] text-white px-3 py-1 rounded text-xs font-bold uppercase">Refresh</button>
             </div>
         </header>
@@ -69,27 +69,27 @@
             <div class="grid grid-cols-4 lg:grid-cols-7 gap-2">
                 <div class="bg-white p-2 rounded border-l-4 border-blue-500 text-center shadow-sm">
                     <p class="text-[7px] font-bold text-gray-400 uppercase">Received</p>
-                    <h3 id="stat-received-legal" class="text-md font-black text-blue-600">0</h3>
+                    <h3 id="stat-received" class="text-md font-black text-blue-600">0</h3>
                 </div>
                 <div class="bg-white p-2 rounded border-l-4 border-purple-500 text-center shadow-sm">
-                    <p class="text-[7px] font-bold text-gray-400 uppercase">Reviewed</p>
+                    <p class="text-[6.5px] font-bold text-gray-400 uppercase">Reviewed & Rec</p>
                     <h3 id="stat-reviewed" class="text-md font-black text-purple-600">0</h3>
                 </div>
                 <div class="bg-white p-2 rounded border-l-4 border-cyan-500 text-center shadow-sm">
-                    <p class="text-[7px] font-bold text-gray-400 uppercase">Processed</p>
-                    <h3 id="stat-processed" class="text-md font-black text-cyan-600">0</h3>
+                    <p class="text-[7px] font-bold text-gray-400 uppercase">Certified</p>
+                    <h3 id="stat-certified" class="text-md font-black text-cyan-600">0</h3>
                 </div>
                 <div class="bg-white p-2 rounded border-l-4 border-orange-500 text-center shadow-sm">
-                    <p class="text-[7px] font-bold text-gray-400 uppercase">For Sign</p>
-                    <h3 id="stat-signature" class="text-md font-black text-orange-600">0</h3>
+                    <p class="text-[7px] font-bold text-gray-400 uppercase">Signed</p>
+                    <h3 id="stat-signed" class="text-md font-black text-orange-600">0</h3>
                 </div>
                 <div class="bg-white p-2 rounded border-l-4 border-red-500 text-center shadow-sm">
-                    <p class="text-[7px] font-bold text-gray-400 uppercase">Disapproved</p>
-                    <h3 id="stat-disapproved" class="text-md font-black text-red-600">0</h3>
+                    <p class="text-[7px] font-bold text-gray-400 uppercase">To Legal</p>
+                    <h3 id="stat-legal" class="text-md font-black text-red-600">0</h3>
                 </div>
                 <div class="bg-white p-2 rounded border-l-4 border-green-500 text-center shadow-sm">
-                    <p class="text-[7px] font-bold text-gray-400 uppercase">Forwarded</p>
-                    <h3 id="stat-forwarded" class="text-md font-black text-green-600">0</h3>
+                    <p class="text-[7px] font-bold text-gray-400 uppercase">To Records</p>
+                    <h3 id="stat-records" class="text-md font-black text-green-600">0</h3>
                 </div>
                 <div class="bg-white p-2 rounded border-l-4 border-teal-500 text-center shadow-sm">
                     <p class="text-[7px] font-bold text-gray-400 uppercase">Released</p>
@@ -101,11 +101,12 @@
                 <table class="w-full text-left border-collapse text-[11px] compact-table">
                     <thead class="bg-gray-50 border-b uppercase font-bold text-[#003811] tracking-wider">
                         <tr>
-                            <th class="w-1/6">TCT/Lot Number</th>
-                            <th class="w-2/6">Owner Name</th>
-                            <th class="w-1/6">Status</th>
-                            <th class="w-1/6 text-right">Updated</th>
-                            <th class="w-1/6 text-center">Action</th>
+                            <th class="w-[15%]">LTC Number</th>
+                            <th class="w-[15%]">Title</th>
+                            <th class="w-[25%]">Land Owner</th>
+                            <th class="w-[15%]">Status</th>
+                            <th class="w-[15%] text-center">Action</th>
+                            <th class="w-[15%] text-right">Date Updated</th>
                         </tr>
                     </thead>
                     <tbody id="clearanceTableBody" class="divide-y"></tbody>
@@ -120,7 +121,7 @@
             
             <div class="flex justify-between items-center mb-6 border-b pb-4 no-print">
                 <div id="actionButtons" class="flex gap-2">
-                    <button onclick="decideStatus('REVIEWED')" class="bg-green-700 text-white px-5 py-2 rounded text-[10px] font-black uppercase hover:bg-green-800">Approve</button>
+                    <button onclick="decideStatus('REVIEWED AND RECOMMENDED')" class="bg-green-700 text-white px-5 py-2 rounded text-[10px] font-black uppercase hover:bg-green-800">Approve</button>
                     <button onclick="decideStatus('DISAPPROVED')" class="bg-red-700 text-white px-5 py-2 rounded text-[10px] font-black uppercase hover:bg-red-800">Disapprove</button>
                 </div>
                 <button id="btnPrint" onclick="window.print()" class="bg-blue-600 text-white px-5 py-2 rounded text-[10px] font-black uppercase hidden hover:bg-blue-700">Print Official Document</button>
@@ -203,12 +204,13 @@
     <script>
         let currentSelection = null;
         let rawData = [];
+        const statusFlow = ['RECEIVED', 'REVIEWED AND RECOMMENDED', 'CERTIFIED', 'SIGNED', 'TO LEGAL', 'TO RECORDS', 'RELEASE TO CLIENT'];
 
         async function loadMenu() {
             const menuContainer = document.getElementById('dynamicMenu');
             const user = JSON.parse(sessionStorage.getItem('currentUser'));
             const { data: items, error } = await supabaseClient.from('clearance_menu').select('*').eq('is_active', true).order('sort_order', { ascending: true });
-            if (!error) {
+            if (!error && items) {
                 menuContainer.innerHTML = '';
                 items.forEach(item => {
                     if (item.required_roles.includes(user.role.toUpperCase()) || item.required_roles.length === 0) {
@@ -224,39 +226,63 @@
             if (!error) { rawData = data || []; refreshDashboard(); }
         }
 
+        function getWorkingDays(startDate, endDate) {
+            let count = 0;
+            let curDate = new Date(startDate);
+            curDate.setHours(0,0,0,0);
+            let end = new Date(endDate);
+            end.setHours(0,0,0,0);
+            
+            while (curDate < end) {
+                const dayOfWeek = curDate.getDay();
+                if (dayOfWeek !== 0 && dayOfWeek !== 6) count++;
+                curDate.setDate(curDate.getDate() + 1);
+            }
+            return count;
+        }
+
         function refreshDashboard() {
             const query = document.getElementById('searchInput').value.toLowerCase();
             const tbody = document.getElementById('clearanceTableBody');
             tbody.innerHTML = '';
-            let stats = { rl: 0, rev: 0, pro: 0, sig: 0, dis: 0, fwd: 0, rel: 0 };
+            let stats = { rec: 0, rev: 0, cer: 0, sig: 0, leg: 0, recd: 0, rel: 0 };
             
             rawData.forEach(item => {
                 if ((item.registered_under || '').toLowerCase().includes(query) || (item.owner_name || '').toLowerCase().includes(query)) {
-                    const st = item.status || 'RECEIVED - Legal';
-                    if (st === 'RECEIVED - Legal' || st === 'RECEIVED') stats.rl++; 
-                    else if (st === 'REVIEWED') stats.rev++; 
-                    else if (st === 'PROCESSED') stats.pro++; 
-                    else if (st === 'FOR SIGNATURE - PARPO II') stats.sig++; 
-                    else if (st === 'DISAPPROVED') stats.dis++; 
-                    else if (st === 'FORWARDED - Records') stats.fwd++; 
-                    else if (st === 'RELEASED - Client') stats.rel++;
+                    let st = item.status || 'RECEIVED';
+                    
+                    // Normalize old statuses for stat counting if they exist
+                    if (st === 'RECEIVED' || st === 'RECEIVED - Legal') { stats.rec++; st = 'RECEIVED'; }
+                    else if (st === 'REVIEWED AND RECOMMENDED' || st === 'REVIEWED') { stats.rev++; st = 'REVIEWED AND RECOMMENDED'; }
+                    else if (st === 'CERTIFIED' || st === 'PROCESSED') { stats.cer++; st = 'CERTIFIED'; }
+                    else if (st === 'SIGNED' || st === 'FOR SIGNATURE - PARPO II') { stats.sig++; st = 'SIGNED'; }
+                    else if (st === 'TO LEGAL' || st === 'FORWARDED - Records') { stats.leg++; st = 'TO LEGAL'; }
+                    else if (st === 'TO RECORDS') { stats.recd++; st = 'TO RECORDS'; }
+                    else if (st === 'RELEASE TO CLIENT' || st === 'RELEASED - Client') { stats.rel++; st = 'RELEASE TO CLIENT'; }
+
+                    let daysPassed = item.updated_at ? getWorkingDays(new Date(item.updated_at), new Date()) : 0;
+                    let warningHTML = daysPassed > 5 ? `<span class="text-red-600 font-black ml-1 text-[12px]" title="Exceeded 5 working days!">⚠️</span>` : '';
 
                     let actions = `<button onclick='showReview("${item.id}")' class="bg-[#003811] text-white px-3 py-1 rounded text-[8px] font-bold hover:bg-black uppercase mr-1">Review</button>`;
                     
-                    if (st !== 'RECEIVED' && st !== 'RECEIVED - Legal' && st !== 'DISAPPROVED') {
+                    if (st !== 'RECEIVED' && st !== 'DISAPPROVED') {
                         actions += `<button onclick='printRecord("${item.id}")' class="bg-blue-600 text-white px-3 py-1 rounded text-[8px] font-bold hover:bg-blue-700 uppercase mr-1">Print</button>`;
-                        if (st === 'REVIEWED') {
-                            actions += `<button onclick='processRecord("${item.id}")' class="bg-cyan-600 text-white px-3 py-1 rounded text-[8px] font-bold hover:bg-cyan-700 uppercase">Process</button>`;
+                        
+                        let currentIndex = statusFlow.indexOf(st);
+                        if (currentIndex >= 0 && currentIndex < statusFlow.length - 1) {
+                            let nextStatus = statusFlow[currentIndex + 1];
+                            actions += `<button onclick='processToNext("${item.id}", "${nextStatus}")' class="bg-cyan-600 text-white px-3 py-1 rounded text-[8px] font-bold hover:bg-cyan-700 uppercase">Process</button>`;
                         }
                     }
 
                     tbody.innerHTML += `
                         <tr class="hover:bg-gray-50">
+                            <td class="font-bold">${item.ltc_no || '---'}</td>
                             <td class="font-bold">${item.registered_under || '---'}</td>
                             <td class="uppercase font-semibold">${item.owner_name}</td>
-                            <td><span class="px-2 py-0.5 rounded text-[7px] font-black uppercase ${getStatusStyle(st)}">${st}</span></td>
-                            <td class="text-right font-mono text-gray-400">${item.updated_at ? new Date(item.updated_at).toLocaleString('en-US', { hour12: true }) : '---'}</td>
+                            <td><span class="px-2 py-0.5 rounded text-[7px] font-black uppercase ${getStatusStyle(st)}">${st}</span>${warningHTML}</td>
                             <td class="text-center">${actions}</td>
+                            <td class="text-right font-mono text-gray-400">${item.updated_at ? new Date(item.updated_at).toLocaleString('en-US', { hour12: true }) : '---'}</td>
                         </tr>`;
                 }
             });
@@ -264,8 +290,16 @@
         }
 
         function getStatusStyle(s) {
-            const colors = { 'RECEIVED - Legal': 'bg-blue-100 text-blue-800', 'RECEIVED': 'bg-blue-100 text-blue-800', 'REVIEWED': 'bg-purple-100 text-purple-800', 'PROCESSED': 'bg-cyan-100 text-cyan-800', 'FOR SIGNATURE - PARPO II': 'bg-orange-100 text-orange-800', 'DISAPPROVED': 'bg-red-100 text-red-800', 'FORWARDED - Records': 'bg-green-100 text-green-800', 'RELEASED - Client': 'bg-teal-100 text-teal-800' };
-            return colors[s] || 'bg-gray-100';
+            const colors = { 
+                'RECEIVED': 'bg-blue-100 text-blue-800', 
+                'REVIEWED AND RECOMMENDED': 'bg-purple-100 text-purple-800', 
+                'CERTIFIED': 'bg-cyan-100 text-cyan-800', 
+                'SIGNED': 'bg-orange-100 text-orange-800', 
+                'TO LEGAL': 'bg-red-100 text-red-800', 
+                'TO RECORDS': 'bg-green-100 text-green-800', 
+                'RELEASE TO CLIENT': 'bg-teal-100 text-teal-800' 
+            };
+            return colors[s] || 'bg-gray-100 text-gray-800';
         }
 
         function showReview(id) {
@@ -295,7 +329,8 @@
             const now = new Date();
             document.getElementById('pdf-today').innerText = `${now.getDate()}${getOrdinal(now.getDate())} day of ${["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"][now.getMonth()]}, ${now.getFullYear()}.`;
 
-            const isEvaluated = currentSelection.status !== 'RECEIVED - Legal' && currentSelection.status !== 'RECEIVED';
+            const st = currentSelection.status || 'RECEIVED';
+            const isEvaluated = st !== 'RECEIVED' && st !== 'RECEIVED - Legal';
             document.getElementById('btnPrint').classList.toggle('hidden', !isEvaluated);
             document.getElementById('actionButtons').classList.toggle('hidden', isEvaluated);
             document.getElementById('reviewModal').classList.remove('hidden');
@@ -306,8 +341,8 @@
             if (!error) { await fetchClearanceData(); showReview(currentSelection.id); }
         }
 
-        window.processRecord = async function(id) {
-            const { error } = await supabaseClient.from('land_records').update({ status: 'PROCESSED', updated_at: new Date() }).eq('id', id);
+        window.processToNext = async function(id, nextStatus) {
+            const { error } = await supabaseClient.from('land_records').update({ status: nextStatus, updated_at: new Date() }).eq('id', id);
             if (!error) { await fetchClearanceData(); }
         }
 
@@ -318,7 +353,15 @@
 
         function closeReview() { document.getElementById('reviewModal').classList.add('hidden'); }
         function getOrdinal(d) { if (d > 3 && d < 21) return 'th'; switch (d % 10) { case 1: return "st"; case 2: return "nd"; case 3: return "rd"; default: return "th"; } }
-        function updateStats(s) { document.getElementById('stat-received-legal').innerText = s.rl; document.getElementById('stat-reviewed').innerText = s.rev; document.getElementById('stat-processed').innerText = s.pro; document.getElementById('stat-signature').innerText = s.sig; document.getElementById('stat-disapproved').innerText = s.dis; document.getElementById('stat-forwarded').innerText = s.fwd; document.getElementById('stat-released').innerText = s.rel; }
+        function updateStats(s) { 
+            document.getElementById('stat-received').innerText = s.rec; 
+            document.getElementById('stat-reviewed').innerText = s.rev; 
+            document.getElementById('stat-certified').innerText = s.cer; 
+            document.getElementById('stat-signed').innerText = s.sig; 
+            document.getElementById('stat-legal').innerText = s.leg; 
+            document.getElementById('stat-records').innerText = s.recd; 
+            document.getElementById('stat-released').innerText = s.rel; 
+        }
         function logout() { sessionStorage.removeItem('currentUser'); window.location.href = 'index.html'; }
         window.onload = () => { fetchClearanceData(); loadMenu(); };
     </script>
