@@ -3,183 +3,73 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DAR Clearance Monitor - DARPO</title>
+    <title>Login - DAR Clearance System</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="supabase-config.js"></script>
-    <style>
-        :root {
-            --dar-green: #003811;
-            --dar-gold: #D4AF37;
-        }
-        body { font-family: 'Segoe UI', sans-serif; background-color: #F3F4F6; }
-        .sidebar { background-color: var(--dar-green); }
-        .status-card { border-top: 4px solid var(--dar-gold); }
-        
-        /* Custom Scrollbar */
-        ::-webkit-scrollbar { width: 5px; }
-        ::-webkit-scrollbar-track { background: #f1f1f1; }
-        ::-webkit-scrollbar-thumb { background: #888; border-radius: 10px; }
-        ::-webkit-scrollbar-thumb:hover { background: #555; }
-    </style>
 </head>
-<body class="flex h-screen overflow-hidden text-gray-800">
-
-    <nav class="sidebar md:w-64 flex flex-col text-white flex-shrink-0 shadow-xl z-20">
-        <div class="p-6 border-b border-[#006400]">
-            <h2 class="text-xl font-bold text-[#D4AF37]">DARPO-CS</h2>
-            <p class="text-[10px] text-gray-300 uppercase tracking-widest mt-1 font-bold">Clearance Monitoring</p>
-        </div>
-        <div class="flex-1 overflow-y-auto py-2">
-            <a href="dashboard.html" class="block px-6 py-4 text-sm font-bold border-l-4 border-transparent hover:bg-[#006400]">DASHBOARD</a>
-            <a href="#" class="block px-6 py-4 text-sm font-bold bg-[#006400] border-l-4 border-[#D4AF37]">CLEARANCE STATUS</a>
-            <a href="pds.html" class="block px-6 py-4 text-sm font-bold border-l-4 border-transparent hover:bg-[#006400]">PDS MANAGER</a>
-        </div>
-        <div class="p-4 bg-black/20">
-            <p id="activeUser" class="text-xs text-gray-300 truncate mb-2 font-bold"></p>
-            <button onclick="logout()" class="w-full bg-red-800 py-2 text-xs font-bold rounded shadow hover:bg-red-700 transition-colors">LOGOUT</button>
-        </div>
-    </nav>
-
-    <main class="flex-1 flex flex-col overflow-hidden">
-        <header class="bg-white shadow-sm border-b px-8 py-4 flex justify-between items-center">
-            <h1 class="text-lg font-bold text-[#003811] uppercase tracking-tight">DAR Clearance Status Dashboard</h1>
-            <div class="flex gap-2">
-                <input type="text" id="searchInput" placeholder="Search Lot/Owner..." class="border rounded px-3 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-[#003811]" onkeyup="refreshDashboard()">
-                <button onclick="fetchClearanceData()" class="bg-[#003811] text-white px-4 py-1 rounded text-sm font-bold">REFRESH</button>
-            </div>
-        </header>
-
-        <div class="flex-1 overflow-y-auto p-8 space-y-8">
-            
-            <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
-                <div class="bg-white p-4 rounded shadow-sm border-l-4 border-blue-500">
-                    <p class="text-[10px] font-bold text-gray-500 uppercase">Received</p>
-                    <h3 id="stat-received" class="text-2xl font-black text-blue-600">0</h3>
-                </div>
-                <div class="bg-white p-4 rounded shadow-sm border-l-4 border-indigo-500">
-                    <p class="text-[10px] font-bold text-gray-500 uppercase">Processed</p>
-                    <h3 id="stat-processed" class="text-2xl font-black text-indigo-600">0</h3>
-                </div>
-                <div class="bg-white p-4 rounded shadow-sm border-l-4 border-orange-500">
-                    <p class="text-[10px] font-bold text-gray-500 uppercase">For Signature</p>
-                    <h3 id="stat-signature" class="text-2xl font-black text-orange-600">0</h3>
-                </div>
-                <div class="bg-white p-4 rounded shadow-sm border-l-4 border-red-500">
-                    <p class="text-[10px] font-bold text-gray-500 uppercase">Returned</p>
-                    <h3 id="stat-returned" class="text-2xl font-black text-red-600">0</h3>
-                </div>
-                <div class="bg-white p-4 rounded shadow-sm border-l-4 border-green-500">
-                    <p class="text-[10px] font-bold text-gray-500 uppercase">To Records</p>
-                    <h3 id="stat-records" class="text-2xl font-black text-green-600">0</h3>
-                </div>
+<body class="bg-gray-100 h-screen flex items-center justify-center p-4">
+    <div class="bg-white w-full max-w-md rounded-lg shadow-2xl overflow-hidden border-t-8 border-[#D4AF37]">
+        <div class="p-8">
+            <div class="text-center mb-8">
+                <h2 class="text-3xl font-black text-[#003811] tracking-tighter">SECURE ACCESS</h2>
+                <p class="text-xs text-gray-400 font-bold tracking-widest uppercase mt-1">DAR Clearance Portal</p>
             </div>
 
-            <div class="bg-white rounded shadow-sm overflow-hidden border">
-                <table class="w-full text-left border-collapse">
-                    <thead class="bg-gray-50 border-b">
-                        <tr class="text-[11px] font-bold text-[#003811] uppercase tracking-wider">
-                            <th class="px-6 py-4">Lot Information</th>
-                            <th class="px-6 py-4">Current Owner</th>
-                            <th class="px-6 py-4">Deed Type</th>
-                            <th class="px-6 py-4">Current Status</th>
-                            <th class="px-6 py-4 text-right">Last Updated</th>
-                        </tr>
-                    </thead>
-                    <tbody id="clearanceTableBody" class="divide-y text-xs">
-                        </tbody>
-                </table>
-            </div>
+            <form id="loginForm" class="space-y-6">
+                <div>
+                    <label class="block text-[10px] font-bold text-[#003811] uppercase tracking-wider mb-1">Username</label>
+                    <input type="text" id="username" required class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded focus:ring-2 focus:ring-[#003811] focus:outline-none font-bold">
+                </div>
+                <div>
+                    <label class="block text-[10px] font-bold text-[#003811] uppercase tracking-wider mb-1">Password</label>
+                    <input type="password" id="password" required class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded focus:ring-2 focus:ring-[#003811] focus:outline-none font-bold">
+                </div>
+                
+                <p id="errorMessage" class="text-red-600 text-xs font-bold hidden text-center">Authentication failed. Please check your credentials.</p>
+
+                <button type="submit" id="loginBtn" class="w-full bg-[#003811] text-white py-4 rounded font-black text-sm hover:bg-[#005c1c] transition-all shadow-lg active:scale-95 uppercase tracking-widest">
+                    Log In
+                </button>
+            </form>
         </div>
-    </main>
+        <div class="bg-gray-50 p-4 text-center border-t">
+            <p class="text-[10px] text-gray-400 font-bold uppercase">Department of Agrarian Reform - Camarines Sur</p>
+        </div>
+    </div>
 
     <script>
-        // --- Session Auth ---
-        const userData = sessionStorage.getItem('currentUser');
-        if (!userData) { window.location.href = 'index.html'; }
-        const currentUser = JSON.parse(userData);
-        document.getElementById('activeUser').innerText = currentUser.full_name;
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('loginBtn');
+            const err = document.getElementById('errorMessage');
+            const userVal = document.getElementById('username').value;
+            const passVal = document.getElementById('password').value;
 
-        function logout() { sessionStorage.removeItem('currentUser'); window.location.href = 'index.html'; }
+            btn.innerText = "VERIFYING...";
+            btn.disabled = true;
+            err.classList.add('hidden');
 
-        // --- Status Config ---
-        const statusConfig = {
-            'RECEIVED': 'bg-blue-100 text-blue-800 border-blue-200',
-            'PROCESSED': 'bg-indigo-100 text-indigo-800 border-indigo-200',
-            'FOR SIGNATURE - CHIEF LEGAL and PARPO': 'bg-orange-100 text-orange-800 border-orange-200',
-            'RETURN TO LEGAL': 'bg-red-100 text-red-800 border-red-200',
-            'FORWARDED TO RECORDS SECTION': 'bg-green-100 text-green-800 border-green-200'
-        };
-
-        let rawData = [];
-
-        async function fetchClearanceData() {
             try {
-                // Assuming land_records table created in previous SQL step
                 const { data, error } = await supabaseClient
-                    .from('land_records')
+                    .from('Users')
                     .select('*')
-                    .order('updated_at', { ascending: false });
+                    .eq('username', userVal)
+                    .eq('password', passVal)
+                    .single();
 
-                if (error) throw error;
-                rawData = data || [];
-                refreshDashboard();
-            } catch (err) {
-                console.error("Fetch error:", err);
+                if (error || !data) throw new Error("Invalid login");
+
+                // Store user session
+                sessionStorage.setItem('currentUser', JSON.stringify(data));
+                window.location.href = 'dashboard.html';
+
+            } catch (fail) {
+                err.classList.remove('hidden');
+                btn.innerText = "LOG IN";
+                btn.disabled = false;
             }
-        }
-
-        function refreshDashboard() {
-            const query = document.getElementById('searchInput').value.toLowerCase();
-            const tbody = document.getElementById('clearanceTableBody');
-            tbody.innerHTML = '';
-
-            // Reset Stats
-            let stats = { rec: 0, pro: 0, sig: 0, ret: 0, recs: 0 };
-
-            const filteredData = rawData.filter(item => 
-                (item.lot_no || '').toLowerCase().includes(query) || 
-                (item.owner_name || '').toLowerCase().includes(query)
-            );
-
-            filteredData.forEach(item => {
-                const status = item.status || 'RECEIVED';
-                
-                // Update Stats
-                if (status === 'RECEIVED') stats.rec++;
-                else if (status === 'PROCESSED') stats.pro++;
-                else if (status.includes('SIGNATURE')) stats.sig++;
-                else if (status.includes('RETURN')) stats.ret++;
-                else if (status.includes('RECORDS')) stats.recs++;
-
-                const statusClass = statusConfig[status] || 'bg-gray-100 text-gray-800';
-                const formattedDate = item.updated_at ? new Date(item.updated_at).toLocaleString('en-US', { hour12: true }) : '---';
-
-                const tr = document.createElement('tr');
-                tr.className = "hover:bg-gray-50 transition-colors";
-                tr.innerHTML = `
-                    <td class="px-6 py-4 font-bold text-gray-900">${item.lot_no || 'N/A'}</td>
-                    <td class="px-6 py-4 whitespace-pre-wrap">${item.owner_name || 'Unknown'}</td>
-                    <td class="px-6 py-4 italic text-gray-500">${item.deed_type || '---'}</td>
-                    <td class="px-6 py-4">
-                        <span class="px-2.5 py-1 rounded-full border text-[10px] font-black uppercase tracking-tighter ${statusClass}">
-                            ${status}
-                        </span>
-                    </td>
-                    <td class="px-6 py-4 text-right font-mono text-gray-400">${formattedDate}</td>
-                `;
-                tbody.appendChild(tr);
-            });
-
-            // Update Header Stats
-            document.getElementById('stat-received').innerText = stats.rec;
-            document.getElementById('stat-processed').innerText = stats.pro;
-            document.getElementById('stat-signature').innerText = stats.sig;
-            document.getElementById('stat-returned').innerText = stats.ret;
-            document.getElementById('stat-records').innerText = stats.recs;
-        }
-
-        window.onload = fetchClearanceData;
+        });
     </script>
 </body>
 </html>
