@@ -32,11 +32,11 @@
                 color: black !important;
                 border: none !important;
             }
-            .underline-data { background-color: transparent !important; border-bottom: 1.5px solid black !important; }
+            .underline-data { font-size: 10pt !important; color: black !important; background-color: transparent !important; border-bottom: 1.5px solid black !important; padding: 0 4px !important; }
         }
 
         .doc-format { font-family: 'Roboto', sans-serif; font-size: 10pt; color: black; line-height: 1.1; }
-        .underline-data { border-bottom: 1.5px solid black; font-weight: 700; padding: 0 4px; display: inline-block; min-width: 80px; text-transform: uppercase; transition: background-color 0.2s; }
+        .underline-data { border-bottom: 1.5px solid black; font-weight: 700; padding: 0 4px; display: inline-block; min-width: 80px; text-transform: uppercase; transition: all 0.2s; }
         
         .scroll-area::-webkit-scrollbar { width: 4px; }
         .scroll-area::-webkit-scrollbar-track { background: #f1f1f1; }
@@ -130,7 +130,7 @@
                 <div class="flex items-center gap-4">
                     <h2 id="modalMainTitle" class="text-4xl font-black text-[#003811] uppercase tracking-widest">REVIEW</h2>
                     <div id="editNotice" class="bg-yellow-100 text-yellow-800 text-[10px] px-3 py-1 rounded hidden font-bold uppercase tracking-wide border border-yellow-300">
-                        EDIT MODE ACTIVE
+                        EDIT MODE ACTIVE (VALUES ENLARGED FOR REVIEW)
                     </div>
                 </div>
                 <div class="flex gap-2 items-center">
@@ -150,8 +150,11 @@
                     <button onclick="decideStatus('RECOMMENDED')" class="bg-green-700 text-white px-6 py-2.5 rounded text-[11px] font-black uppercase shadow hover:bg-green-800 transition-colors">Approve</button>
                     <button onclick="decideStatus('DISAPPROVED')" class="bg-red-700 text-white px-6 py-2.5 rounded text-[11px] font-black uppercase shadow hover:bg-red-800 transition-colors">Disapprove</button>
                 </div>
-                <button id="btnCertifyPrint" onclick="printAndCertify()" class="bg-[#D4AF37] text-[#003811] px-6 py-2.5 rounded text-[11px] font-black uppercase hidden hover:bg-[#b8972e] shadow transition-colors">Recommendation & Certification</button>
-                <button id="btnPrint" onclick="window.print()" class="bg-gray-600 text-white px-6 py-2.5 rounded text-[11px] font-black uppercase hidden hover:bg-gray-700 shadow transition-colors">Print Official Document</button>
+                <div class="flex gap-2">
+                    <button id="btnRecommendPrint" onclick="window.print()" class="bg-purple-600 text-white px-6 py-2.5 rounded text-[11px] font-black uppercase hidden hover:bg-purple-700 shadow transition-colors">Recommendation</button>
+                    <button id="btnCertifyPrint" onclick="printAndCertifyAction()" class="bg-[#D4AF37] text-[#003811] px-6 py-2.5 rounded text-[11px] font-black uppercase hidden hover:bg-[#b8972e] shadow transition-colors">Certification</button>
+                    <button id="btnPrint" onclick="window.print()" class="bg-gray-600 text-white px-6 py-2.5 rounded text-[11px] font-black uppercase hidden hover:bg-gray-700 shadow transition-colors">Print Official Document</button>
+                </div>
             </div>
             
             <div id="printSection" class="bg-white p-10 text-black doc-format border mx-auto relative">
@@ -312,7 +315,8 @@
                     
                     if (st !== 'RECEIVED' && st !== 'DISAPPROVED') {
                         if (st === 'RECOMMENDED') {
-                            actions += `<button onclick='printRecord("${item.id}")' class="bg-[#D4AF37] text-[#003811] px-4 py-1.5 rounded shadow text-[8px] font-bold hover:bg-[#b8972e] uppercase mr-1 transition-colors">Recommendation & Certification</button>`;
+                            actions += `<button onclick='printDoc("${item.id}")' class="bg-purple-600 text-white px-4 py-1.5 rounded shadow text-[8px] font-bold hover:bg-purple-700 uppercase mr-1 transition-colors">Recommendation</button>`;
+                            actions += `<button onclick='printAndCertify("${item.id}")' class="bg-[#D4AF37] text-[#003811] px-4 py-1.5 rounded shadow text-[8px] font-bold hover:bg-[#b8972e] uppercase mr-1 transition-colors">Certification</button>`;
                         } else {
                             actions += `<button onclick='printRecord("${item.id}")' class="bg-blue-600 text-white px-4 py-1.5 rounded shadow text-[8px] font-bold hover:bg-blue-700 uppercase mr-1 transition-colors">Print</button>`;
                         }
@@ -397,11 +401,12 @@
                     el.style.borderBottom = '1.5px solid black';
                 }
 
+                // MAKE EDITABLE VALUES BIG
                 el.contentEditable = isReceived ? "true" : "false";
                 if (isReceived) {
-                    el.classList.add('hover:bg-yellow-200', 'focus:bg-yellow-200', 'cursor-text', 'outline-none');
+                    el.classList.add('hover:bg-yellow-200', 'focus:bg-yellow-200', 'cursor-text', 'outline-none', 'text-xl', 'text-blue-800', 'bg-yellow-50', 'p-1', 'rounded');
                 } else {
-                    el.classList.remove('hover:bg-yellow-200', 'focus:bg-yellow-200', 'cursor-text', 'outline-none');
+                    el.classList.remove('hover:bg-yellow-200', 'focus:bg-yellow-200', 'cursor-text', 'outline-none', 'text-xl', 'text-blue-800', 'bg-yellow-50', 'p-1', 'rounded');
                 }
             });
 
@@ -417,7 +422,9 @@
             document.getElementById('reviewRemarks').disabled = !isReceived;
             document.getElementById('remarksSection').classList.toggle('hidden', !isReceived && !currentSelection.remarks);
 
+            // Separate Buttons Visibility
             document.getElementById('actionButtons').classList.toggle('hidden', !isReceived);
+            document.getElementById('btnRecommendPrint').classList.toggle('hidden', !isRecommended);
             document.getElementById('btnCertifyPrint').classList.toggle('hidden', !isRecommended);
             document.getElementById('btnPrint').classList.toggle('hidden', isReceived || isRecommended || st === 'DISAPPROVED');
             
@@ -451,10 +458,9 @@
             if (!error) { await fetchClearanceData(); closeReview(); }
         }
 
-        async function printAndCertify() {
+        async function printAndCertifyAction() {
             window.print();
-            let st = currentSelection.status || '';
-            if (st === 'RECOMMENDED' || st === 'REVIEWED AND RECOMMENDED') {
+            if (currentSelection.status === 'RECOMMENDED' || currentSelection.status === 'REVIEWED AND RECOMMENDED') {
                 await supabaseClient.from('land_records').update({ status: 'CERTIFIED', updated_at: new Date() }).eq('id', currentSelection.id);
                 fetchClearanceData();
                 closeReview();
@@ -466,16 +472,20 @@
             if (!error) { await fetchClearanceData(); }
         }
 
+        // Functions for the table row buttons
+        window.printAndCertify = function(id) {
+            showReview(id);
+            setTimeout(() => printAndCertifyAction(), 300);
+        }
+
+        window.printDoc = function(id) {
+            showReview(id);
+            setTimeout(() => window.print(), 300);
+        }
+
         window.printRecord = function(id) {
             showReview(id);
-            setTimeout(() => {
-                let st = currentSelection.status || '';
-                if (st === 'RECOMMENDED' || st === 'REVIEWED AND RECOMMENDED') {
-                    printAndCertify();
-                } else {
-                    window.print();
-                }
-            }, 300);
+            setTimeout(() => window.print(), 300);
         }
 
         function closeReview() { document.getElementById('reviewModal').classList.add('hidden'); }
