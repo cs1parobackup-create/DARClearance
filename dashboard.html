@@ -27,12 +27,8 @@
                 display: block !important;
                 width: 8.5in !important; 
                 height: 13in !important;
-                padding: 1in !important;
+                padding: 0 !important;
                 margin: 0 !important;
-                font-family: 'Roboto', sans-serif !important;
-                font-size: 9pt !important;
-                line-height: 1.5 !important;
-                color: black !important;
             }
         }
 
@@ -45,9 +41,29 @@
             width: 8.5in; 
             min-height: 13in;
             margin: 0 auto; 
+            padding: 0;
+            overflow: hidden;
+            background: transparent;
+        }
+
+        .print-bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            object-fit: cover;
+        }
+
+        .doc-content {
+            position: relative;
+            z-index: 10;
             padding: 1in;
-            background: white;
+            width: 100%;
+            height: 100%;
             box-sizing: border-box;
+            background: transparent;
         }
         
         .data-value { 
@@ -220,143 +236,152 @@
             </div>
 
             <div id="docRecommendation" class="doc-print-area mx-auto hidden pt-8">
-                
-                <div class="text-center mb-6">
-                    <div class="font-black text-[16pt] tracking-wide">RECOMMENDATION</div>
-                    <div class="text-[10pt]">(Land Transfer Clearance)</div>
-                </div>
-                
-                <p class="mb-4 text-justify indent-10">
-                    This is to recommend that the application/request for Issuance of Land Transfer Clearance (LTC) be <span class="font-bold">APPROVED</span> on the parcel of agricultural land with the following pertinent information, to wit;
-                </p>
-
-                <div class="grid grid-cols-[220px_1fr] gap-y-1.5 mb-4 ml-10">
-                    <div class="italic">Lot No/s</div> <div class="data-value" id="rec-lot">---</div>
-                    <div class="italic">In the Name of</div> <div class="data-value" id="rec-owner">---</div>
-                    <div class="italic">Registered under</div> <div class="data-value" id="rec-tct">---</div>
-                    <div class="italic">With an area (in has.) of</div> <div class="data-value" id="rec-area">---</div>
-                    <div class="italic">Declared under T.D. No.</div> <div class="data-value" id="rec-td">---</div>
-                    <div class="italic">Located at</div> <div class="data-value" id="rec-location">---</div>
-                    <div class="italic">Subjected of the Deed of</div> <div class="data-value" id="rec-deed">---</div>
-                    <div class="italic">Executed by</div> <div class="data-value" id="rec-executed">---</div>
-                    <div class="italic">In favor of</div> <div class="data-value" id="rec-favor">---</div>
-                    
-                    <div class="italic">Under Doc. No.</div> 
-                    <div class="flex items-end gap-2">
-                        <span class="data-value text-center" id="rec-doc">---</span>
-                        <span class="italic ml-2">Page No.</span> <span class="data-value text-center" id="rec-page">---</span>
-                        <span class="italic ml-2">Book No.</span> <span class="data-value text-center" id="rec-book">---</span>
+                <img class="print-bg" crossorigin="anonymous" src="" style="display: none;">
+                <div class="doc-content">
+                    <div class="text-center mb-6">
+                        <div class="font-black text-[16pt] tracking-wide">RECOMMENDATION</div>
+                        <div class="text-[10pt]">(Land Transfer Clearance)</div>
                     </div>
                     
-                    <div class="italic">Series of</div> 
-                    <div class="flex items-end gap-2">
-                        <span class="data-value text-center" id="rec-series">---</span>
-                        <span class="italic ml-4">Dated</span> <span class="data-value text-center" id="rec-dated">---</span>
+                    <p class="mb-4 text-justify indent-10">
+                        This is to recommend that the application/request for Issuance of Land Transfer Clearance (LTC) be <span class="font-bold">APPROVED</span> on the parcel of agricultural land with the following pertinent information, to wit;
+                    </p>
+
+                    <div class="grid grid-cols-[220px_1fr] gap-y-1.5 mb-4 ml-10">
+                        <div class="italic">Lot No/s</div> <div class="data-value" id="rec-lot">---</div>
+                        <div class="italic">In the Name of</div> <div class="data-value" id="rec-owner">---</div>
+                        <div class="italic">Registered under</div> <div class="data-value" id="rec-tct">---</div>
+                        <div class="italic">With an area (in has.) of</div> <div class="data-value" id="rec-area">---</div>
+                        <div class="italic">Declared under T.D. No.</div> <div class="data-value" id="rec-td">---</div>
+                        <div class="italic">Located at</div> <div class="data-value" id="rec-location">---</div>
+                        <div class="italic">Subjected of the Deed of</div> <div class="data-value" id="rec-deed">---</div>
+                        <div class="italic">Executed by</div> <div class="data-value" id="rec-executed">---</div>
+                        <div class="italic">In favor of</div> <div class="data-value" id="rec-favor">---</div>
+                        
+                        <div class="italic">Under Doc. No.</div> 
+                        <div class="flex items-end gap-2">
+                            <span class="data-value text-center" id="rec-doc">---</span>
+                            <span class="italic ml-2">Page No.</span> <span class="data-value text-center" id="rec-page">---</span>
+                            <span class="italic ml-2">Book No.</span> <span class="data-value text-center" id="rec-book">---</span>
+                        </div>
+                        
+                        <div class="italic">Series of</div> 
+                        <div class="flex items-end gap-2">
+                            <span class="data-value text-center" id="rec-series">---</span>
+                            <span class="italic ml-4">Dated</span> <span class="data-value text-center" id="rec-dated">---</span>
+                        </div>
+                        
+                        <div class="italic">of Notary Public</div> <div class="data-value" id="rec-notary">---</div>
+                        <div class="italic text-[9pt]">of a retention area of vendor/transferor</div> <div class="data-value" id="rec-retention">---</div>
+
+                        <div class="italic mt-5">is hereby:</div>
+                        <div class="mt-5"><span class="font-bold text-[11pt] border-b-[1.5px] border-black pb-0.5">APPROVED</span></div>
                     </div>
-                    
-                    <div class="italic">of Notary Public</div> <div class="data-value" id="rec-notary">---</div>
-                    <div class="italic text-[9pt]">of a retention area of vendor/transferor</div> <div class="data-value" id="rec-retention">---</div>
 
-                    <div class="italic mt-5">is hereby:</div>
-                    <div class="mt-5"><span class="font-bold text-[11pt] border-b-[1.5px] border-black pb-0.5">APPROVED</span></div>
-                </div>
+                    <p class="mb-4 text-justify indent-10 page-break-avoid">
+                        The applicant submitted all the necessary requirements for the issuance of Land Transfer Clearance in compliance with DAR Administrative Order No. 4, series of 2021.
+                    </p>
 
-                <p class="mb-4 text-justify indent-10 page-break-avoid">
-                    The applicant submitted all the necessary requirements for the issuance of Land Transfer Clearance in compliance with DAR Administrative Order No. 4, series of 2021.
-                </p>
-
-                <div class="mt-4 mb-6 page-break-avoid indent-10">
-                    Done this <span class="pdf-today-ordinal font-bold">---</span>. Naga City, Camarines Sur.
-                </div>
-
-                <div class="page-break-avoid w-full relative h-32 mt-4">
-                    <div class="absolute right-10 top-0 text-center">
-                        <p class="mb-4 text-left ml-4">Prepared by:</p>
-                        <p class="preparedByName font-bold uppercase underline underline-offset-4 inline-block">---</p>
-                        <p class="preparedByPosition text-[9pt] uppercase mt-1">---</p>
+                    <div class="mt-4 mb-4 page-break-avoid indent-10">
+                        Done this <span class="pdf-today-ordinal font-bold">---</span>. Naga City, Camarines Sur.
                     </div>
-                    <div class="absolute left-10 top-12 text-center">
-                        <p class="mb-4 text-left">Reviewed and Noted by:</p>
-                        <p class="sys-chief-name font-bold uppercase underline underline-offset-4 inline-block">---</p>
-                        <p class="text-[9pt] mt-1">Chief, Legal Division</p>
-                    </div>
-                </div>
 
-                <div class="flex justify-end mt-12 page-break-avoid mr-10">
-                    <div id="qr-rec" class="p-1"></div>
+                    <div class="page-break-avoid w-full ml-10">
+                        <div class="mb-2">
+                            <p class="text-left">Prepared by:</p>
+                            <div class="text-center ml-10 inline-block mt-12">
+                                <p class="preparedByName font-bold uppercase underline underline-offset-4">---</p>
+                                <p class="preparedByPosition text-[9pt] uppercase mt-1">---</p>
+                            </div>
+                        </div>
+                        <div>
+                            <p class="text-left">Reviewed and Noted by:</p>
+                            <div class="text-center ml-10 inline-block mt-12">
+                                <p class="sys-chief-name font-bold uppercase underline underline-offset-4">---</p>
+                                <p class="text-[9pt] mt-1">Chief, Legal Division</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex justify-end mt-4 page-break-avoid mr-10">
+                        <div id="qr-rec" class="p-1"></div>
+                    </div>
                 </div>
             </div>
 
             <div id="docCertification" class="doc-print-area mx-auto hidden pt-8">
-                
-                <div class="text-right font-bold mb-4 flex flex-col items-end mr-10" style="margin-top: -10px;">
-                    <span class="italic font-normal text-[10pt]">LTC Form No. 5</span>
-                    <span id="cert-header-id">LTC-PENDING</span>
-                </div>
+                <img class="print-bg" crossorigin="anonymous" src="" style="display: none;">
+                <div class="doc-content">
+                    <div class="text-right font-bold mb-4 flex flex-col items-end mr-10" style="margin-top: -10px;">
+                        <span class="italic font-normal text-[10pt]">LTC Form No. 5</span>
+                        <span id="cert-header-id">LTC-PENDING</span>
+                    </div>
 
-                <div class="text-center mb-6">
-                    <div class="font-black text-[16pt] tracking-wide">CERTIFICATION</div>
-                    <div class="text-[10pt]">(Land Transfer Clearance)</div>
-                </div>
-                
-                <p class="mb-4 text-justify indent-10">
-                    This is to certify that the application/request for Issuance of Land Transfer Clearance (LTC) filed to this Office with the following pertinent information, to wit:
-                </p>
-
-                <div class="grid grid-cols-[220px_1fr] gap-y-1.5 mb-4 ml-10">
-                    <div class="italic">Lot No/s</div> <div class="data-value" id="cert-lot">---</div>
-                    <div class="italic">In the Name of</div> <div class="data-value" id="cert-owner">---</div>
-                    <div class="italic">Registered under</div> <div class="data-value" id="cert-tct">---</div>
-                    <div class="italic">With an area (in has.) of</div> <div class="data-value" id="cert-area">---</div>
-                    <div class="italic">Declared under T.D. No.</div> <div class="data-value" id="cert-td">---</div>
-                    <div class="italic">Located at</div> <div class="data-value" id="cert-location">---</div>
-                    <div class="italic">Subjected of the Deed of</div> <div class="data-value" id="cert-deed">---</div>
-                    <div class="italic">Executed by</div> <div class="data-value" id="cert-executed">---</div>
-                    <div class="italic">In favor of</div> <div class="data-value" id="cert-favor">---</div>
+                    <div class="text-center mb-6">
+                        <div class="font-black text-[16pt] tracking-wide">CERTIFICATION</div>
+                        <div class="text-[10pt]">(Land Transfer Clearance)</div>
+                    </div>
                     
-                    <div class="italic">Under Doc. No.</div> 
-                    <div class="flex items-end gap-2">
-                        <span class="data-value text-center" id="cert-doc">---</span>
-                        <span class="italic ml-2">Page No.</span> <span class="data-value text-center" id="cert-page">---</span>
-                        <span class="italic ml-2">Book No.</span> <span class="data-value text-center" id="cert-book">---</span>
+                    <p class="mb-4 text-justify indent-10">
+                        This is to certify that the application/request for Issuance of Land Transfer Clearance (LTC) filed to this Office with the following pertinent information, to wit:
+                    </p>
+
+                    <div class="grid grid-cols-[220px_1fr] gap-y-1.5 mb-4 ml-10">
+                        <div class="italic">Lot No/s</div> <div class="data-value" id="cert-lot">---</div>
+                        <div class="italic">In the Name of</div> <div class="data-value" id="cert-owner">---</div>
+                        <div class="italic">Registered under</div> <div class="data-value" id="cert-tct">---</div>
+                        <div class="italic">With an area (in has.) of</div> <div class="data-value" id="cert-area">---</div>
+                        <div class="italic">Declared under T.D. No.</div> <div class="data-value" id="cert-td">---</div>
+                        <div class="italic">Located at</div> <div class="data-value" id="cert-location">---</div>
+                        <div class="italic">Subjected of the Deed of</div> <div class="data-value" id="cert-deed">---</div>
+                        <div class="italic">Executed by</div> <div class="data-value" id="cert-executed">---</div>
+                        <div class="italic">In favor of</div> <div class="data-value" id="cert-favor">---</div>
+                        
+                        <div class="italic">Under Doc. No.</div> 
+                        <div class="flex items-end gap-2">
+                            <span class="data-value text-center" id="cert-doc">---</span>
+                            <span class="italic ml-2">Page No.</span> <span class="data-value text-center" id="cert-page">---</span>
+                            <span class="italic ml-2">Book No.</span> <span class="data-value text-center" id="cert-book">---</span>
+                        </div>
+                        <div class="italic">Series of</div> 
+                        <div class="flex items-end gap-2">
+                            <span class="data-value text-center" id="cert-series">---</span>
+                            <span class="italic ml-4">Dated</span> <span class="data-value text-center" id="cert-dated">---</span>
+                        </div>
+                        <div class="italic">of Notary Public</div> <div class="data-value" id="cert-notary">---</div>
+                        <div class="italic text-[9pt]">of a retention area of vendor/transferor</div> <div class="data-value" id="cert-retention">---</div>
+
+                        <div class="italic mt-5">is hereby:</div>
+                        <div class="mt-5"><span class="font-bold text-[11pt] border-b-[1.5px] border-black pb-0.5">APPROVED</span></div>
                     </div>
-                    <div class="italic">Series of</div> 
-                    <div class="flex items-end gap-2">
-                        <span class="data-value text-center" id="cert-series">---</span>
-                        <span class="italic ml-4">Dated</span> <span class="data-value text-center" id="cert-dated">---</span>
+
+                    <p class="mb-4 text-justify leading-relaxed page-break-avoid indent-10">
+                        based on the Attestation of the CARPO-LTS/FOD and from the report and recommendation of the Chief Legal Division/Authorized Legal Officer pursuant to Administrative Order (AO) No. 4 Series of 2021.
+                    </p>
+
+                    <p class="mb-4 text-justify leading-relaxed page-break-avoid indent-10">
+                        Any actual change in the use of the land and/or development over the subject land, requires a prior Order of Conversion or Exemption/Exclusion from the Office of the DAR Regional Director.
+                    </p>
+
+                    <p class="mb-4 text-justify leading-relaxed page-break-avoid indent-10">
+                        This Office reserves the right to revoke this Certification of LTC in case of findings of misrepresentation or submission of falsified documents by either or both parties to the Deed of Transfer and any third person who may be affected by the transfer.
+                    </p>
+
+                    <p class="mb-6 text-justify leading-relaxed page-break-avoid indent-10">
+                        This Certification is hereby issued only for the purpose stated in the application/request for issuance of LTC.
+                    </p>
+
+                    <div class="mt-4 mb-4 page-break-avoid indent-10">
+                        Done and issued this <span class="pdf-today-ordinal font-bold">---</span> at the DAR Provincial Office.
                     </div>
-                    <div class="italic">of Notary Public</div> <div class="data-value" id="cert-notary">---</div>
-                    <div class="italic text-[9pt]">of a retention area of vendor/transferor</div> <div class="data-value" id="cert-retention">---</div>
 
-                    <div class="italic mt-5">is hereby:</div>
-                    <div class="mt-5"><span class="font-bold text-[11pt] border-b-[1.5px] border-black pb-0.5">APPROVED</span></div>
-                </div>
-
-                <p class="mb-4 text-justify leading-relaxed page-break-avoid indent-10">
-                    based on the Attestation of the CARPO-LTS/FOD and from the report and recommendation of the Chief Legal Division/Authorized Legal Officer pursuant to Administrative Order (AO) No. 4 Series of 2021.
-                </p>
-
-                <p class="mb-4 text-justify leading-relaxed page-break-avoid indent-10">
-                    Any actual change in the use of the land and/or development over the subject land, requires a prior Order of Conversion or Exemption/Exclusion from the Office of the DAR Regional Director.
-                </p>
-
-                <p class="mb-4 text-justify leading-relaxed page-break-avoid indent-10">
-                    This Office reserves the right to revoke this Certification of LTC in case of findings of misrepresentation or submission of falsified documents by either or both parties to the Deed of Transfer and any third person who may be affected by the transfer.
-                </p>
-
-                <p class="mb-6 text-justify leading-relaxed page-break-avoid indent-10">
-                    This Certification is hereby issued only for the purpose stated in the application/request for issuance of LTC.
-                </p>
-
-                <div class="mt-4 mb-6 page-break-avoid indent-10">
-                    Done and issued this <span class="pdf-today-ordinal font-bold">---</span> at the DAR Provincial Office.
-                </div>
-
-                <div class="flex justify-end items-end gap-4 mt-12 page-break-avoid mr-10">
-                    <div id="qr-cert" class="p-1 mb-2"></div>
-                    <div class="text-center w-60">
-                        <p class="sys-parpo-name font-bold uppercase underline underline-offset-4 inline-block">---</p>
-                        <p class="text-[9pt] uppercase mt-1">PARPO II</p>
+                    <div class="flex justify-end items-end gap-6 mt-8 page-break-avoid mr-10">
+                        <div id="qr-cert" class="p-1 mb-2"></div>
+                        <div class="text-center">
+                            <div class="mt-14"></div>
+                            <p class="sys-parpo-name font-bold uppercase underline underline-offset-4 inline-block">---</p>
+                            <p class="text-[9pt] uppercase mt-1">PARPO II</p>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -416,6 +441,10 @@
             const { data } = supabaseClient.storage.from('bg').getPublicUrl('ltc_bg.jpg');
             if (data && data.publicUrl) {
                 backgroundImageUrl = data.publicUrl;
+                document.querySelectorAll('.print-bg').forEach(img => {
+                    img.src = backgroundImageUrl;
+                    img.style.display = 'block';
+                });
             }
         }
 
@@ -757,14 +786,6 @@
                     var totalPages = pdf.internal.getNumberOfPages();
                     for (var i = 1; i <= totalPages; i++) {
                         pdf.setPage(i);
-                        
-                        if (backgroundImageUrl) {
-                            var img = new Image();
-                            img.crossOrigin = "Anonymous";
-                            img.src = backgroundImageUrl;
-                            pdf.addImage(img, 'JPEG', 0, 0, 8.5, 13);
-                        }
-
                         pdf.setFontSize(10);
                         pdf.setTextColor(80);
                         pdf.text(currentSelection.LTC_ID_NUMBER || 'LTC-PENDING', 0.5, 11.5, { angle: 90 });
