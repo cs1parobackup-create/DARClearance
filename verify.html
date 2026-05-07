@@ -554,8 +554,9 @@
         }
 
         function generateQRs(identifier) {
-            const baseUrl = new URL("verify.html?id=", window.location.href).href;
-            const scanUrl = baseUrl + encodeURIComponent(identifier || 'NO-ID');
+            // Safe relative path generation for GitHub pages
+            const currentPath = window.location.href.substring(0, window.location.href.lastIndexOf('/'));
+            const scanUrl = currentPath + "/verify.html?id=" + encodeURIComponent(identifier || 'NO-ID');
 
             ['qr-rec', 'qr-cert'].forEach(id => {
                 const el = document.getElementById(id);
