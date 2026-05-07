@@ -3,24 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DAR Clearance Monitor - DARPO</title>
+    <title>Dashboard - DAR Clearance Monitor</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="supabase-config.js"></script>
     <style>
-        :root {
-            --dar-green: #003811;
-            --dar-gold: #D4AF37;
-        }
+        :root { --dar-green: #003811; --dar-gold: #D4AF37; }
         body { font-family: 'Segoe UI', sans-serif; background-color: #F3F4F6; }
         .sidebar { background-color: var(--dar-green); }
-        .status-card { border-top: 4px solid var(--dar-gold); }
-        
-        /* Custom Scrollbar */
         ::-webkit-scrollbar { width: 5px; }
-        ::-webkit-scrollbar-track { background: #f1f1f1; }
         ::-webkit-scrollbar-thumb { background: #888; border-radius: 10px; }
-        ::-webkit-scrollbar-thumb:hover { background: #555; }
     </style>
 </head>
 <body class="flex h-screen overflow-hidden text-gray-800">
@@ -28,13 +20,12 @@
     <nav class="sidebar md:w-64 flex flex-col text-white flex-shrink-0 shadow-xl z-20">
         <div class="p-6 border-b border-[#006400]">
             <h2 class="text-xl font-bold text-[#D4AF37]">DARPO-CS</h2>
-            <p class="text-[10px] text-gray-300 uppercase tracking-widest mt-1 font-bold">Clearance Monitoring</p>
+            <p id="userRoleBadge" class="text-[10px] text-gray-300 uppercase tracking-widest mt-1 font-bold">---</p>
         </div>
-        <div class="flex-1 overflow-y-auto py-2">
-            <a href="dashboard.html" class="block px-6 py-4 text-sm font-bold border-l-4 border-transparent hover:bg-[#006400]">DASHBOARD</a>
-            <a href="#" class="block px-6 py-4 text-sm font-bold bg-[#006400] border-l-4 border-[#D4AF37]">CLEARANCE STATUS</a>
-            <a href="pds.html" class="block px-6 py-4 text-sm font-bold border-l-4 border-transparent hover:bg-[#006400]">PDS MANAGER</a>
-        </div>
+        
+        <div id="dynamicMenu" class="flex-1 overflow-y-auto py-2">
+            </div>
+
         <div class="p-4 bg-black/20">
             <p id="activeUser" class="text-xs text-gray-300 truncate mb-2 font-bold"></p>
             <button onclick="logout()" class="w-full bg-red-800 py-2 text-xs font-bold rounded shadow hover:bg-red-700 transition-colors">LOGOUT</button>
@@ -43,15 +34,14 @@
 
     <main class="flex-1 flex flex-col overflow-hidden">
         <header class="bg-white shadow-sm border-b px-8 py-4 flex justify-between items-center">
-            <h1 class="text-lg font-bold text-[#003811] uppercase tracking-tight">DAR Clearance Status Dashboard</h1>
+            <h1 class="text-lg font-bold text-[#003811] uppercase tracking-tight">Clearance Status Dashboard</h1>
             <div class="flex gap-2">
-                <input type="text" id="searchInput" placeholder="Search Lot/Owner..." class="border rounded px-3 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-[#003811]" onkeyup="refreshDashboard()">
+                <input type="text" id="searchInput" placeholder="Search Lot/Owner..." class="border rounded px-3 py-1 text-sm focus:outline-none" onkeyup="refreshDashboard()">
                 <button onclick="fetchClearanceData()" class="bg-[#003811] text-white px-4 py-1 rounded text-sm font-bold">REFRESH</button>
             </div>
         </header>
 
         <div class="flex-1 overflow-y-auto p-8 space-y-8">
-            
             <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
                 <div class="bg-white p-4 rounded shadow-sm border-l-4 border-blue-500">
                     <p class="text-[10px] font-bold text-gray-500 uppercase">Received</p>
@@ -86,23 +76,48 @@
                             <th class="px-6 py-4 text-right">Last Updated</th>
                         </tr>
                     </thead>
-                    <tbody id="clearanceTableBody" class="divide-y text-xs">
-                        </tbody>
+                    <tbody id="clearanceTableBody" class="divide-y text-xs"></tbody>
                 </table>
             </div>
         </div>
     </main>
 
     <script>
-        // --- Session Auth ---
         const userData = sessionStorage.getItem('currentUser');
         if (!userData) { window.location.href = 'index.html'; }
         const currentUser = JSON.parse(userData);
         document.getElementById('activeUser').innerText = currentUser.full_name;
+        document.getElementById('userRoleBadge').innerText = currentUser.role;
 
         function logout() { sessionStorage.removeItem('currentUser'); window.location.href = 'index.html'; }
 
-        // --- Status Config ---
+        // --- Dynamic Menu Logic ---
+        async function loadMenu() {
+            const menuContainer = document.getElementById('dynamicMenu');
+            const userRole = currentUser.role.toUpperCase();
+
+            const { data: menuItems, error } = await supabaseClient
+                .from('clearance_menu')
+                .select('*')
+                .eq('is_active', true)
+                .order('sort_order', { ascending: true });
+
+            if (error) return;
+
+            menuContainer.innerHTML = '';
+            menuItems.forEach(item => {
+                // Check if user role is authorized for this menu
+                if (item.required_roles.includes(userRole) || item.required_roles.length === 0) {
+                    const isCurrent = window.location.pathname.includes(item.url);
+                    const link = document.createElement('a');
+                    link.href = item.url;
+                    link.className = `block px-6 py-4 text-sm font-bold border-l-4 transition-all ${isCurrent ? 'bg-[#006400] border-[#D4AF37]' : 'border-transparent hover:bg-[#006400]'}`;
+                    link.innerText = item.label;
+                    menuContainer.appendChild(link);
+                }
+            });
+        }
+
         const statusConfig = {
             'RECEIVED': 'bg-blue-100 text-blue-800 border-blue-200',
             'PROCESSED': 'bg-indigo-100 text-indigo-800 border-indigo-200',
@@ -114,64 +129,38 @@
         let rawData = [];
 
         async function fetchClearanceData() {
-            try {
-                // Assuming land_records table created in previous SQL step
-                const { data, error } = await supabaseClient
-                    .from('land_records')
-                    .select('*')
-                    .order('updated_at', { ascending: false });
-
-                if (error) throw error;
-                rawData = data || [];
-                refreshDashboard();
-            } catch (err) {
-                console.error("Fetch error:", err);
-            }
+            const { data, error } = await supabaseClient.from('land_records').select('*').order('updated_at', { ascending: false });
+            if (!error) { rawData = data || []; refreshDashboard(); }
         }
 
         function refreshDashboard() {
             const query = document.getElementById('searchInput').value.toLowerCase();
             const tbody = document.getElementById('clearanceTableBody');
             tbody.innerHTML = '';
-
-            // Reset Stats
             let stats = { rec: 0, pro: 0, sig: 0, ret: 0, recs: 0 };
 
-            const filteredData = rawData.filter(item => 
-                (item.lot_no || '').toLowerCase().includes(query) || 
-                (item.owner_name || '').toLowerCase().includes(query)
-            );
+            rawData.forEach(item => {
+                if ((item.lot_no || '').toLowerCase().includes(query) || (item.owner_name || '').toLowerCase().includes(query)) {
+                    const status = item.status || 'RECEIVED';
+                    if (status === 'RECEIVED') stats.rec++;
+                    else if (status === 'PROCESSED') stats.pro++;
+                    else if (status.includes('SIGNATURE')) stats.sig++;
+                    else if (status.includes('RETURN')) stats.ret++;
+                    else if (status.includes('RECORDS')) stats.recs++;
 
-            filteredData.forEach(item => {
-                const status = item.status || 'RECEIVED';
-                
-                // Update Stats
-                if (status === 'RECEIVED') stats.rec++;
-                else if (status === 'PROCESSED') stats.pro++;
-                else if (status.includes('SIGNATURE')) stats.sig++;
-                else if (status.includes('RETURN')) stats.ret++;
-                else if (status.includes('RECORDS')) stats.recs++;
-
-                const statusClass = statusConfig[status] || 'bg-gray-100 text-gray-800';
-                const formattedDate = item.updated_at ? new Date(item.updated_at).toLocaleString('en-US', { hour12: true }) : '---';
-
-                const tr = document.createElement('tr');
-                tr.className = "hover:bg-gray-50 transition-colors";
-                tr.innerHTML = `
-                    <td class="px-6 py-4 font-bold text-gray-900">${item.lot_no || 'N/A'}</td>
-                    <td class="px-6 py-4 whitespace-pre-wrap">${item.owner_name || 'Unknown'}</td>
-                    <td class="px-6 py-4 italic text-gray-500">${item.deed_type || '---'}</td>
-                    <td class="px-6 py-4">
-                        <span class="px-2.5 py-1 rounded-full border text-[10px] font-black uppercase tracking-tighter ${statusClass}">
-                            ${status}
-                        </span>
-                    </td>
-                    <td class="px-6 py-4 text-right font-mono text-gray-400">${formattedDate}</td>
-                `;
-                tbody.appendChild(tr);
+                    const formattedDate = item.updated_at ? new Date(item.updated_at).toLocaleString('en-US', { hour12: true }) : '---';
+                    const tr = document.createElement('tr');
+                    tr.className = "hover:bg-gray-50 transition-colors";
+                    tr.innerHTML = `
+                        <td class="px-6 py-4 font-bold text-gray-900">${item.lot_no || 'N/A'}</td>
+                        <td class="px-6 py-4 whitespace-pre-wrap">${item.owner_name || 'Unknown'}</td>
+                        <td class="px-6 py-4 italic text-gray-500">${item.deed_type || '---'}</td>
+                        <td class="px-6 py-4"><span class="px-2.5 py-1 rounded-full border text-[10px] font-black uppercase ${statusConfig[status]}">${status}</span></td>
+                        <td class="px-6 py-4 text-right font-mono text-gray-400">${formattedDate}</td>`;
+                    tbody.appendChild(tr);
+                }
             });
 
-            // Update Header Stats
             document.getElementById('stat-received').innerText = stats.rec;
             document.getElementById('stat-processed').innerText = stats.pro;
             document.getElementById('stat-signature').innerText = stats.sig;
@@ -179,7 +168,7 @@
             document.getElementById('stat-records').innerText = stats.recs;
         }
 
-        window.onload = fetchClearanceData;
+        window.onload = () => { loadMenu(); fetchClearanceData(); };
     </script>
 </body>
 </html>
