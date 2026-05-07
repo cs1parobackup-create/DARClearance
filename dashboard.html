@@ -26,6 +26,7 @@
                 visibility: visible !important;
                 display: block !important;
                 width: 8.5in !important; 
+                height: 13in !important;
                 padding: 1in !important;
                 margin: 0 !important;
                 font-family: 'Roboto', sans-serif !important;
@@ -214,11 +215,10 @@
             <div id="actionButtons" class="flex justify-between items-center no-print">
                 </div>
 
-            <div id="docRecommendation" class="bg-white text-black doc-print-area mx-auto hidden">
-                <div class="text-right font-bold mb-4 mr-10" id="rec-header-id">LTC-PENDING</div>
+            <div id="docRecommendation" class="bg-white text-black doc-print-area mx-auto hidden pt-8">
                 
                 <div class="text-center mb-6">
-                    <div class="font-bold text-[12pt]">RECOMMENDATION</div>
+                    <div class="font-bold text-[16pt]">RECOMMENDATION</div>
                     <div class="text-[10pt]">(Land Transfer Clearance)</div>
                 </div>
                 
@@ -265,33 +265,32 @@
                     Done this <span class="pdf-today-ordinal font-bold">---</span>. Naga City, Camarines Sur.
                 </div>
 
-                <div class="page-break-avoid w-full relative h-40 mt-4">
-                    <div class="absolute right-10 top-0 text-center">
-                        <p class="mb-4 text-left ml-4">Prepared by:</p>
-                        <p class="preparedByName font-bold uppercase underline underline-offset-4 inline-block">---</p>
-                        <p class="preparedByPosition text-[9pt] uppercase mt-1">---</p>
+                <div class="page-break-avoid w-full mt-4 ml-10">
+                    <div class="mb-1">
+                        <p class="text-left">Prepared by:</p>
+                        <div class="text-center ml-10 inline-block mt-10">
+                            <p class="preparedByName font-bold uppercase underline underline-offset-4">---</p>
+                            <p class="preparedByPosition text-[9pt] uppercase mt-1">---</p>
+                        </div>
                     </div>
-                    <div class="absolute left-10 top-20 text-center">
-                        <br><br><br><br><br><br>
-                        <p class="mb-4 text-left">Reviewed and Noted by:</p>
-                        <p class="sys-chief-name font-bold uppercase underline underline-offset-4 inline-block">---</p>
-                        <p class="text-[9pt] mt-1">Chief, Legal Division</p>
+                    <div>
+                        <p class="text-left">Reviewed and Noted by:</p>
+                        <div class="text-center ml-10 inline-block mt-10">
+                            <p class="sys-chief-name font-bold uppercase underline underline-offset-4">---</p>
+                            <p class="text-[9pt] mt-1">Chief, Legal Division</p>
+                        </div>
                     </div>
                 </div>
 
-                <div class="flex justify-end mt-20 page-break-avoid">
-                    <div id="qr-rec" class="border p-1 bg-white"></div>
+                <div class="flex justify-end mt-4 page-break-avoid">
+                    <div id="qr-rec" class="p-1"></div>
                 </div>
             </div>
 
-            <div id="docCertification" class="bg-white text-black doc-print-area mx-auto hidden">
-                <div class="text-right font-bold mb-4 flex flex-col items-end mr-10" style="margin-top: -10px;">
-                    <span class="italic font-normal text-[10pt]">LTC Form No. 5</span>
-                    <span id="cert-header-id">LTC-PENDING</span>
-                </div>
+            <div id="docCertification" class="bg-white text-black doc-print-area mx-auto hidden pt-8">
 
                 <div class="text-center mb-6">
-                    <div class="font-bold text-[12pt]">CERTIFICATION</div>
+                    <div class="font-bold text-[16pt]">CERTIFICATION</div>
                     <div class="text-[10pt]">(Land Transfer Clearance)</div>
                 </div>
                 
@@ -344,20 +343,16 @@
                     This Certification is hereby issued only for the purpose stated in the application/request for issuance of LTC.
                 </p>
 
-                <div class="mt-4 mb-12 page-break-avoid indent-10">
+                <div class="mt-4 mb-6 page-break-avoid indent-10">
                     Done and issued this <span class="pdf-today-ordinal font-bold">---</span> at the DAR Provincial Office.
                 </div>
 
-                <div class="flex justify-end mt-12 page-break-avoid mr-10">
-                    <div class="text-center">
-                        <br><br>
+                <div class="flex justify-end items-end gap-8 mt-12 page-break-avoid mr-10">
+                    <div id="qr-cert" class="p-1 mb-2"></div>
+                    <div class="text-center mt-10">
                         <p class="sys-parpo-name font-bold uppercase underline underline-offset-4 inline-block">---</p>
                         <p class="text-[9pt] uppercase mt-1">PARPO II</p>
                     </div>
-                </div>
-
-                <div class="flex justify-end mt-12 page-break-avoid">
-                    <div id="qr-cert" class="border p-1 bg-white"></div>
                 </div>
             </div>
 
@@ -412,15 +407,14 @@
         }
 
         async function applyBackground() {
-            // Fetch public URL for background
             const { data } = supabaseClient.storage.from('bg').getPublicUrl('ltc_bg.jpg');
             if (data && data.publicUrl) {
                 const bgUrl = data.publicUrl;
                 document.querySelectorAll('.doc-print-area').forEach(el => {
                     el.style.backgroundImage = `url('${bgUrl}')`;
-                    el.style.backgroundSize = '8.5in 13in';
-                    el.style.backgroundRepeat = 'repeat-y';
-                    el.style.backgroundPosition = 'top left';
+                    el.style.backgroundSize = '100% 100%';
+                    el.style.backgroundRepeat = 'no-repeat';
+                    el.style.backgroundPosition = 'center';
                 });
             }
         }
@@ -455,8 +449,14 @@
             let isRecords = userRole.includes('RECORDS');
             let userFullName = currentUser.full_name;
 
+            let displayCount = 0;
+
             rawData.forEach(item => {
-                if ((item.registered_under || '').toLowerCase().includes(query) || (item.owner_name || '').toLowerCase().includes(query)) {
+                let matchesSearch = (item.registered_under || '').toLowerCase().includes(query) || 
+                                    (item.owner_name || '').toLowerCase().includes(query) || 
+                                    (item.LTC_ID_NUMBER || '').toLowerCase().includes(query);
+
+                if (matchesSearch) {
                     
                     let st = (item.status || 'RECEIVED').trim().toUpperCase();
                     
@@ -480,6 +480,7 @@
                             if (isChief || isLegal) {
                                 actions += `<button onclick='showReview("${item.id}")' class="bg-[#003811] text-white w-full py-1.5 rounded shadow text-[10px] font-bold tracking-wide hover:bg-black uppercase transition-colors text-center">Review</button>`;
                                 actions += `<button onclick='createVariant("${item.id}")' class="bg-gray-500 text-white w-full py-1 mt-1 rounded shadow text-[9px] font-bold hover:bg-gray-700 uppercase transition-colors text-center">+ Variant</button>`;
+                                actions += `<button onclick='deleteRecord("${item.id}")' class="bg-red-600 text-white w-full py-1 mt-1 rounded shadow text-[9px] font-bold hover:bg-red-800 uppercase transition-colors text-center">Delete</button>`;
                             }
                         } else if (st === 'REVIEWED') {
                             if (isChief || isLegal) {
@@ -515,18 +516,33 @@
 
                     let encodedBy = item.encoded_by || item.created_by || '---'; 
 
-                    tbody.innerHTML += `
-                        <tr class="hover:bg-gray-50 transition-colors">
-                            <td class="font-bold">${item.LTC_ID_NUMBER || '---'}</td>
-                            <td class="uppercase font-semibold">${item.owner_name}</td>
-                            <td class="text-xs text-gray-500">${encodedBy}</td>
-                            <td><span class="px-2 py-1 rounded text-[8px] shadow-sm font-black uppercase ${getStatusStyle(st)}">${st}</span>${warningHTML}</td>
-                            <td class="text-center align-middle">${actions}</td>
-                            <td class="text-right font-mono text-gray-500">${item.updated_at ? new Date(item.updated_at).toLocaleString('en-US', { hour12: true }) : '---'}</td>
-                        </tr>`;
+                    if (query !== '' || displayCount < 30) {
+                        tbody.innerHTML += `
+                            <tr class="hover:bg-gray-50 transition-colors">
+                                <td class="font-bold">${item.LTC_ID_NUMBER || '---'}</td>
+                                <td class="uppercase font-semibold">${item.owner_name}</td>
+                                <td class="text-xs text-gray-500">${encodedBy}</td>
+                                <td><span class="px-2 py-1 rounded text-[8px] shadow-sm font-black uppercase ${getStatusStyle(st)}">${st}</span>${warningHTML}</td>
+                                <td class="text-center align-middle">${actions}</td>
+                                <td class="text-right font-mono text-gray-500">${item.updated_at ? new Date(item.updated_at).toLocaleString('en-US', { hour12: true }) : '---'}</td>
+                            </tr>`;
+                        displayCount++;
+                    }
                 }
             });
             updateStats(stats);
+        }
+
+        window.deleteRecord = async function(id) {
+            if (confirm("Are you sure you want to permanently delete this record? This action cannot be undone.")) {
+                const { error } = await supabaseClient.from('land_records').delete().eq('id', id);
+                if (error) {
+                    alert('Error deleting record: ' + error.message);
+                } else {
+                    alert('Record successfully deleted.');
+                    fetchClearanceData();
+                }
+            }
         }
 
         window.createVariant = async function(id) {
@@ -589,7 +605,7 @@
                 const el = document.getElementById(id);
                 if (el) {
                     el.innerHTML = '';
-                    new QRCode(el, { text: scanUrl, width: 60, height: 60 });
+                    new QRCode(el, { text: scanUrl, width: 70, height: 70, correctLevel: QRCode.CorrectLevel.L });
                 }
             });
         }
@@ -702,6 +718,12 @@
 
         function openPrint(id, type) {
             showReview(id); 
+            
+            const now = new Date();
+            const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+            const dateStrOrdinal = `${now.getDate()}${getOrdinal(now.getDate())} day of ${monthNames[now.getMonth()]}, ${now.getFullYear()}`;
+            document.querySelectorAll('.pdf-today-ordinal').forEach(el => el.innerText = dateStrOrdinal);
+
             document.getElementById('reviewSection').classList.add('hidden');
             document.getElementById('actionButtons').classList.add('hidden');
             document.getElementById('editNotice').classList.add('hidden');
@@ -727,9 +749,8 @@
                     margin:       0,
                     filename:     filename,
                     image:        { type: 'jpeg', quality: 1.0 },
-                    html2canvas:  { scale: 3, useCORS: true },
-                    jsPDF:        { unit: 'in', format: [8.5, 13], orientation: 'portrait' },
-                    pagebreak:    { mode: ['css', 'legacy'] }
+                    html2canvas:  { scale: 5, useCORS: true },
+                    jsPDF:        { unit: 'in', format: [8.5, 13], orientation: 'portrait' }
                 };
 
                 html2pdf().set(opt).from(elementToPrint).toPdf().get('pdf').then(function(pdf) {
@@ -737,10 +758,8 @@
                     for (var i = 1; i <= totalPages; i++) {
                         pdf.setPage(i);
                         pdf.setFontSize(10);
-                        pdf.setTextColor(100);
-                        // Print the exact LTC number at the top right of every page
-                        // Because margin is now 0, 7.5 is 1 inch from the right edge
-                        pdf.text(currentSelection.LTC_ID_NUMBER || 'LTC-PENDING', 7.5, 0.5, { align: 'right' });
+                        pdf.setTextColor(80);
+                        pdf.text(currentSelection.LTC_ID_NUMBER || 'LTC-PENDING', 0.5, 11.5, { angle: 90 });
                     }
                 }).save().then(async () => {
                     if (type === 'cert' && currentSelection.status === 'REVIEWED') {
