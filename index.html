@@ -8,7 +8,6 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="supabase-config.js"></script>
     <script>
-        // Check if user is already logged in [cite: 2026-02-17]
         if (sessionStorage.getItem('currentUser')) {
             window.location.href = 'dashboard.html';
         }
@@ -57,22 +56,29 @@
             err.classList.add('hidden');
 
             try {
-                // Fetch user from Users table
+                // Binago sa lowercase 'users' para tumugma sa database
                 const { data, error } = await supabaseClient
-                    .from('Users')
+                    .from('users') 
                     .select('*')
                     .eq('username', userVal)
                     .eq('password', passVal)
                     .single();
 
-                if (error || !data) throw new Error("Invalid login");
+                if (error) {
+                    console.error("Supabase Error:", error.message); // Makikita ito sa F12 Console
+                    throw new Error(error.message);
+                }
 
-                // Store user session [cite: 2026-02-14]
+                if (!data) throw new Error("No user found");
+
+                console.log("Login Success:", data.full_name);
                 sessionStorage.setItem('currentUser', JSON.stringify(data));
                 window.location.href = 'dashboard.html';
 
             } catch (fail) {
+                console.error("Login Process Failed:", fail.message);
                 err.classList.remove('hidden');
+                err.innerText = "Authentication failed. " + fail.message;
                 btn.innerText = "LOG IN";
                 btn.disabled = false;
             }
