@@ -256,14 +256,14 @@
                     Done this <span class="pdf-today-ordinal font-bold">---</span>. Naga City, Camarines Sur.
                 </div>
 
-                <div class="page-break-avoid w-full relative h-40 mt-4">
+                <div class="page-break-avoid w-full relative h-48 mt-4">
                     <div class="absolute right-10 top-0 text-center">
                         <p class="mb-4 text-left ml-4">Prepared by:</p>
                         <p class="preparedByName font-bold uppercase underline underline-offset-4 inline-block">---</p>
                         <p class="preparedByPosition text-[9pt] uppercase mt-1">---</p>
                     </div>
                     <div class="absolute left-10 top-20 text-center">
-                        <br><br><br><br>
+                        <br><br><br><br><br>
                         <p class="mb-4 text-left">Reviewed and Noted by:</p>
                         <p class="sys-chief-name font-bold uppercase underline underline-offset-4 inline-block">---</p>
                         <p class="text-[9pt] mt-1">Chief, Legal Division</p>
@@ -339,7 +339,7 @@
                     Done and issued this <span class="pdf-today-ordinal font-bold">---</span> at the DAR Provincial Office.
                 </div>
 
-                <div class="flex justify-end mt-8 page-break-avoid mr-10">
+                <div class="flex justify-end mt-12 page-break-avoid mr-10">
                     <div class="text-center">
                         <p class="sys-parpo-name font-bold uppercase underline underline-offset-4 inline-block">---</p>
                         <p class="text-[9pt] uppercase mt-1">PARPO II</p>
@@ -426,7 +426,8 @@
             let userRole = currentUser.role.toUpperCase();
             let isParpo = userRole === 'PARPO II' || userRole === 'PARPO';
             let isChief = userRole === 'CHIEF, LEGAL DIVISION' || userRole === 'DIVISION CHIEF' || userRole === 'CHIEF';
-            let isLegal = userRole.includes('LEGAL') || userRole.includes('SARPO') || userRole.includes('ARPT') || userRole.includes('ARPO');
+            // Added && !isParpo to completely prevent duplicate buttons issue for PARPO II
+            let isLegal = (userRole.includes('LEGAL') || userRole.includes('SARPO') || userRole.includes('ARPT') || userRole.includes('ARPO')) && !isParpo;
             let isEncoder = userRole === 'ODTS ENCODER' || userRole.includes('ODTS');
             let isRecords = userRole.includes('RECORDS');
             let userFullName = currentUser.full_name;
@@ -457,7 +458,6 @@
                                 actions += `<button onclick='createVariant("${item.id}")' class="bg-gray-500 text-white w-full py-1 mt-1 rounded shadow text-[9px] font-bold hover:bg-gray-700 uppercase transition-colors text-center">+ Variant</button>`;
                             }
                         } else {
-                            // SHOW PRINTS FOR LEGAL AND CHIEF ON ALL STAGES AFTER RECEIVED
                             if (isChief || isLegal) {
                                 actions += `<button onclick='openPrint("${item.id}", "rec")' class="bg-[#8b5cf6] text-white w-full py-1.5 rounded shadow text-[9px] font-black tracking-wide hover:bg-purple-800 uppercase transition-colors text-center">Recommendation</button>`;
                                 actions += `<button onclick='openPrint("${item.id}", "cert")' class="bg-[#d97706] text-white w-full py-1.5 rounded shadow text-[9px] font-black tracking-wide hover:bg-amber-700 uppercase transition-colors text-center">Certification</button>`;
@@ -572,7 +572,8 @@
             });
         }
 
-        function showReview(id) {
+        // Changed to async to properly fetch encoder's role position
+        async function showReview(id) {
             const query = document.getElementById('searchInput').value.toLowerCase();
             currentNavList = rawData.filter(item => {
                 return (item.registered_under || '').toLowerCase().includes(query) || (item.owner_name || '').toLowerCase().includes(query);
@@ -632,14 +633,8 @@
 
             document.querySelectorAll('.sys-chief-name').forEach(el => el.innerText = chiefLegalName);
             document.querySelectorAll('.sys-parpo-name').forEach(el => el.innerText = parpoName);
-            document.querySelectorAll('.preparedByName').forEach(el => el.innerText = currentUser.full_name);
-            document.querySelectorAll('.preparedByPosition').forEach(el => el.innerText = currentUser.role || 'Personnel');
-            
-            const now = new Date();
-            const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
-            const dateStrOrdinal = `${now.getDate()}${getOrdinal(now.getDate())} day of ${monthNames[now.getMonth()]}, ${now.getFullYear()}`;
-            document.querySelectorAll('.pdf-today-ordinal').forEach(el => el.innerText = dateStrOrdinal);
 
+            // Pop modal right away to avoid delay while fetching
             document.getElementById('modalMainTitle').innerText = "REVIEW";
             document.getElementById('docRecommendation').classList.add('hidden');
             document.getElementById('docCertification').classList.add('hidden');
@@ -648,7 +643,6 @@
             document.getElementById('editNotice').classList.remove('hidden');
             document.getElementById('reviewRemarks').value = currentSelection.Remarks || currentSelection.remarks || '';
             
-            // DYNAMIC ACTION BUTTONS (PARPO Edit vs Normal Approve)
             const actionDiv = document.getElementById('actionButtons');
             const st = (currentSelection.status || 'RECEIVED').trim().toUpperCase();
             const uRole = currentUser.role.toUpperCase();
@@ -669,6 +663,22 @@
             }
 
             document.getElementById('reviewModal').classList.remove('hidden');
+
+            // FETCH ENCODER ROLE/POSITION FOR "PREPARED BY"
+            let encoderName = currentSelection.encoded_by || currentSelection.created_by || '---';
+            document.querySelectorAll('.preparedByName').forEach(el => el.innerText = encoderName);
+            document.querySelectorAll('.preparedByPosition').forEach(el => el.innerText = 'Fetching...');
+            
+            if (encoderName !== '---') {
+                const { data: encData } = await supabaseClient.from('users').select('role').eq('full_name', encoderName).single();
+                if (encData && encData.role) {
+                    document.querySelectorAll('.preparedByPosition').forEach(el => el.innerText = encData.role);
+                } else {
+                    document.querySelectorAll('.preparedByPosition').forEach(el => el.innerText = 'Personnel');
+                }
+            } else {
+                document.querySelectorAll('.preparedByPosition').forEach(el => el.innerText = 'Personnel');
+            }
         }
 
         function openPrint(id, type) {
@@ -721,7 +731,6 @@
             const updateData = { status: newSt, updated_at: new Date() };
             if (remarks.trim()) updateData.Remarks = remarks; 
 
-            // Include CERTIFIED here so PARPO can update details without changing status back to RECOMMENDED
             if (newSt === 'RECOMMENDED' || newSt === 'CERTIFIED') {
                 const dbToHtmlMap = {
                     'lot_no': 'edit-lot', 'owner_name': 'edit-owner', 'registered_under': 'edit-tct', 
