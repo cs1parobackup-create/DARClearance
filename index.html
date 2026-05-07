@@ -8,92 +8,44 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="supabase-config.js"></script>
     <script>
-        // AUTO-REDIRECT: If session exists, skip login [cite: 2026-02-14, 2026-02-17]
-        if (sessionStorage.getItem('currentUser')) {
-            window.location.href = 'dashboard.html';
-        }
+        if (sessionStorage.getItem('currentUser')) { window.location.href = 'dashboard.html'; }
     </script>
 </head>
-<body class="bg-gray-100 h-screen flex items-center justify-center p-4 text-[#1F2937]">
-    
+<body class="bg-gray-100 h-screen flex items-center justify-center p-4">
     <div class="bg-white w-full max-w-md rounded-lg shadow-2xl overflow-hidden border-t-8 border-[#D4AF37]">
         <div class="p-8">
             <div class="text-center mb-8">
                 <h2 class="text-3xl font-black text-[#003811] tracking-tighter uppercase">Secure Access</h2>
-                <p class="text-[10px] text-gray-400 font-bold tracking-widest uppercase mt-1">DAR Clearance Portal</p>
+                <p class="text-[10px] text-gray-400 font-bold tracking-widest uppercase mt-1 font-sans">DAR Clearance Portal</p>
             </div>
-
             <form id="loginForm" class="space-y-6">
                 <div>
                     <label class="block text-[10px] font-bold text-[#003811] uppercase tracking-wider mb-1">Username</label>
-                    <input type="text" id="username" required 
-                           class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded focus:ring-2 focus:ring-[#003811] focus:outline-none font-bold">
+                    <input type="text" id="username" required class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded focus:ring-2 focus:ring-[#003811] focus:outline-none font-bold">
                 </div>
-                
                 <div>
                     <label class="block text-[10px] font-bold text-[#003811] uppercase tracking-wider mb-1">Password</label>
-                    <input type="password" id="password" required 
-                           class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded focus:ring-2 focus:ring-[#003811] focus:outline-none font-bold">
+                    <input type="password" id="password" required class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded focus:ring-2 focus:ring-[#003811] focus:outline-none font-bold">
                 </div>
-                
-                <p id="errorMessage" class="text-red-600 text-[10px] font-bold hidden text-center uppercase tracking-tight"></p>
-
-                <button type="submit" id="loginBtn" 
-                        class="w-full bg-[#003811] text-white py-4 rounded font-black text-sm hover:bg-[#005c1c] transition-all shadow-lg active:scale-95 uppercase tracking-widest">
-                    Log In
-                </button>
+                <p id="errorMessage" class="text-red-600 text-[10px] font-bold hidden text-center uppercase">Invalid Username or Password.</p>
+                <button type="submit" id="loginBtn" class="w-full bg-[#003811] text-white py-4 rounded font-black text-sm hover:bg-[#005c1c] transition-all shadow-lg active:scale-95 uppercase tracking-widest">Log In</button>
             </form>
         </div>
-        
-        <div class="bg-gray-50 p-4 text-center border-t">
-            <p class="text-[9px] text-gray-400 font-bold uppercase tracking-wider">Dept. of Agrarian Reform - Camarines Sur</p>
-        </div>
+        <div class="bg-gray-50 p-4 text-center border-t text-[9px] text-gray-400 font-bold uppercase">Dept. of Agrarian Reform - Camarines Sur</div>
     </div>
-
     <script>
         document.getElementById('loginForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const btn = document.getElementById('loginBtn');
             const err = document.getElementById('errorMessage');
-            const userVal = document.getElementById('username').value.trim();
-            const passVal = document.getElementById('password').value.trim();
-
-            // UI Reset
-            btn.innerText = "VERIFYING...";
-            btn.disabled = true;
-            err.classList.add('hidden');
-
+            btn.innerText = "VERIFYING..."; btn.disabled = true; err.classList.add('hidden');
             try {
-                // Database query targeting lowercase 'users' table
-                // maybeSingle prevents crashing if no user is found
-                const { data, error } = await supabaseClient
-                    .from('users') 
-                    .select('*')
-                    .eq('username', userVal)
-                    .eq('password', passVal)
-                    .maybeSingle(); 
-
-                if (error) {
-                    console.error("Database Connection Error:", error.message);
-                    throw new Error("Database connection failed.");
-                }
-
-                if (!data) {
-                    // Triggers if username/password mismatch occurs
-                    throw new Error("Invalid Username or Password.");
-                }
-
-                // SUCCESS: Store session and redirect [cite: 2026-02-14]
-                console.log("Welcome,", data.full_name);
+                const { data, error } = await supabaseClient.from('users').select('*').eq('username', document.getElementById('username').value.trim()).eq('password', document.getElementById('password').value.trim()).maybeSingle();
+                if (error || !data) throw new Error("Invalid Username or Password.");
                 sessionStorage.setItem('currentUser', JSON.stringify(data));
                 window.location.href = 'dashboard.html';
-
             } catch (fail) {
-                console.error("Auth Exception:", fail.message);
-                err.innerText = fail.message;
-                err.classList.remove('hidden');
-                btn.innerText = "LOG IN";
-                btn.disabled = false;
+                err.innerText = fail.message; err.classList.remove('hidden'); btn.innerText = "LOG IN"; btn.disabled = false;
             }
         });
     </script>
