@@ -15,9 +15,9 @@
         body { font-family: 'Segoe UI', sans-serif; background-color: #F3F4F6; font-size: 13px; color: #1F2937; }
         .compact-table td, .compact-table th { padding: 0.5rem 1rem !important; }
 
-        /* PRINT CONFIGURATION: Legal/Folio (8.5 x 13) - 1 INCH MARGINS */
+        /* PRINT CONFIGURATION: Legal/Folio (8.5 x 13) - 0 MARGIN FOR FULL BACKGROUND */
         @media print {
-            @page { size: 8.5in 13in; margin: 1in; }
+            @page { size: 8.5in 13in; margin: 0; }
             body { background: white !important; }
             nav, header, .no-print, #actionButtons, #remarksSection, .modal-header-actions { display: none !important; }
             #reviewModal { position: static; display: block; background: transparent; padding: 0; box-shadow: none; }
@@ -25,8 +25,9 @@
             .doc-print-area { 
                 visibility: visible !important;
                 display: block !important;
-                width: 6.5in !important; 
-                margin: 0 auto !important;
+                width: 8.5in !important; 
+                padding: 1in !important;
+                margin: 0 !important;
                 font-family: 'Roboto', sans-serif !important;
                 font-size: 9pt !important;
                 line-height: 1.5 !important;
@@ -34,7 +35,15 @@
             }
         }
 
-        .doc-print-area { font-family: 'Roboto', sans-serif; font-size: 9pt; color: black; line-height: 1.5; }
+        .doc-print-area { 
+            font-family: 'Roboto', sans-serif; 
+            font-size: 9pt; 
+            color: black; 
+            line-height: 1.5; 
+            width: 8.5in; 
+            padding: 1in; 
+            margin: 0 auto; 
+        }
         
         .data-value { 
             font-weight: bold; 
@@ -205,7 +214,7 @@
             <div id="actionButtons" class="flex justify-between items-center no-print">
                 </div>
 
-            <div id="docRecommendation" class="bg-white text-black doc-print-area mx-auto hidden pt-8">
+            <div id="docRecommendation" class="bg-white text-black doc-print-area mx-auto hidden">
                 <div class="text-right font-bold mb-4 mr-10" id="rec-header-id">LTC-PENDING</div>
                 
                 <div class="text-center mb-6">
@@ -256,7 +265,7 @@
                     Done this <span class="pdf-today-ordinal font-bold">---</span>. Naga City, Camarines Sur.
                 </div>
 
-                <div class="page-break-avoid w-full relative h-48 mt-4">
+                <div class="page-break-avoid w-full relative h-40 mt-4">
                     <div class="absolute right-10 top-0 text-center">
                         <p class="mb-4 text-left ml-4">Prepared by:</p>
                         <p class="preparedByName font-bold uppercase underline underline-offset-4 inline-block">---</p>
@@ -275,7 +284,7 @@
                 </div>
             </div>
 
-            <div id="docCertification" class="bg-white text-black doc-print-area mx-auto hidden pt-8">
+            <div id="docCertification" class="bg-white text-black doc-print-area mx-auto hidden">
                 <div class="text-right font-bold mb-4 flex flex-col items-end mr-10" style="margin-top: -10px;">
                     <span class="italic font-normal text-[10pt]">LTC Form No. 5</span>
                     <span id="cert-header-id">LTC-PENDING</span>
@@ -399,6 +408,20 @@
                 const parpo = data.find(u => u.role.toUpperCase().includes('PARPO'));
                 if (chief) chiefLegalName = chief.full_name;
                 if (parpo) parpoName = parpo.full_name;
+            }
+        }
+
+        async function applyBackground() {
+            // Fetch public URL for background
+            const { data } = supabaseClient.storage.from('bg').getPublicUrl('ltc_bg.jpg');
+            if (data && data.publicUrl) {
+                const bgUrl = data.publicUrl;
+                document.querySelectorAll('.doc-print-area').forEach(el => {
+                    el.style.backgroundImage = `url('${bgUrl}')`;
+                    el.style.backgroundSize = '8.5in 13in';
+                    el.style.backgroundRepeat = 'repeat-y';
+                    el.style.backgroundPosition = 'top left';
+                });
             }
         }
 
@@ -701,11 +724,12 @@
 
             setTimeout(() => { 
                 const opt = {
-                    margin:       1,
+                    margin:       0,
                     filename:     filename,
-                    image:        { type: 'jpeg', quality: 0.98 },
-                    html2canvas:  { scale: 2, useCORS: true },
-                    jsPDF:        { unit: 'in', format: [8.5, 13], orientation: 'portrait' }
+                    image:        { type: 'jpeg', quality: 1.0 },
+                    html2canvas:  { scale: 3, useCORS: true },
+                    jsPDF:        { unit: 'in', format: [8.5, 13], orientation: 'portrait' },
+                    pagebreak:    { mode: ['css', 'legacy'] }
                 };
 
                 html2pdf().set(opt).from(elementToPrint).toPdf().get('pdf').then(function(pdf) {
@@ -715,6 +739,7 @@
                         pdf.setFontSize(10);
                         pdf.setTextColor(100);
                         // Print the exact LTC number at the top right of every page
+                        // Because margin is now 0, 7.5 is 1 inch from the right edge
                         pdf.text(currentSelection.LTC_ID_NUMBER || 'LTC-PENDING', 7.5, 0.5, { align: 'right' });
                     }
                 }).save().then(async () => {
@@ -773,6 +798,7 @@
         function logout() { sessionStorage.removeItem('currentUser'); window.location.href = 'index.html'; }
         
         window.onload = async () => { 
+            await applyBackground();
             await fetchDynamicSignatories();
             loadMenu(); 
             fetchClearanceData(); 
