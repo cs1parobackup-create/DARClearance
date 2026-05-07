@@ -9,7 +9,7 @@
     <script src="supabase-config.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        :root { --dar-green: #003811; --dar-gold: #D4AF37; }
+        :root { --color-primary: #003811; --color-secondary: #D4AF37; }
         body { font-family: 'Segoe UI', sans-serif; background-color: #F3F4F6; font-size: 13px; color: #1F2937; }
         
         .compact-table td, .compact-table th { padding: 0.5rem 1rem !important; }
@@ -18,13 +18,13 @@
         @media print {
             @page { size: 8.5in 13in; margin: 1in; }
             body { background: white !important; }
-            nav, header, .no-print, #actionButtons, #remarksSection, .modal-header-actions { display: none !important; }
+            nav, header, .no-print, #reviewSection, #actionButtons, #remarksSection, .modal-header-actions { display: none !important; }
             #reviewModal { position: static; display: block; background: transparent; padding: 0; box-shadow: none; }
             
             .doc-print-area { 
                 visibility: visible !important;
                 display: block !important;
-                width: 6.5in !important; /* Adjusted for 1 inch margins */
+                width: 6.5in !important; 
                 margin: 0 auto !important;
                 font-family: 'Roboto', sans-serif !important;
                 font-size: 10pt !important;
@@ -32,11 +32,11 @@
                 color: black !important;
             }
             .page-break-avoid { page-break-inside: avoid; }
-            .underline-data { background-color: transparent !important; border-bottom: 1.5px solid black !important; }
+            .underline-data { font-size: 10pt !important; color: black !important; background-color: transparent !important; border-bottom: 1.5px solid black !important; padding: 0 4px !important; }
         }
 
         .doc-format { font-family: 'Roboto', sans-serif; font-size: 10pt; color: black; line-height: 1.1; }
-        .underline-data { border-bottom: 1.5px solid black; font-weight: 700; padding: 0 4px; display: inline-block; min-width: 80px; text-transform: uppercase; transition: background-color 0.2s; }
+        .underline-data { border-bottom: 1.5px solid black; font-weight: 700; padding: 0 4px; display: inline-block; min-width: 80px; text-transform: uppercase; transition: all 0.2s; }
         
         .scroll-area::-webkit-scrollbar { width: 4px; }
         .scroll-area::-webkit-scrollbar-track { background: #f1f1f1; }
@@ -44,16 +44,16 @@
 
         /* BIG Editable Text Styles for Reviewing */
         .edit-big {
-            font-size: 1.25rem !important;
-            line-height: 1.75rem !important;
+            font-size: 1.3rem !important;
+            line-height: 1.8rem !important;
             font-weight: 900 !important;
             color: #1e3a8a !important;
             background-color: #fefce8 !important;
             border-bottom: 3px solid #fde047 !important;
-            padding: 6px 12px !important;
+            padding: 8px 12px !important;
             border-radius: 4px;
             display: inline-block;
-            min-width: 200px;
+            min-width: 250px;
             text-transform: uppercase;
             outline: none;
             transition: all 0.2s;
@@ -81,7 +81,7 @@
     </nav>
 
     <main class="flex-1 flex flex-col overflow-hidden">
-        <header class="bg-white shadow-sm border-b px-6 py-4 flex justify-between items-center no-print">
+        <header class="bg-white shadow-sm border-b px-8 py-4 flex justify-between items-center no-print">
             <h1 class="text-lg font-bold text-[#003811] uppercase tracking-tight">Clearance Monitor</h1>
             <div class="flex gap-2">
                 <input type="text" id="searchInput" placeholder="Search Title/Owner..." class="border border-gray-300 rounded px-3 py-1.5 text-xs focus:outline-none focus:border-[#003811] w-64" onkeyup="refreshDashboard()">
@@ -225,20 +225,25 @@
                 </div>
             </div>
 
-            <div id="actionButtons" class="flex justify-between items-center no-print">
+            <div id="actionButtons" class="flex justify-between items-center mb-4 no-print border-b border-gray-200 pb-4">
                 <div class="flex gap-2">
                     <button onclick="decideStatus('RECOMMENDED')" class="bg-green-700 text-white px-8 py-3 rounded text-sm font-black uppercase shadow-lg hover:bg-green-800 transition-colors">Approve</button>
                     <button onclick="decideStatus('DISAPPROVED')" class="bg-red-700 text-white px-8 py-3 rounded text-sm font-black uppercase shadow-lg hover:bg-red-800 transition-colors">Disapprove</button>
                 </div>
+                
+                <div class="flex gap-3">
+                    <button id="btnModalRecommend" onclick="triggerPrint('rec')" class="bg-[#8b5cf6] text-white px-6 py-3 rounded text-[11px] font-black uppercase hidden hover:bg-purple-800 shadow transition-colors">Recommendation</button>
+                    <button id="btnModalCertify" onclick="triggerPrint('cert')" class="bg-[#d97706] text-white px-6 py-3 rounded text-[11px] font-black uppercase hidden hover:bg-amber-700 shadow transition-colors">Certification</button>
+                </div>
             </div>
 
             <div id="docRecommendation" class="bg-white text-black doc-print-area mx-auto hidden">
-                <div class="text-center mb-6 uppercase font-bold text-lg leading-tight mt-8">
+                <div class="text-center mb-6 uppercase font-bold text-lg leading-tight mt-10">
                     RECOMMENDATION<br>
                     <span class="text-sm font-normal normal-case">(Land Transfer Clearance)</span>
                 </div>
                 
-                <p class="mb-4 text-justify">
+                <p class="mb-4 text-justify indent-8">
                     This is to recommend that the application/request for Issuance of Land Transfer Clearance (LTC) be <strong>APPROVED</strong> on the parcel of agricultural land with the following pertinent information, to wit;
                 </p>
 
@@ -273,11 +278,11 @@
                     <span class="px-16 text-lg font-bold underline">APPROVED</span>
                 </div>
 
-                <p class="mb-6 text-[9.5pt] text-justify leading-tight page-break-avoid">
+                <p class="mb-6 text-[10pt] text-justify leading-tight page-break-avoid indent-8">
                     The applicant submitted all the necessary requirements for the issuance of Land Transfer Clearance in compliance with DAR Administrative Order No. 4, series of 2021.
                 </p>
 
-                <div class="mt-4 mb-10 page-break-avoid ml-4">
+                <div class="mt-4 mb-10 page-break-avoid ml-4 indent-8">
                     Done this <span class="pdf-today font-bold">---</span>. Naga City, Camarines Sur.
                 </div>
 
@@ -293,14 +298,14 @@
                         <div class="inline-block text-center mr-10">
                             <p class="mb-6 text-left">Prepared by:</p>
                             <p class="preparedByName font-bold uppercase border-b border-black min-w-[220px] inline-block text-center">---</p>
-                            <p class="preparedByPosition text-[10pt] text-center">---</p>
+                            <p class="preparedByPosition text-[10pt] text-center uppercase">---</p>
                         </div>
                     </div>
                 </div>
             </div>
 
             <div id="docCertification" class="bg-white text-black doc-print-area mx-auto hidden">
-                <div class="text-center mb-6 uppercase font-bold text-lg leading-tight mt-8 tracking-widest">
+                <div class="text-center mb-6 uppercase font-bold text-lg leading-tight mt-10 tracking-widest">
                     CERTIFICATION<br>
                     <span class="text-sm font-normal normal-case tracking-normal">(Land Transfer Clearance)</span>
                 </div>
@@ -384,7 +389,8 @@
         let currentNavIndex = -1;
         const statusFlow = ['RECEIVED', 'RECOMMENDED', 'CERTIFIED', 'SIGNED', 'TO LEGAL', 'TO RECORDS', 'RELEASE TO CLIENT'];
 
-        async function loadMenu() {
+        // --- MENU LOGIC FROM NEW_CLEARANCE.HTML ---
+        async function renderMenu() {
             const menuContainer = document.getElementById('dynamicMenu');
             const userRole = currentUser.role.toUpperCase();
 
@@ -452,24 +458,23 @@
 
                     let actions = '';
                     
-                    // Table Logic: ONLY show REVIEW if RECEIVED
+                    // Table Action Logic
                     if (st === 'RECEIVED' || st === 'RECEIVED - Legal') {
-                        actions += `<button onclick='showReview("${item.id}")' class="bg-[#003811] text-white px-5 py-1.5 rounded shadow text-[10px] font-bold tracking-wide hover:bg-black uppercase transition-colors w-full max-w-[120px]">Review</button>`;
+                        actions += `<button onclick='showReview("${item.id}")' class="bg-[#003811] text-white px-5 py-2 rounded shadow text-[10px] font-bold tracking-wide hover:bg-black uppercase transition-colors w-full max-w-[120px]">Review</button>`;
                     } 
-                    // Show 2 MAGKAIBANG BUTTON if RECOMMENDED. Ginawang pantay ang lapad via w-full sa flex column.
                     else if (st === 'RECOMMENDED') {
+                        // DALAWANG MAGKAIBANG BUTTON
                         actions += `
-                        <div class="flex flex-col gap-1 w-full max-w-[140px] mx-auto">
-                            <button onclick='openPrint("${item.id}", "rec")' class="bg-[#8b5cf6] text-white w-full py-1.5 rounded shadow text-[9px] font-black tracking-wide hover:bg-purple-800 uppercase transition-colors text-center">Recommendation</button>
-                            <button onclick='openPrint("${item.id}", "cert")' class="bg-[#d97706] text-white w-full py-1.5 rounded shadow text-[9px] font-black tracking-wide hover:bg-amber-700 uppercase transition-colors text-center">Certification</button>
+                        <div class="flex flex-col gap-1.5 w-full max-w-[140px] mx-auto">
+                            <button onclick='triggerPrint("rec", "${item.id}")' class="bg-[#8b5cf6] text-white w-full py-1.5 rounded shadow text-[9px] font-black tracking-wide hover:bg-purple-800 uppercase transition-colors text-center">Recommendation</button>
+                            <button onclick='triggerPrint("cert", "${item.id}")' class="bg-[#d97706] text-white w-full py-1.5 rounded shadow text-[9px] font-black tracking-wide hover:bg-amber-700 uppercase transition-colors text-center">Certification</button>
                         </div>`;
                     } 
-                    // Other states
                     else if (st !== 'DISAPPROVED') {
                         let currentIndex = statusFlow.indexOf(st);
                         if (currentIndex >= 2 && currentIndex < statusFlow.length - 1) {
                             let nextStatus = statusFlow[currentIndex + 1];
-                            actions += `<button onclick='processToNext("${item.id}", "${nextStatus}")' class="bg-cyan-600 text-white px-4 py-1.5 rounded shadow text-[10px] font-bold hover:bg-cyan-700 uppercase transition-colors w-full max-w-[120px]">Process</button>`;
+                            actions += `<button onclick='processToNext("${item.id}", "${nextStatus}")' class="bg-cyan-600 text-white px-4 py-2 rounded shadow text-[10px] font-bold hover:bg-cyan-700 uppercase transition-colors w-full max-w-[120px]">Process</button>`;
                         }
                     }
 
@@ -508,7 +513,6 @@
             }
         }
 
-        // Logic para i-setup ang BIG Edit screen (Reviewing)
         function showReview(id) {
             const query = document.getElementById('searchInput').value.toLowerCase();
             currentNavList = rawData.filter(item => {
@@ -517,6 +521,7 @@
             currentNavIndex = currentNavList.findIndex(r => r.id === id);
             currentSelection = currentNavList[currentNavIndex];
 
+            // Setup Prev/Next Navigation
             document.getElementById('btnPrev').disabled = currentNavIndex <= 0;
             document.getElementById('btnPrev').className = currentNavIndex <= 0 ? 'bg-gray-100 text-gray-400 px-4 py-2 rounded text-xs font-black uppercase cursor-not-allowed' : 'bg-gray-200 hover:bg-gray-300 px-4 py-2 rounded text-xs font-black uppercase transition-colors text-gray-800';
             
@@ -525,12 +530,22 @@
 
             const fields = ['lot_no', 'owner_name', 'registered_under', 'area', 'td_no', 'location', 'deed_type', 'executed_by', 'in_favor_of', 'doc_no', 'page_no', 'book_no', 'series_of', 'dated', 'notary_public', 'retention_area_names'];
             
-            // MAP DATA SA BIG EDITABLE REVIEW SECTION
+            let st = currentSelection.status || 'RECEIVED';
+            if (st === 'REVIEWED AND RECOMMENDED' || st === 'REVIEWED') st = 'RECOMMENDED';
+            const isReceived = (st === 'RECEIVED' || st === 'RECEIVED - Legal');
+            const isRecommended = (st === 'RECOMMENDED');
+
+            // MAP DATA SA REVIEW SECTION (UI EDITING) - BIG TEXT
             fields.forEach(field => {
                 let editEl = document.getElementById(`edit-${field.replace(/_no|_name|_under|_type|_of|s_of|_public|_area_names/g, '')}`);
                 if(editEl) {
                     editEl.innerText = currentSelection[field] || '---';
-                    editEl.contentEditable = "true";
+                    editEl.contentEditable = isReceived ? "true" : "false";
+                    if (isReceived) {
+                        editEl.classList.add('hover:bg-yellow-200', 'focus:bg-yellow-200', 'cursor-text');
+                    } else {
+                        editEl.classList.remove('hover:bg-yellow-200', 'focus:bg-yellow-200', 'cursor-text');
+                    }
                 }
             });
 
@@ -540,56 +555,35 @@
                 let recEl = document.getElementById(`rec-${p}`);
                 let certEl = document.getElementById(`cert-${p}`);
                 let val = currentSelection[fields[i]] || ' ';
-
                 if(recEl) recEl.innerText = val;
                 if(certEl) certEl.innerText = val;
             });
 
-            // Set Global Names and Dates
+            // Date Generation (For Certification layout specifically)
+            const now = new Date();
+            const fullDateStr = `${now.getDate()}${getOrdinal(now.getDate())} day of ${["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"][now.getMonth()]}, ${now.getFullYear()}`;
+            document.querySelectorAll('.pdf-today').forEach(el => el.innerText = fullDateStr);
+            
+            // Signatories setup
             document.querySelectorAll('.preparedByName').forEach(el => el.innerText = currentUser.full_name);
             document.querySelectorAll('.preparedByPosition').forEach(el => el.innerText = currentUser.role || 'Personnel');
-            
-            const now = new Date();
-            const dateStr = `${now.getDate()}${getOrdinal(now.getDate())} day of ${["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"][now.getMonth()]}, ${now.getFullYear()}`;
-            document.querySelectorAll('.pdf-today').forEach(el => el.innerText = dateStr);
 
-            // Hide/Show correct UI Sections
-            document.getElementById('modalMainTitle').innerText = "REVIEW";
+            // UI Visibility Control
             document.getElementById('docRecommendation').classList.add('hidden');
             document.getElementById('docCertification').classList.add('hidden');
             document.getElementById('reviewSection').classList.remove('hidden');
-            document.getElementById('actionButtons').classList.remove('hidden');
-            document.getElementById('editNotice').classList.remove('hidden');
+            document.getElementById('actionButtons').classList.toggle('hidden', !isReceived);
+            
+            // DALAWA NA BUTTON SA MODAL PAG RECOMMENDED
+            document.getElementById('btnModalRecommend').classList.toggle('hidden', !isRecommended);
+            document.getElementById('btnModalCertify').classList.toggle('hidden', !isRecommended);
 
+            document.getElementById('editNotice').classList.toggle('hidden', !isReceived);
             document.getElementById('reviewRemarks').value = currentSelection.remarks || '';
-            document.getElementById('reviewModal').classList.remove('hidden');
-        }
+            document.getElementById('reviewRemarks').disabled = !isReceived;
+            document.getElementById('remarksSection').classList.toggle('hidden', !isReceived && !currentSelection.remarks);
 
-        // Logic kapag kinlik yung Recommendation o Certification Button sa Table
-        function openPrint(id, type) {
-            showReview(id); // Load the data into the DOM first
-            
-            document.getElementById('reviewSection').classList.add('hidden');
-            document.getElementById('actionButtons').classList.add('hidden');
-            document.getElementById('editNotice').classList.add('hidden');
-            document.getElementById('modalMainTitle').parentElement.classList.add('hidden'); // Hide the entire header in print mode
-            
-            if (type === 'rec') {
-                document.getElementById('docRecommendation').classList.remove('hidden');
-                document.getElementById('docCertification').classList.add('hidden');
-                setTimeout(() => { window.print(); closeReview(); document.getElementById('modalMainTitle').parentElement.classList.remove('hidden'); }, 300);
-            } else if (type === 'cert') {
-                document.getElementById('docRecommendation').classList.add('hidden');
-                document.getElementById('docCertification').classList.remove('hidden');
-                
-                setTimeout(async () => { 
-                    window.print();
-                    await supabaseClient.from('land_records').update({ status: 'CERTIFIED', updated_at: new Date() }).eq('id', id);
-                    fetchClearanceData();
-                    closeReview(); 
-                    document.getElementById('modalMainTitle').parentElement.classList.remove('hidden');
-                }, 300);
-            }
+            document.getElementById('reviewModal').classList.remove('hidden');
         }
 
         async function decideStatus(newSt) {
@@ -625,6 +619,33 @@
             if (!error) { await fetchClearanceData(); closeReview(); }
         }
 
+        // Print Execution function for both Table and Modal buttons
+        function triggerPrint(type, id = null) {
+            if (id) showReview(id); // If called from table, load data first
+            
+            document.getElementById('reviewSection').classList.add('hidden');
+            document.getElementById('actionButtons').classList.add('hidden');
+            document.getElementById('btnModalRecommend').classList.add('hidden');
+            document.getElementById('btnModalCertify').classList.add('hidden');
+            
+            if (type === 'rec') {
+                document.getElementById('docRecommendation').classList.remove('hidden');
+                document.getElementById('docCertification').classList.add('hidden');
+                setTimeout(() => { window.print(); closeReview(); }, 300);
+            } 
+            else if (type === 'cert') {
+                document.getElementById('docRecommendation').classList.add('hidden');
+                document.getElementById('docCertification').classList.remove('hidden');
+                
+                setTimeout(async () => { 
+                    window.print();
+                    await supabaseClient.from('land_records').update({ status: 'CERTIFIED', updated_at: new Date() }).eq('id', currentSelection.id);
+                    fetchClearanceData();
+                    closeReview(); 
+                }, 300);
+            }
+        }
+
         window.processToNext = async function(id, nextStatus) {
             const { error } = await supabaseClient.from('land_records').update({ status: nextStatus, updated_at: new Date() }).eq('id', id);
             if (!error) { await fetchClearanceData(); }
@@ -646,7 +667,7 @@
 
         function logout() { sessionStorage.removeItem('currentUser'); window.location.href = 'index.html'; }
         
-        window.onload = () => { loadMenu(); fetchClearanceData(); };
+        window.onload = () => { renderMenu(); fetchClearanceData(); };
     </script>
 </body>
 </html>
