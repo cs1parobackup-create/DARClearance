@@ -3,17 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - DARPO-CS Clearance</title>
+    <title>Login - DARPO-CS Clearance Portal</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="supabase-config.js"></script>
     <script>
+        // AUTO-REDIRECT: If session exists, skip login [cite: 2026-02-14, 2026-02-17]
         if (sessionStorage.getItem('currentUser')) {
             window.location.href = 'dashboard.html';
         }
     </script>
 </head>
 <body class="bg-gray-100 h-screen flex items-center justify-center p-4 text-[#1F2937]">
+    
     <div class="bg-white w-full max-w-md rounded-lg shadow-2xl overflow-hidden border-t-8 border-[#D4AF37]">
         <div class="p-8">
             <div class="text-center mb-8">
@@ -24,20 +26,25 @@
             <form id="loginForm" class="space-y-6">
                 <div>
                     <label class="block text-[10px] font-bold text-[#003811] uppercase tracking-wider mb-1">Username</label>
-                    <input type="text" id="username" required class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded focus:ring-2 focus:ring-[#003811] focus:outline-none font-bold">
-                </div>
-                <div>
-                    <label class="block text-[10px] font-bold text-[#003811] uppercase tracking-wider mb-1">Password</label>
-                    <input type="password" id="password" required class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded focus:ring-2 focus:ring-[#003811] focus:outline-none font-bold">
+                    <input type="text" id="username" required 
+                           class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded focus:ring-2 focus:ring-[#003811] focus:outline-none font-bold">
                 </div>
                 
-                <p id="errorMessage" class="text-red-600 text-[10px] font-bold hidden text-center uppercase">Authentication failed. Check credentials.</p>
+                <div>
+                    <label class="block text-[10px] font-bold text-[#003811] uppercase tracking-wider mb-1">Password</label>
+                    <input type="password" id="password" required 
+                           class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded focus:ring-2 focus:ring-[#003811] focus:outline-none font-bold">
+                </div>
+                
+                <p id="errorMessage" class="text-red-600 text-[10px] font-bold hidden text-center uppercase tracking-tight"></p>
 
-                <button type="submit" id="loginBtn" class="w-full bg-[#003811] text-white py-4 rounded font-black text-sm hover:bg-[#005c1c] transition-all shadow-lg active:scale-95 uppercase tracking-widest">
+                <button type="submit" id="loginBtn" 
+                        class="w-full bg-[#003811] text-white py-4 rounded font-black text-sm hover:bg-[#005c1c] transition-all shadow-lg active:scale-95 uppercase tracking-widest">
                     Log In
                 </button>
             </form>
         </div>
+        
         <div class="bg-gray-50 p-4 text-center border-t">
             <p class="text-[9px] text-gray-400 font-bold uppercase tracking-wider">Dept. of Agrarian Reform - Camarines Sur</p>
         </div>
@@ -51,34 +58,40 @@
             const userVal = document.getElementById('username').value.trim();
             const passVal = document.getElementById('password').value.trim();
 
+            // UI Reset
             btn.innerText = "VERIFYING...";
             btn.disabled = true;
             err.classList.add('hidden');
 
             try {
-                // Binago sa lowercase 'users' para tumugma sa database
+                // Database query targeting lowercase 'users' table
+                // maybeSingle prevents crashing if no user is found
                 const { data, error } = await supabaseClient
                     .from('users') 
                     .select('*')
                     .eq('username', userVal)
                     .eq('password', passVal)
-                    .single();
+                    .maybeSingle(); 
 
                 if (error) {
-                    console.error("Supabase Error:", error.message); // Makikita ito sa F12 Console
-                    throw new Error(error.message);
+                    console.error("Database Connection Error:", error.message);
+                    throw new Error("Database connection failed.");
                 }
 
-                if (!data) throw new Error("No user found");
+                if (!data) {
+                    // Triggers if username/password mismatch occurs
+                    throw new Error("Invalid Username or Password.");
+                }
 
-                console.log("Login Success:", data.full_name);
+                // SUCCESS: Store session and redirect [cite: 2026-02-14]
+                console.log("Welcome,", data.full_name);
                 sessionStorage.setItem('currentUser', JSON.stringify(data));
                 window.location.href = 'dashboard.html';
 
             } catch (fail) {
-                console.error("Login Process Failed:", fail.message);
+                console.error("Auth Exception:", fail.message);
+                err.innerText = fail.message;
                 err.classList.remove('hidden');
-                err.innerText = "Authentication failed. " + fail.message;
                 btn.innerText = "LOG IN";
                 btn.disabled = false;
             }
