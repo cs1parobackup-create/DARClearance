@@ -445,7 +445,6 @@
 
                     let currentIndex = statusFlow.indexOf(st);
                     
-                    // PARPO DASHBOARD FILTER: Hide RECEIVED and RECOMMENDED from PARPO
                     if (isParpo && currentIndex < 2 && st !== 'DISAPPROVED') {
                         return; 
                     }
@@ -555,11 +554,15 @@
         }
 
         function generateQRs(identifier) {
+            // Update this base URL to wherever you host verify.html
+            const baseUrl = window.location.origin + "/verify.html?id=";
+            const scanUrl = baseUrl + encodeURIComponent(identifier || 'NO-ID');
+
             ['qr-rec', 'qr-cert'].forEach(id => {
                 const el = document.getElementById(id);
                 if (el) {
                     el.innerHTML = '';
-                    new QRCode(el, { text: identifier || 'NO-ID', width: 60, height: 60 });
+                    new QRCode(el, { text: scanUrl, width: 60, height: 60 });
                 }
             });
         }
