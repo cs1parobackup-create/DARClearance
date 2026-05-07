@@ -27,7 +27,7 @@
                 display: block !important;
                 width: 8.5in !important; 
                 height: 13in !important;
-                padding: 0 !important;
+                padding: 0 !important; /* Update this line for full image background */
                 margin: 0 !important;
             }
         }
@@ -59,7 +59,7 @@
         .doc-content {
             position: relative;
             z-index: 10;
-            padding: 1in;
+            padding: 1in; /* This creates the necessary content margins inside the background */
             width: 100%;
             height: 100%;
             box-sizing: border-box;
@@ -71,7 +71,7 @@
             display: inline-block; 
             min-width: 40px; 
             text-transform: uppercase; 
-            line-height: 1.1; 
+            line-height: 1.6; /* Increase to prevent overlap */
             padding-bottom: 1px;
         }
         
@@ -237,7 +237,7 @@
             <div id="docRecommendation" class="doc-print-area hidden">
                 <img class="print-bg" crossorigin="anonymous" src="" style="display: none;">
                 <div class="doc-content">
-                    <div class="text-right font-bold mb-4 mr-10" id="rec-header-id">LTC-PENDING</div>
+                    <div class="text-right font-bold mb-4 mr-10 mt-[0.1in]" id="rec-header-id">LTC-PENDING</div>
                     
                     <div class="text-center mb-6">
                         <div class="font-black text-[18pt] tracking-wide">RECOMMENDATION</div>
@@ -248,8 +248,7 @@
                         This is to recommend that the application/request for Issuance of Land Transfer Clearance (LTC) be <span class="font-bold">APPROVED</span> on the parcel of agricultural land with the following pertinent information, to wit;
                     </p>
 
-                    <div class="grid grid-cols-[220px_1fr] gap-y-1.5 mb-4 ml-10">
-                        <div class="italic">Lot No/s</div> <div class="data-value" id="rec-lot">---</div>
+                    <div class="grid grid-cols-[220px_1fr] gap-y-2.5 mb-4 ml-10"> <div class="italic">Lot No/s</div> <div class="data-value" id="rec-lot">---</div>
                         <div class="italic">In the Name of</div> <div class="data-value" id="rec-owner">---</div>
                         <div class="italic">Registered under</div> <div class="data-value" id="rec-tct">---</div>
                         <div class="italic">With an area (in has.) of</div> <div class="data-value" id="rec-area">---</div>
@@ -304,16 +303,20 @@
                         </div>
                     </div>
 
-                    <div class="flex justify-end mt-4 page-break-avoid mr-10">
-                        <div id="qr-rec" class="p-1"></div>
-                    </div>
+                    <div class="flex justify-end items-center gap-4 mt-12 page-break-avoid mr-10">
+                        <div class="text-center w-60">
+                            <div class="mt-14"></div>
+                            <p class="sys-parpo-name font-bold uppercase underline underline-offset-4 inline-block">---</p>
+                            <p class="text-[9pt] uppercase mt-1">PARPO II</p>
+                        </div>
+                        <div id="qr-rec" class="p-1 mb-2"></div> </div>
                 </div>
             </div>
 
             <div id="docCertification" class="doc-print-area mx-auto hidden">
                 <img class="print-bg" crossorigin="anonymous" src="" style="display: none;">
                 <div class="doc-content pt-8">
-                    <div class="text-right font-bold mb-4 flex flex-col items-end mr-10" style="margin-top: -10px;">
+                    <div class="text-right font-bold mb-4 flex flex-col items-end mr-10 mt-[0.1in]" style="margin-top: -10px;">
                         <span class="italic font-normal text-[10pt]">LTC Form No. 5</span>
                         <span id="cert-header-id">LTC-PENDING</span>
                     </div>
@@ -327,8 +330,7 @@
                         This is to certify that the application/request for Issuance of Land Transfer Clearance (LTC) filed to this Office with the following pertinent information, to wit:
                     </p>
 
-                    <div class="grid grid-cols-[220px_1fr] gap-y-1.5 mb-4 ml-10">
-                        <div class="italic">Lot No/s</div> <div class="data-value" id="cert-lot">---</div>
+                    <div class="grid grid-cols-[220px_1fr] gap-y-2.5 mb-4 ml-10"> <div class="italic">Lot No/s</div> <div class="data-value" id="cert-lot">---</div>
                         <div class="italic">In the Name of</div> <div class="data-value" id="cert-owner">---</div>
                         <div class="italic">Registered under</div> <div class="data-value" id="cert-tct">---</div>
                         <div class="italic">With an area (in has.) of</div> <div class="data-value" id="cert-area">---</div>
@@ -376,13 +378,11 @@
                         Done and issued this <span class="pdf-today-ordinal font-bold">---</span> at the DAR Provincial Office.
                     </div>
 
-                    <div class="flex justify-end items-end gap-6 mt-8 page-break-avoid mr-10">
-                        <div id="qr-cert" class="p-1 mb-2"></div>
-                        <div class="text-center">
-                            <div class="mt-14"></div>
+                    <div class="flex justify-end items-center gap-4 mt-12 page-break-avoid mr-10"> <div class="text-center w-60"> <div class="mt-14"></div>
                             <p class="sys-parpo-name font-bold uppercase underline underline-offset-4 inline-block">---</p>
                             <p class="text-[9pt] uppercase mt-1">PARPO II</p>
                         </div>
+                        <div id="qr-cert" class="p-1 mb-2"></div>
                     </div>
                 </div>
             </div>
@@ -634,7 +634,7 @@
                 const el = document.getElementById(id);
                 if (el) {
                     el.innerHTML = '';
-                    new QRCode(el, { text: scanUrl, width: 80, height: 80, correctLevel: QRCode.CorrectLevel.L });
+                    new QRCode(el, { text: scanUrl, width: 60, height: 60, correctLevel: QRCode.CorrectLevel.L });
                 }
             });
         }
