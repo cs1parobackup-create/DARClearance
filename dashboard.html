@@ -27,18 +27,18 @@
             #printSection { 
                 visibility: visible !important;
                 display: block !important;
-                width: 6.5in !important; /* 8.5in - 2in margins */
+                width: 6.5in !important; /* Adjusted for 1 inch margins */
                 margin: 0 auto !important;
                 font-family: 'Roboto', sans-serif !important;
                 font-size: 10pt !important;
-                line-height: 1.2 !important;
+                line-height: 1.1 !important;
                 color: black !important;
+                border: none !important;
             }
-            .underline-data { text-decoration: underline !important; border: none !important; }
         }
 
-        .doc-format { font-family: 'Roboto', sans-serif; font-size: 10pt; color: black; line-height: 1.2; }
-        .underline-data { text-decoration: underline; font-weight: 700; padding: 0 2px; text-transform: uppercase; }
+        .doc-format { font-family: 'Roboto', sans-serif; font-size: 10pt; color: black; line-height: 1.1; }
+        .underline-data { border-bottom: 1.5px solid black; font-weight: 700; padding: 0 4px; display: inline-block; min-width: 80px; text-transform: uppercase; }
     </style>
 </head>
 <body class="flex h-screen overflow-hidden text-gray-800">
@@ -126,7 +126,7 @@
                 <button id="btnPrint" onclick="window.print()" class="bg-blue-600 text-white px-5 py-2 rounded text-[10px] font-black uppercase hidden hover:bg-blue-700">Print Official Document</button>
             </div>
             
-            <div id="printSection" class="bg-white text-black doc-format mx-auto">
+            <div id="printSection" class="bg-white p-10 text-black doc-format border mx-auto">
                 <div class="text-center mb-6 uppercase font-bold text-lg leading-tight">
                     RECOMMENDATION<br>
                     <span class="text-sm font-normal normal-case">(Land Transfer Clearance)</span>
@@ -136,40 +136,40 @@
                     This is to recommend that the application/request for issuance of Land Transfer Clearance (LTC) be <strong>APPROVED</strong> on the parcel of agricultural land with the following pertinent information, to wit;
                 </p>
 
-                <div class="grid grid-cols-[200px_1fr] gap-y-1 mb-6">
-                    <div class="italic">Lot No/s</div> <div id="pdf-lot" class="underline-data">---</div>
-                    <div class="italic">In the Name of</div> <div id="pdf-owner" class="underline-data font-bold">---</div>
-                    <div class="italic">Registered under</div> <div id="pdf-tct" class="underline-data">---</div>
-                    <div class="italic">With an area (in has.) of</div> <div id="pdf-area" class="underline-data">---</div>
-                    <div class="italic">Declared under T.D. No.</div> <div id="pdf-td" class="underline-data">---</div>
-                    <div class="italic">Located at</div> <div id="pdf-location" class="underline-data uppercase">---</div>
-                    <div class="italic">Subjected of the Deed of</div> <div id="pdf-deed" class="underline-data uppercase">---</div>
-                    <div class="italic">Executed by</div> <div id="pdf-executed" class="underline-data uppercase">---</div>
-                    <div class="italic">In favor of</div> <div id="pdf-favor" class="underline-data uppercase">---</div>
+                <div class="grid grid-cols-[200px_1fr] gap-y-1 mb-6 ml-4">
+                    <div class="italic">Lot No/s</div> <div class="underline-data w-full" id="pdf-lot">---</div>
+                    <div class="italic">In the Name of</div> <div class="underline-data w-full font-bold uppercase" id="pdf-owner">---</div>
+                    <div class="italic">Registered under</div> <div class="underline-data w-full" id="pdf-tct">---</div>
+                    <div class="italic">With an area (in has.) of</div> <div class="underline-data w-full" id="pdf-area">---</div>
+                    <div class="italic">Declared under T.D. No.</div> <div class="underline-data w-full" id="pdf-td">---</div>
+                    <div class="italic">Located at</div> <div class="underline-data w-full uppercase" id="pdf-location">---</div>
+                    <div class="italic">Subjected of the Deed of</div> <div class="underline-data w-full uppercase" id="pdf-deed">---</div>
+                    <div class="italic">Executed by</div> <div class="underline-data w-full uppercase" id="pdf-executed">---</div>
+                    <div class="italic">In favor of</div> <div class="underline-data w-full uppercase" id="pdf-favor">---</div>
                     
                     <div class="italic">Under Doc. No.</div> 
                     <div class="flex gap-8">
-                        <span id="pdf-doc" class="underline-data">---</span>
-                        <span>Page No. <span id="pdf-page" class="underline-data">---</span></span>
-                        <span>Book No. <span id="pdf-book" class="underline-data">---</span></span>
+                        <span class="underline-data w-20 text-center" id="pdf-doc">---</span>
+                        <span>Page No. <span class="underline-data w-20 text-center" id="pdf-page">---</span></span>
+                        <span>Book No. <span class="underline-data w-20 text-center" id="pdf-book">---</span></span>
                     </div>
 
                     <div class="italic">Series of</div> 
                     <div class="flex gap-8">
-                        <span id="pdf-series" class="underline-data">---</span>
-                        <span>Dated <span id="pdf-dated" class="underline-data uppercase">---</span></span>
+                        <span class="underline-data w-20 text-center" id="pdf-series">---</span>
+                        <span>Dated <span class="underline-data min-w-[120px] uppercase" id="pdf-dated">---</span></span>
                     </div>
 
-                    <div class="italic">of Notary Public</div> <div id="pdf-notary" class="underline-data uppercase font-bold">---</div>
-                    <div class="italic">of a retention area of vendor/transferor</div> <div id="pdf-retention" class="underline-data uppercase">---</div>
+                    <div class="italic">of Notary Public</div> <div class="underline-data w-full uppercase font-bold" id="pdf-notary">---</div>
+                    <div class="italic text-[9.5pt]">of a retention area of vendor/transferor</div> <div class="underline-data w-full uppercase" id="pdf-retention">---</div>
                 </div>
 
-                <div class="mb-6 flex gap-4 font-bold items-center">
+                <div class="mb-6 flex gap-4 font-bold items-center ml-4">
                     <span>is hereby:</span>
-                    <span class="text-lg tracking-widest font-black uppercase underline">APPROVED</span>
+                    <span class="border-b-2 border-black px-16 py-1 text-lg tracking-widest font-black uppercase">APPROVED</span>
                 </div>
 
-                <p class="mb-6 text-justify italic leading-tight">
+                <p class="mb-6 text-[9.5pt] text-justify italic leading-tight">
                     The applicant submitted all the necessary requirements for the issuance of Land Transfer Clearance in compliance with DAR Administrative Order No. 4, series of 2021.
                 </p>
 
@@ -177,19 +177,23 @@
                     Done this <span id="pdf-today" class="font-bold underline">---</span> Naga City, Camarines Sur.
                 </div>
 
-                <div class="grid grid-cols-2 mt-12 items-end">
-                    <div class="text-left">
-                        <p class="text-xs mb-6">Reviewed and Noted by:</p>
-                        <p class="font-bold uppercase underline">ATTY. JAIME G. RESOCO, JR.</p>
-                        <p class="text-[10pt] italic">Chief, Legal Division</p>
-                        <div class="mt-4">
-                            <img id="pdf-qrcode" src="" class="w-20 h-20 bg-gray-100" alt="QR Code">
+                <div class="flex justify-between items-start mt-12">
+                    <div class="space-y-10 w-1/2">
+                        <div>
+                            <p class="text-xs mb-6">Reviewed and Noted by:</p>
+                            <p class="font-bold uppercase border-b border-black min-w-[220px] inline-block">ATTY. JAIME G. RESOCO, JR.</p>
+                            <p class="text-[10pt] italic">Chief, Legal Division</p>
+                        </div>
+                        <div>
+                            <img id="pdf-qrcode" src="" class="w-24 h-24 inline-block bg-gray-100" alt="QR Code">
                         </div>
                     </div>
-                    <div class="text-right">
-                        <p class="text-xs mb-6 text-left inline-block w-[220px]">Prepared by:</p><br>
-                        <p id="preparedByName" class="font-bold uppercase underline inline-block min-w-[220px]">---</p>
-                        <p id="preparedByPosition" class="text-[10pt] italic">---</p>
+                    <div class="w-1/2 text-right">
+                        <div class="inline-block text-left">
+                            <p class="text-xs mb-6">Prepared by:</p>
+                            <p id="preparedByName" class="font-bold uppercase border-b border-black min-w-[220px] inline-block text-center">---</p>
+                            <p id="preparedByPosition" class="text-[10pt] italic text-center">---</p>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -229,7 +233,7 @@
             rawData.forEach(item => {
                 if ((item.registered_under || '').toLowerCase().includes(query) || (item.owner_name || '').toLowerCase().includes(query)) {
                     const st = item.status || 'RECEIVED - Legal';
-                    if (st === 'RECEIVED - Legal') stats.rl++; 
+                    if (st === 'RECEIVED - Legal' || st === 'RECEIVED') stats.rl++; 
                     else if (st === 'REVIEWED') stats.rev++; 
                     else if (st === 'PROCESSED') stats.pro++; 
                     else if (st === 'FOR SIGNATURE - PARPO II') stats.sig++; 
@@ -237,13 +241,22 @@
                     else if (st === 'FORWARDED - Records') stats.fwd++; 
                     else if (st === 'RELEASED - Client') stats.rel++;
 
+                    let actions = `<button onclick='showReview("${item.id}")' class="bg-[#003811] text-white px-3 py-1 rounded text-[8px] font-bold hover:bg-black uppercase mr-1">Review</button>`;
+                    
+                    if (st !== 'RECEIVED' && st !== 'RECEIVED - Legal' && st !== 'DISAPPROVED') {
+                        actions += `<button onclick='printRecord("${item.id}")' class="bg-blue-600 text-white px-3 py-1 rounded text-[8px] font-bold hover:bg-blue-700 uppercase mr-1">Print</button>`;
+                        if (st === 'REVIEWED') {
+                            actions += `<button onclick='processRecord("${item.id}")' class="bg-cyan-600 text-white px-3 py-1 rounded text-[8px] font-bold hover:bg-cyan-700 uppercase">Process</button>`;
+                        }
+                    }
+
                     tbody.innerHTML += `
                         <tr class="hover:bg-gray-50">
                             <td class="font-bold">${item.registered_under || '---'}</td>
                             <td class="uppercase font-semibold">${item.owner_name}</td>
                             <td><span class="px-2 py-0.5 rounded text-[7px] font-black uppercase ${getStatusStyle(st)}">${st}</span></td>
                             <td class="text-right font-mono text-gray-400">${item.updated_at ? new Date(item.updated_at).toLocaleString('en-US', { hour12: true }) : '---'}</td>
-                            <td class="text-center"><button onclick='showReview("${item.id}")' class="bg-[#003811] text-white px-3 py-1 rounded text-[8px] font-bold hover:bg-black uppercase">Review</button></td>
+                            <td class="text-center">${actions}</td>
                         </tr>`;
                 }
             });
@@ -251,7 +264,7 @@
         }
 
         function getStatusStyle(s) {
-            const colors = { 'RECEIVED - Legal': 'bg-blue-100 text-blue-800', 'REVIEWED': 'bg-purple-100 text-purple-800', 'PROCESSED': 'bg-cyan-100 text-cyan-800', 'FOR SIGNATURE - PARPO II': 'bg-orange-100 text-orange-800', 'DISAPPROVED': 'bg-red-100 text-red-800', 'FORWARDED - Records': 'bg-green-100 text-green-800', 'RELEASED - Client': 'bg-teal-100 text-teal-800' };
+            const colors = { 'RECEIVED - Legal': 'bg-blue-100 text-blue-800', 'RECEIVED': 'bg-blue-100 text-blue-800', 'REVIEWED': 'bg-purple-100 text-purple-800', 'PROCESSED': 'bg-cyan-100 text-cyan-800', 'FOR SIGNATURE - PARPO II': 'bg-orange-100 text-orange-800', 'DISAPPROVED': 'bg-red-100 text-red-800', 'FORWARDED - Records': 'bg-green-100 text-green-800', 'RELEASED - Client': 'bg-teal-100 text-teal-800' };
             return colors[s] || 'bg-gray-100';
         }
 
@@ -261,7 +274,19 @@
 
             const fields = ['lot_no', 'owner_name', 'registered_under', 'area', 'td_no', 'location', 'deed_type', 'executed_by', 'in_favor_of', 'doc_no', 'page_no', 'book_no', 'series_of', 'dated', 'notary_public', 'retention_area_names'];
             const pdfMap = ['lot', 'owner', 'tct', 'area', 'td', 'location', 'deed', 'executed', 'favor', 'doc', 'page', 'book', 'series', 'dated', 'notary', 'retention'];
-            pdfMap.forEach((p, i) => document.getElementById(`pdf-${p}`).innerText = currentSelection[fields[i]] || '---');
+            
+            pdfMap.forEach((p, i) => {
+                let el = document.getElementById(`pdf-${p}`);
+                let val = currentSelection[fields[i]];
+                
+                if (!val || val.trim() === '' || val === '---') {
+                    el.innerText = ' ';
+                    el.style.borderBottom = 'none';
+                } else {
+                    el.innerText = val;
+                    el.style.borderBottom = '1.5px solid black';
+                }
+            });
 
             document.getElementById('preparedByName').innerText = user.full_name;
             document.getElementById('preparedByPosition').innerText = user.role || 'Personnel';
@@ -279,6 +304,16 @@
         async function decideStatus(newSt) {
             const { error } = await supabaseClient.from('land_records').update({ status: newSt, updated_at: new Date() }).eq('id', currentSelection.id);
             if (!error) { await fetchClearanceData(); showReview(currentSelection.id); }
+        }
+
+        window.processRecord = async function(id) {
+            const { error } = await supabaseClient.from('land_records').update({ status: 'PROCESSED', updated_at: new Date() }).eq('id', id);
+            if (!error) { await fetchClearanceData(); }
+        }
+
+        window.printRecord = function(id) {
+            showReview(id);
+            setTimeout(() => window.print(), 300);
         }
 
         function closeReview() { document.getElementById('reviewModal').classList.add('hidden'); }
