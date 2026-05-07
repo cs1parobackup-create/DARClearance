@@ -21,7 +21,7 @@
         @media print {
             @page { size: 8.5in 13in; margin: 1in; }
             body { background: white !important; }
-            nav, header, .no-print, #actionButtons { display: none !important; }
+            nav, header, .no-print, #actionButtons, #remarksSection { display: none !important; }
             #reviewModal { position: static; display: block; background: transparent; padding: 0; box-shadow: none; }
             
             #printSection { 
@@ -66,14 +66,14 @@
         </header>
 
         <div class="flex-1 overflow-y-auto p-4 space-y-4 no-print">
-            <div class="grid grid-cols-4 lg:grid-cols-7 gap-2">
+            <div class="grid grid-cols-4 lg:grid-cols-8 gap-2">
                 <div class="bg-white p-2 rounded border-l-4 border-blue-500 text-center shadow-sm">
                     <p class="text-[7px] font-bold text-gray-400 uppercase">Received</p>
                     <h3 id="stat-received" class="text-md font-black text-blue-600">0</h3>
                 </div>
                 <div class="bg-white p-2 rounded border-l-4 border-purple-500 text-center shadow-sm">
-                    <p class="text-[6.5px] font-bold text-gray-400 uppercase">Reviewed & Rec</p>
-                    <h3 id="stat-reviewed" class="text-md font-black text-purple-600">0</h3>
+                    <p class="text-[7px] font-bold text-gray-400 uppercase">Recommended</p>
+                    <h3 id="stat-recommended" class="text-md font-black text-purple-600">0</h3>
                 </div>
                 <div class="bg-white p-2 rounded border-l-4 border-cyan-500 text-center shadow-sm">
                     <p class="text-[7px] font-bold text-gray-400 uppercase">Certified</p>
@@ -94,6 +94,10 @@
                 <div class="bg-white p-2 rounded border-l-4 border-teal-500 text-center shadow-sm">
                     <p class="text-[7px] font-bold text-gray-400 uppercase">Released</p>
                     <h3 id="stat-released" class="text-md font-black text-teal-600">0</h3>
+                </div>
+                <div class="bg-white p-2 rounded border-l-4 border-gray-400 text-center shadow-sm">
+                    <p class="text-[7px] font-bold text-gray-400 uppercase">Disapproved</p>
+                    <h3 id="stat-disapproved" class="text-md font-black text-gray-600">0</h3>
                 </div>
             </div>
 
@@ -119,12 +123,17 @@
         <div class="bg-white max-w-4xl w-full p-6 shadow-2xl relative my-4 no-print">
             <button onclick="closeReview()" class="absolute top-4 right-4 text-gray-400 hover:text-black text-xl no-print">&times;</button>
             
+            <div id="remarksSection" class="mb-4 no-print hidden">
+                <label class="block text-[10px] font-bold text-gray-700 uppercase mb-1">Remarks (Required for Disapproval)</label>
+                <textarea id="reviewRemarks" class="w-full border rounded p-2 text-xs focus:outline-none focus:border-[#003811]" rows="3" placeholder="Enter remarks here..."></textarea>
+            </div>
+
             <div class="flex justify-between items-center mb-6 border-b pb-4 no-print">
                 <div id="actionButtons" class="flex gap-2">
-                    <button onclick="decideStatus('REVIEWED AND RECOMMENDED')" class="bg-green-700 text-white px-5 py-2 rounded text-[10px] font-black uppercase hover:bg-green-800">Approve</button>
+                    <button onclick="decideStatus('RECOMMENDED')" class="bg-green-700 text-white px-5 py-2 rounded text-[10px] font-black uppercase hover:bg-green-800">Approve</button>
                     <button onclick="decideStatus('DISAPPROVED')" class="bg-red-700 text-white px-5 py-2 rounded text-[10px] font-black uppercase hover:bg-red-800">Disapprove</button>
                 </div>
-                <button id="btnPrint" onclick="window.print()" class="bg-blue-600 text-white px-5 py-2 rounded text-[10px] font-black uppercase hidden hover:bg-blue-700">Print Official Document</button>
+                <button id="btnPrint" onclick="printAndCertify()" class="bg-blue-600 text-white px-5 py-2 rounded text-[10px] font-black uppercase hidden hover:bg-blue-700">Print Official Document</button>
             </div>
             
             <div id="printSection" class="bg-white p-10 text-black doc-format border mx-auto">
@@ -204,7 +213,7 @@
     <script>
         let currentSelection = null;
         let rawData = [];
-        const statusFlow = ['RECEIVED', 'REVIEWED AND RECOMMENDED', 'CERTIFIED', 'SIGNED', 'TO LEGAL', 'TO RECORDS', 'RELEASE TO CLIENT'];
+        const statusFlow = ['RECEIVED', 'RECOMMENDED', 'CERTIFIED', 'SIGNED', 'TO LEGAL', 'TO RECORDS', 'RELEASE TO CLIENT'];
 
         async function loadMenu() {
             const menuContainer = document.getElementById('dynamicMenu');
@@ -245,20 +254,20 @@
             const query = document.getElementById('searchInput').value.toLowerCase();
             const tbody = document.getElementById('clearanceTableBody');
             tbody.innerHTML = '';
-            let stats = { rec: 0, rev: 0, cer: 0, sig: 0, leg: 0, recd: 0, rel: 0 };
+            let stats = { rec: 0, rev: 0, cer: 0, sig: 0, leg: 0, recd: 0, rel: 0, dis: 0 };
             
             rawData.forEach(item => {
                 if ((item.registered_under || '').toLowerCase().includes(query) || (item.owner_name || '').toLowerCase().includes(query)) {
                     let st = item.status || 'RECEIVED';
                     
-                    // Normalize old statuses for stat counting if they exist
                     if (st === 'RECEIVED' || st === 'RECEIVED - Legal') { stats.rec++; st = 'RECEIVED'; }
-                    else if (st === 'REVIEWED AND RECOMMENDED' || st === 'REVIEWED') { stats.rev++; st = 'REVIEWED AND RECOMMENDED'; }
+                    else if (st === 'RECOMMENDED' || st === 'REVIEWED AND RECOMMENDED' || st === 'REVIEWED') { stats.rev++; st = 'RECOMMENDED'; }
                     else if (st === 'CERTIFIED' || st === 'PROCESSED') { stats.cer++; st = 'CERTIFIED'; }
                     else if (st === 'SIGNED' || st === 'FOR SIGNATURE - PARPO II') { stats.sig++; st = 'SIGNED'; }
                     else if (st === 'TO LEGAL' || st === 'FORWARDED - Records') { stats.leg++; st = 'TO LEGAL'; }
                     else if (st === 'TO RECORDS') { stats.recd++; st = 'TO RECORDS'; }
                     else if (st === 'RELEASE TO CLIENT' || st === 'RELEASED - Client') { stats.rel++; st = 'RELEASE TO CLIENT'; }
+                    else if (st === 'DISAPPROVED') { stats.dis++; st = 'DISAPPROVED'; }
 
                     let daysPassed = item.updated_at ? getWorkingDays(new Date(item.updated_at), new Date()) : 0;
                     let warningHTML = daysPassed > 5 ? `<span class="text-red-600 font-black ml-1 text-[12px]" title="Exceeded 5 working days!">⚠️</span>` : '';
@@ -269,7 +278,7 @@
                         actions += `<button onclick='printRecord("${item.id}")' class="bg-blue-600 text-white px-3 py-1 rounded text-[8px] font-bold hover:bg-blue-700 uppercase mr-1">Print</button>`;
                         
                         let currentIndex = statusFlow.indexOf(st);
-                        if (currentIndex >= 0 && currentIndex < statusFlow.length - 1) {
+                        if (currentIndex >= 2 && currentIndex < statusFlow.length - 1) {
                             let nextStatus = statusFlow[currentIndex + 1];
                             actions += `<button onclick='processToNext("${item.id}", "${nextStatus}")' class="bg-cyan-600 text-white px-3 py-1 rounded text-[8px] font-bold hover:bg-cyan-700 uppercase">Process</button>`;
                         }
@@ -292,12 +301,13 @@
         function getStatusStyle(s) {
             const colors = { 
                 'RECEIVED': 'bg-blue-100 text-blue-800', 
-                'REVIEWED AND RECOMMENDED': 'bg-purple-100 text-purple-800', 
+                'RECOMMENDED': 'bg-purple-100 text-purple-800', 
                 'CERTIFIED': 'bg-cyan-100 text-cyan-800', 
                 'SIGNED': 'bg-orange-100 text-orange-800', 
                 'TO LEGAL': 'bg-red-100 text-red-800', 
                 'TO RECORDS': 'bg-green-100 text-green-800', 
-                'RELEASE TO CLIENT': 'bg-teal-100 text-teal-800' 
+                'RELEASE TO CLIENT': 'bg-teal-100 text-teal-800',
+                'DISAPPROVED': 'bg-gray-200 text-gray-800'
             };
             return colors[s] || 'bg-gray-100 text-gray-800';
         }
@@ -329,16 +339,43 @@
             const now = new Date();
             document.getElementById('pdf-today').innerText = `${now.getDate()}${getOrdinal(now.getDate())} day of ${["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"][now.getMonth()]}, ${now.getFullYear()}.`;
 
-            const st = currentSelection.status || 'RECEIVED';
-            const isEvaluated = st !== 'RECEIVED' && st !== 'RECEIVED - Legal';
-            document.getElementById('btnPrint').classList.toggle('hidden', !isEvaluated);
-            document.getElementById('actionButtons').classList.toggle('hidden', isEvaluated);
+            let st = currentSelection.status || 'RECEIVED';
+            if (st === 'REVIEWED AND RECOMMENDED' || st === 'REVIEWED') st = 'RECOMMENDED';
+            
+            const isReceived = (st === 'RECEIVED' || st === 'RECEIVED - Legal');
+
+            // Handle remarks visibility
+            document.getElementById('reviewRemarks').value = currentSelection.remarks || '';
+            document.getElementById('reviewRemarks').disabled = !isReceived;
+            document.getElementById('remarksSection').classList.toggle('hidden', !isReceived && !currentSelection.remarks);
+
+            document.getElementById('actionButtons').classList.toggle('hidden', !isReceived);
+            document.getElementById('btnPrint').classList.toggle('hidden', isReceived || st === 'DISAPPROVED');
+            
             document.getElementById('reviewModal').classList.remove('hidden');
         }
 
         async function decideStatus(newSt) {
-            const { error } = await supabaseClient.from('land_records').update({ status: newSt, updated_at: new Date() }).eq('id', currentSelection.id);
-            if (!error) { await fetchClearanceData(); showReview(currentSelection.id); }
+            const remarks = document.getElementById('reviewRemarks').value;
+            if (newSt === 'DISAPPROVED' && !remarks.trim()) {
+                alert('Please provide remarks for disapproval.');
+                return;
+            }
+            
+            const updateData = { status: newSt, updated_at: new Date() };
+            if (remarks.trim()) updateData.remarks = remarks;
+
+            const { error } = await supabaseClient.from('land_records').update(updateData).eq('id', currentSelection.id);
+            if (!error) { await fetchClearanceData(); closeReview(); }
+        }
+
+        async function printAndCertify() {
+            window.print();
+            let st = currentSelection.status || '';
+            if (st === 'RECOMMENDED' || st === 'REVIEWED AND RECOMMENDED') {
+                await supabaseClient.from('land_records').update({ status: 'CERTIFIED', updated_at: new Date() }).eq('id', currentSelection.id);
+                fetchClearanceData();
+            }
         }
 
         window.processToNext = async function(id, nextStatus) {
@@ -348,19 +385,20 @@
 
         window.printRecord = function(id) {
             showReview(id);
-            setTimeout(() => window.print(), 300);
+            setTimeout(() => printAndCertify(), 300);
         }
 
         function closeReview() { document.getElementById('reviewModal').classList.add('hidden'); }
         function getOrdinal(d) { if (d > 3 && d < 21) return 'th'; switch (d % 10) { case 1: return "st"; case 2: return "nd"; case 3: return "rd"; default: return "th"; } }
         function updateStats(s) { 
             document.getElementById('stat-received').innerText = s.rec; 
-            document.getElementById('stat-reviewed').innerText = s.rev; 
+            document.getElementById('stat-recommended').innerText = s.rev; 
             document.getElementById('stat-certified').innerText = s.cer; 
             document.getElementById('stat-signed').innerText = s.sig; 
             document.getElementById('stat-legal').innerText = s.leg; 
             document.getElementById('stat-records').innerText = s.recd; 
             document.getElementById('stat-released').innerText = s.rel; 
+            document.getElementById('stat-disapproved').innerText = s.dis;
         }
         function logout() { sessionStorage.removeItem('currentUser'); window.location.href = 'index.html'; }
         window.onload = () => { fetchClearanceData(); loadMenu(); };
