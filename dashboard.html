@@ -91,23 +91,23 @@
                     <h3 id="stat-received" class="text-lg font-black text-blue-600">0</h3>
                 </div>
                 <div class="bg-white p-3 rounded border-l-4 border-purple-500 text-center shadow-sm">
-                    <p class="text-[8px] font-bold text-gray-400 uppercase">Recommended</p>
+                    <p class="text-[8px] font-bold text-gray-400 uppercase">Reviewed</p>
                     <h3 id="stat-recommended" class="text-lg font-black text-purple-600">0</h3>
                 </div>
                 <div class="bg-white p-3 rounded border-l-4 border-cyan-500 text-center shadow-sm">
-                    <p class="text-[8px] font-bold text-gray-400 uppercase">Certified</p>
+                    <p class="text-[8px] font-bold text-gray-400 uppercase">Printed LTC</p>
                     <h3 id="stat-certified" class="text-lg font-black text-cyan-600">0</h3>
                 </div>
                 <div class="bg-white p-3 rounded border-l-4 border-orange-500 text-center shadow-sm">
-                    <p class="text-[8px] font-bold text-gray-400 uppercase">Signed</p>
+                    <p class="text-[8px] font-bold text-gray-400 uppercase">Signed by PARPO</p>
                     <h3 id="stat-signed" class="text-lg font-black text-orange-600">0</h3>
                 </div>
                 <div class="bg-white p-3 rounded border-l-4 border-red-500 text-center shadow-sm">
-                    <p class="text-[8px] font-bold text-gray-400 uppercase">To Legal</p>
+                    <p class="text-[8px] font-bold text-gray-400 uppercase">Returned to Legal</p>
                     <h3 id="stat-legal" class="text-lg font-black text-red-600">0</h3>
                 </div>
                 <div class="bg-white p-3 rounded border-l-4 border-green-500 text-center shadow-sm">
-                    <p class="text-[8px] font-bold text-gray-400 uppercase">To Records</p>
+                    <p class="text-[8px] font-bold text-gray-400 uppercase">Forwarded to Records</p>
                     <h3 id="stat-records" class="text-lg font-black text-green-600">0</h3>
                 </div>
                 <div class="bg-white p-3 rounded border-l-4 border-teal-500 text-center shadow-sm">
@@ -263,7 +263,7 @@
                         <p class="preparedByPosition text-[9pt] uppercase mt-1">---</p>
                     </div>
                     <div class="absolute left-10 top-20 text-center">
-                        <br><br><br><br><br>
+                        <br><br><br><br><br><br>
                         <p class="mb-4 text-left">Reviewed and Noted by:</p>
                         <p class="sys-chief-name font-bold uppercase underline underline-offset-4 inline-block">---</p>
                         <p class="text-[9pt] mt-1">Chief, Legal Division</p>
@@ -341,6 +341,7 @@
 
                 <div class="flex justify-end mt-12 page-break-avoid mr-10">
                     <div class="text-center">
+                        <br><br>
                         <p class="sys-parpo-name font-bold uppercase underline underline-offset-4 inline-block">---</p>
                         <p class="text-[9pt] uppercase mt-1">PARPO II</p>
                     </div>
@@ -365,7 +366,7 @@
         let rawData = [];
         let currentNavList = [];
         let currentNavIndex = -1;
-        const statusFlow = ['RECEIVED', 'RECOMMENDED', 'CERTIFIED', 'SIGNED', 'TO LEGAL', 'TO RECORDS', 'RELEASE TO CLIENT'];
+        const statusFlow = ['RECEIVED', 'REVIEWED', 'PRINTED LTC', 'SIGNED BY PARPO', 'RETURNED TO LEGAL', 'FORWARDED TO RECORDS', 'RELEASED TO CLIENT', 'DISAPPROVED'];
 
         let chiefLegalName = "---";
         let parpoName = "---";
@@ -426,7 +427,6 @@
             let userRole = currentUser.role.toUpperCase();
             let isParpo = userRole === 'PARPO II' || userRole === 'PARPO';
             let isChief = userRole === 'CHIEF, LEGAL DIVISION' || userRole === 'DIVISION CHIEF' || userRole === 'CHIEF';
-            // Added && !isParpo to completely prevent duplicate buttons issue for PARPO II
             let isLegal = (userRole.includes('LEGAL') || userRole.includes('SARPO') || userRole.includes('ARPT') || userRole.includes('ARPO')) && !isParpo;
             let isEncoder = userRole === 'ODTS ENCODER' || userRole.includes('ODTS');
             let isRecords = userRole.includes('RECORDS');
@@ -434,15 +434,16 @@
 
             rawData.forEach(item => {
                 if ((item.registered_under || '').toLowerCase().includes(query) || (item.owner_name || '').toLowerCase().includes(query)) {
+                    
                     let st = (item.status || 'RECEIVED').trim().toUpperCase();
                     
                     if (st === 'RECEIVED' || st === 'RECEIVED - LEGAL') { stats.rec++; st = 'RECEIVED'; }
-                    else if (st === 'RECOMMENDED' || st === 'REVIEWED AND RECOMMENDED' || st === 'REVIEWED') { stats.rev++; st = 'RECOMMENDED'; }
-                    else if (st === 'CERTIFIED' || st === 'PROCESSED') { stats.cer++; st = 'CERTIFIED'; }
-                    else if (st === 'SIGNED' || st === 'FOR SIGNATURE - PARPO II') { stats.sig++; st = 'SIGNED'; }
-                    else if (st === 'TO LEGAL' || st === 'FORWARDED - RECORDS') { stats.leg++; st = 'TO LEGAL'; }
-                    else if (st === 'TO RECORDS') { stats.recd++; st = 'TO RECORDS'; }
-                    else if (st === 'RELEASE TO CLIENT' || st === 'RELEASED - CLIENT') { stats.rel++; st = 'RELEASE TO CLIENT'; }
+                    else if (st === 'REVIEWED' || st === 'REVIEWED AND RECOMMENDED' || st === 'RECOMMENDED') { stats.rev++; st = 'REVIEWED'; }
+                    else if (st === 'PRINTED LTC' || st === 'CERTIFIED' || st === 'PROCESSED') { stats.cer++; st = 'PRINTED LTC'; }
+                    else if (st === 'SIGNED BY PARPO' || st === 'SIGNED' || st === 'FOR SIGNATURE - PARPO II') { stats.sig++; st = 'SIGNED BY PARPO'; }
+                    else if (st === 'RETURNED TO LEGAL' || st === 'TO LEGAL' || st === 'FORWARDED - RECORDS') { stats.leg++; st = 'RETURNED TO LEGAL'; }
+                    else if (st === 'FORWARDED TO RECORDS' || st === 'TO RECORDS') { stats.recd++; st = 'FORWARDED TO RECORDS'; }
+                    else if (st === 'RELEASED TO CLIENT' || st === 'RELEASED - CLIENT' || st === 'RELEASE TO CLIENT') { stats.rel++; st = 'RELEASED TO CLIENT'; }
                     else if (st === 'DISAPPROVED') { stats.dis++; st = 'DISAPPROVED'; }
 
                     let currentIndex = statusFlow.indexOf(st);
@@ -457,35 +458,33 @@
                                 actions += `<button onclick='showReview("${item.id}")' class="bg-[#003811] text-white w-full py-1.5 rounded shadow text-[10px] font-bold tracking-wide hover:bg-black uppercase transition-colors text-center">Review</button>`;
                                 actions += `<button onclick='createVariant("${item.id}")' class="bg-gray-500 text-white w-full py-1 mt-1 rounded shadow text-[9px] font-bold hover:bg-gray-700 uppercase transition-colors text-center">+ Variant</button>`;
                             }
-                        } else {
+                        } else if (st === 'REVIEWED') {
                             if (isChief || isLegal) {
                                 actions += `<button onclick='openPrint("${item.id}", "rec")' class="bg-[#8b5cf6] text-white w-full py-1.5 rounded shadow text-[9px] font-black tracking-wide hover:bg-purple-800 uppercase transition-colors text-center">Recommendation</button>`;
                                 actions += `<button onclick='openPrint("${item.id}", "cert")' class="bg-[#d97706] text-white w-full py-1.5 rounded shadow text-[9px] font-black tracking-wide hover:bg-amber-700 uppercase transition-colors text-center">Certification</button>`;
-                                
-                                if (st === 'RECOMMENDED') {
-                                    actions += `<button onclick='createVariant("${item.id}")' class="bg-gray-500 text-white w-full py-1 rounded shadow text-[9px] font-bold hover:bg-gray-700 uppercase transition-colors text-center mt-1">+ Variant</button>`;
-                                }
+                                actions += `<button onclick='createVariant("${item.id}")' class="bg-gray-500 text-white w-full py-1 rounded shadow text-[9px] font-bold hover:bg-gray-700 uppercase transition-colors text-center mt-1">+ Variant</button>`;
                             }
-
-                            if (st === 'CERTIFIED') {
-                                if (isParpo) {
-                                    actions += `<button onclick='showReview("${item.id}")' class="bg-[#003811] text-white w-full py-1.5 rounded shadow text-[9px] font-black tracking-wide hover:bg-black uppercase transition-colors text-center">Review (Edit)</button>`;
-                                    actions += `<button onclick='openPrint("${item.id}", "rec")' class="bg-[#8b5cf6] text-white w-full py-1.5 rounded shadow text-[9px] font-black tracking-wide hover:bg-purple-800 uppercase transition-colors text-center">Recommendation</button>`;
-                                    actions += `<button onclick='openPrint("${item.id}", "cert")' class="bg-[#d97706] text-white w-full py-1.5 rounded shadow text-[9px] font-black tracking-wide hover:bg-amber-700 uppercase transition-colors text-center">Certification</button>`;
-                                    actions += `<button onclick='processToNext("${item.id}", "SIGNED")' class="bg-cyan-600 text-white w-full py-1.5 rounded shadow text-[10px] font-bold hover:bg-cyan-700 uppercase transition-colors text-center mt-1">Sign</button>`;
-                                }
-                            } else if (st === 'SIGNED') {
-                                if (isParpo) {
-                                    actions += `<button onclick='processToNext("${item.id}", "TO LEGAL")' class="bg-cyan-600 text-white w-full py-1.5 rounded shadow text-[10px] font-bold hover:bg-cyan-700 uppercase transition-colors text-center">Forward to Legal</button>`;
-                                }
-                            } else if (st === 'TO LEGAL') {
-                                if (isChief || (isLegal && item.encoded_by === userFullName)) {
-                                    actions += `<button onclick='processToNext("${item.id}", "TO RECORDS")' class="bg-cyan-600 text-white w-full py-1.5 rounded shadow text-[10px] font-bold hover:bg-cyan-700 uppercase transition-colors text-center">RECORDS</button>`;
-                                }
-                            } else if (st === 'TO RECORDS') {
-                                if (isRecords || isChief) {
-                                    actions += `<button onclick='processToNext("${item.id}", "RELEASE TO CLIENT")' class="bg-cyan-600 text-white w-full py-1.5 rounded shadow text-[10px] font-bold hover:bg-cyan-700 uppercase transition-colors text-center">Release</button>`;
-                                }
+                        } else if (st === 'PRINTED LTC') {
+                            if (isParpo) {
+                                actions += `<button onclick='showReview("${item.id}")' class="bg-[#003811] text-white w-full py-1.5 rounded shadow text-[9px] font-black tracking-wide hover:bg-black uppercase transition-colors text-center">Edit</button>`;
+                                actions += `<button onclick='openPrint("${item.id}", "rec")' class="bg-[#8b5cf6] text-white w-full py-1.5 rounded shadow text-[9px] font-black tracking-wide hover:bg-purple-800 uppercase transition-colors text-center">Recommendation</button>`;
+                                actions += `<button onclick='openPrint("${item.id}", "cert")' class="bg-[#d97706] text-white w-full py-1.5 rounded shadow text-[9px] font-black tracking-wide hover:bg-amber-700 uppercase transition-colors text-center">Certification</button>`;
+                                actions += `<button onclick='processToNext("${item.id}", "SIGNED BY PARPO")' class="bg-cyan-600 text-white w-full py-1.5 rounded shadow text-[10px] font-bold hover:bg-cyan-700 uppercase transition-colors text-center mt-1">Sign</button>`;
+                            } else if (isChief || isLegal) {
+                                actions += `<button onclick='openPrint("${item.id}", "rec")' class="bg-[#8b5cf6] text-white w-full py-1.5 rounded shadow text-[9px] font-black tracking-wide hover:bg-purple-800 uppercase transition-colors text-center">Recommendation</button>`;
+                                actions += `<button onclick='openPrint("${item.id}", "cert")' class="bg-[#d97706] text-white w-full py-1.5 rounded shadow text-[9px] font-black tracking-wide hover:bg-amber-700 uppercase transition-colors text-center">Certification</button>`;
+                            }
+                        } else if (st === 'SIGNED BY PARPO') {
+                            if (isParpo) {
+                                actions += `<button onclick='processToNext("${item.id}", "RETURNED TO LEGAL")' class="bg-cyan-600 text-white w-full py-1.5 rounded shadow text-[10px] font-bold hover:bg-cyan-700 uppercase transition-colors text-center">Return to Legal</button>`;
+                            }
+                        } else if (st === 'RETURNED TO LEGAL') {
+                            if (isChief || (isLegal && item.encoded_by === userFullName)) {
+                                actions += `<button onclick='processToNext("${item.id}", "FORWARDED TO RECORDS")' class="bg-cyan-600 text-white w-full py-1.5 rounded shadow text-[10px] font-bold hover:bg-cyan-700 uppercase transition-colors text-center">FORWARD TO RECORDS</button>`;
+                            }
+                        } else if (st === 'FORWARDED TO RECORDS') {
+                            if (isRecords || isChief) {
+                                actions += `<button onclick='processToNext("${item.id}", "RELEASED TO CLIENT")' class="bg-cyan-600 text-white w-full py-1.5 rounded shadow text-[10px] font-bold hover:bg-cyan-700 uppercase transition-colors text-center">Release</button>`;
                             }
                         }
                     }
@@ -543,12 +542,12 @@
         function getStatusStyle(s) {
             const colors = { 
                 'RECEIVED': 'bg-blue-100 text-blue-800 border border-blue-200', 
-                'RECOMMENDED': 'bg-purple-100 text-purple-800 border border-purple-200', 
-                'CERTIFIED': 'bg-cyan-100 text-cyan-800 border border-cyan-200', 
-                'SIGNED': 'bg-orange-100 text-orange-800 border border-orange-200', 
-                'TO LEGAL': 'bg-red-100 text-red-800 border border-red-200', 
-                'TO RECORDS': 'bg-green-100 text-green-800 border border-green-200', 
-                'RELEASE TO CLIENT': 'bg-teal-100 text-teal-800 border border-teal-200',
+                'REVIEWED': 'bg-purple-100 text-purple-800 border border-purple-200', 
+                'PRINTED LTC': 'bg-cyan-100 text-cyan-800 border border-cyan-200', 
+                'SIGNED BY PARPO': 'bg-orange-100 text-orange-800 border border-orange-200', 
+                'RETURNED TO LEGAL': 'bg-red-100 text-red-800 border border-red-200', 
+                'FORWARDED TO RECORDS': 'bg-green-100 text-green-800 border border-green-200', 
+                'RELEASED TO CLIENT': 'bg-teal-100 text-teal-800 border border-teal-200',
                 'DISAPPROVED': 'bg-gray-200 text-gray-800 border border-gray-300'
             };
             return colors[s] || 'bg-gray-100 text-gray-800';
@@ -572,7 +571,6 @@
             });
         }
 
-        // Changed to async to properly fetch encoder's role position
         async function showReview(id) {
             const query = document.getElementById('searchInput').value.toLowerCase();
             currentNavList = rawData.filter(item => {
@@ -634,7 +632,6 @@
             document.querySelectorAll('.sys-chief-name').forEach(el => el.innerText = chiefLegalName);
             document.querySelectorAll('.sys-parpo-name').forEach(el => el.innerText = parpoName);
 
-            // Pop modal right away to avoid delay while fetching
             document.getElementById('modalMainTitle').innerText = "REVIEW";
             document.getElementById('docRecommendation').classList.add('hidden');
             document.getElementById('docCertification').classList.add('hidden');
@@ -647,16 +644,16 @@
             const st = (currentSelection.status || 'RECEIVED').trim().toUpperCase();
             const uRole = currentUser.role.toUpperCase();
             
-            if (st === 'CERTIFIED' && (uRole === 'PARPO II' || uRole === 'PARPO')) {
+            if (st === 'PRINTED LTC' && (uRole === 'PARPO II' || uRole === 'PARPO')) {
                 actionDiv.innerHTML = `
                     <div class="flex gap-2 w-full justify-end">
-                        <button onclick="decideStatus('CERTIFIED')" class="bg-green-700 text-white px-8 py-3 rounded text-sm font-black uppercase shadow-lg hover:bg-green-800 transition-colors">Update Details</button>
+                        <button onclick="decideStatus('PRINTED LTC')" class="bg-green-700 text-white px-8 py-3 rounded text-sm font-black uppercase shadow-lg hover:bg-green-800 transition-colors">Update Details</button>
                     </div>
                 `;
             } else {
                 actionDiv.innerHTML = `
                     <div class="flex gap-2">
-                        <button onclick="decideStatus('RECOMMENDED')" class="bg-green-700 text-white px-8 py-3 rounded text-sm font-black uppercase shadow-lg hover:bg-green-800 transition-colors">Approve</button>
+                        <button onclick="decideStatus('REVIEWED')" class="bg-green-700 text-white px-8 py-3 rounded text-sm font-black uppercase shadow-lg hover:bg-green-800 transition-colors">Approve</button>
                         <button onclick="decideStatus('DISAPPROVED')" class="bg-red-700 text-white px-8 py-3 rounded text-sm font-black uppercase shadow-lg hover:bg-red-800 transition-colors">Disapprove</button>
                     </div>
                 `;
@@ -664,7 +661,6 @@
 
             document.getElementById('reviewModal').classList.remove('hidden');
 
-            // FETCH ENCODER ROLE/POSITION FOR "PREPARED BY"
             let encoderName = currentSelection.encoded_by || currentSelection.created_by || '---';
             document.querySelectorAll('.preparedByName').forEach(el => el.innerText = encoderName);
             document.querySelectorAll('.preparedByPosition').forEach(el => el.innerText = 'Fetching...');
@@ -709,13 +705,21 @@
                     filename:     filename,
                     image:        { type: 'jpeg', quality: 0.98 },
                     html2canvas:  { scale: 2, useCORS: true },
-                    jsPDF:        { unit: 'in', format: [8.5, 13], orientation: 'portrait' },
-                    pagebreak:    { mode: ['css', 'legacy'] }
+                    jsPDF:        { unit: 'in', format: [8.5, 13], orientation: 'portrait' }
                 };
 
-                html2pdf().set(opt).from(elementToPrint).save().then(async () => {
-                    if (type === 'cert' && currentSelection.status !== 'CERTIFIED') {
-                        await supabaseClient.from('land_records').update({ status: 'CERTIFIED', updated_at: new Date() }).eq('id', id);
+                html2pdf().set(opt).from(elementToPrint).toPdf().get('pdf').then(function(pdf) {
+                    var totalPages = pdf.internal.getNumberOfPages();
+                    for (var i = 1; i <= totalPages; i++) {
+                        pdf.setPage(i);
+                        pdf.setFontSize(10);
+                        pdf.setTextColor(100);
+                        // Print the exact LTC number at the top right of every page
+                        pdf.text(currentSelection.LTC_ID_NUMBER || 'LTC-PENDING', 7.5, 0.5, { align: 'right' });
+                    }
+                }).save().then(async () => {
+                    if (type === 'cert' && currentSelection.status === 'REVIEWED') {
+                        await supabaseClient.from('land_records').update({ status: 'PRINTED LTC', updated_at: new Date() }).eq('id', id);
                         fetchClearanceData();
                     }
                     closeReview(); 
@@ -731,7 +735,7 @@
             const updateData = { status: newSt, updated_at: new Date() };
             if (remarks.trim()) updateData.Remarks = remarks; 
 
-            if (newSt === 'RECOMMENDED' || newSt === 'CERTIFIED') {
+            if (newSt === 'REVIEWED' || newSt === 'PRINTED LTC') {
                 const dbToHtmlMap = {
                     'lot_no': 'edit-lot', 'owner_name': 'edit-owner', 'registered_under': 'edit-tct', 
                     'area': 'edit-area', 'td_no': 'edit-td', 'location': 'edit-location', 
