@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SECURE ACCESS - DARPO-CS</title>
+    <title>Login - DARPO-CS Clearance</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -38,6 +38,7 @@
     </div>
 
     <script>
+        // Initialize Supabase with your provided credentials
         const supabaseUrl = 'https://tqeueibigqwxcizhvdty.supabase.co';
         const supabaseKey = 'sb_publishable_oXBtC1VgBlO07oEmqpcFpw_gBtVMpvT';
         const supabase = supabase.createClient(supabaseUrl, supabaseKey);
@@ -54,7 +55,6 @@
             err.classList.add('hidden');
 
             try {
-                // Check Users table for match
                 const { data, error } = await supabase
                     .from('Users')
                     .select('*')
@@ -64,7 +64,6 @@
 
                 if (error || !data) throw new Error("Invalid login");
 
-                // Store session and redirect [cite: 2026-02-14]
                 sessionStorage.setItem('currentUser', JSON.stringify(data));
                 window.location.href = 'dashboard.html';
 
