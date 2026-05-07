@@ -10,16 +10,21 @@
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
     <style>
         :root { --dar-green: #003811; --dar-gold: #D4AF37; }
-        body { font-family: 'Roboto', sans-serif; background-color: #F3F4F6; font-size: 11px; }
+        body { font-family: 'Segoe UI', sans-serif; background-color: #F3F4F6; font-size: 12px; }
+        
+        /* FIXED SIDEBAR - NO RESIZING */
         .sidebar { background-color: var(--dar-green); width: 16rem; min-width: 16rem; flex-shrink: 0; }
-        .compact-table td, .compact-table th { padding: 0.2rem 0.5rem !important; }
+        
+        /* COMPRESSED UI */
+        .compact-table td, .compact-table th { padding: 0.2rem 0.6rem !important; }
 
-        /* PRINT CONFIG: Folio (8.5x13) - COMPRESSED ROBOTO 10 */
+        /* PRINT CONFIGURATION: Folio (8.5 x 13) - STRICT COMPRESSION */
         @media print {
             @page { size: 8.5in 13in; margin: 0.3in; }
             body { background: white !important; }
             nav, header, .no-print, #actionButtons { display: none !important; }
             #reviewModal { position: static; display: block; background: transparent; padding: 0; box-shadow: none; }
+            
             #printSection { 
                 visibility: visible !important;
                 display: block !important;
@@ -33,8 +38,8 @@
             .underline-data { border-bottom: 1px solid black !important; }
         }
 
-        .doc-format { font-family: 'Roboto', sans-serif; font-size: 10pt; color: black; line-height: 1.2; }
-        .underline-data { font-weight: 700; border-bottom: 1px solid black; padding: 0 2px; text-transform: uppercase; display: inline-block; }
+        .doc-format { font-family: 'Roboto', sans-serif; font-size: 10pt; color: black; line-height: 1.1; }
+        .underline-data { font-weight: 700; border-bottom: 1px solid black; padding: 0 2px; text-transform: uppercase; display: inline-block; min-width: 50px; }
     </style>
 </head>
 <body class="flex h-screen overflow-hidden text-gray-800">
@@ -47,7 +52,7 @@
         <div id="dynamicMenu" class="flex-1 overflow-y-auto py-1"></div>
         <div class="p-3 bg-black/20 text-[10px] font-bold">
             <p id="activeUser" class="text-gray-300 truncate mb-1"></p>
-            <p id="activePosition" class="text-gray-500 italic mb-2"></p>
+            <p id="activePosition" class="text-gray-500 italic mb-2">---</p>
             <button onclick="logout()" class="w-full bg-red-800 py-1.5 rounded hover:bg-red-700 uppercase">Logout</button>
         </div>
     </nav>
@@ -67,7 +72,30 @@
                     <p class="text-[7px] font-bold text-gray-400 uppercase">Received</p>
                     <h3 id="stat-received-legal" class="text-md font-black text-blue-600">0</h3>
                 </div>
-                <div id="stat-placeholder" class="col-span-6"></div> 
+                <div class="bg-white p-2 rounded border-l-4 border-purple-500 text-center shadow-sm">
+                    <p class="text-[7px] font-bold text-gray-400 uppercase">Reviewed</p>
+                    <h3 id="stat-reviewed" class="text-md font-black text-purple-600">0</h3>
+                </div>
+                <div class="bg-white p-2 rounded border-l-4 border-cyan-500 text-center shadow-sm">
+                    <p class="text-[7px] font-bold text-gray-400 uppercase">Processed</p>
+                    <h3 id="stat-processed" class="text-md font-black text-cyan-600">0</h3>
+                </div>
+                <div class="bg-white p-2 rounded border-l-4 border-orange-500 text-center shadow-sm">
+                    <p class="text-[7px] font-bold text-gray-400 uppercase">For Sign</p>
+                    <h3 id="stat-signature" class="text-md font-black text-orange-600">0</h3>
+                </div>
+                <div class="bg-white p-2 rounded border-l-4 border-red-500 text-center shadow-sm">
+                    <p class="text-[7px] font-bold text-gray-400 uppercase">Disapproved</p>
+                    <h3 id="stat-disapproved" class="text-md font-black text-red-600">0</h3>
+                </div>
+                <div class="bg-white p-2 rounded border-l-4 border-green-500 text-center shadow-sm">
+                    <p class="text-[7px] font-bold text-gray-400 uppercase">Forwarded</p>
+                    <h3 id="stat-forwarded" class="text-md font-black text-green-600">0</h3>
+                </div>
+                <div class="bg-white p-2 rounded border-l-4 border-teal-500 text-center shadow-sm">
+                    <p class="text-[7px] font-bold text-gray-400 uppercase">Released</p>
+                    <h3 id="stat-released" class="text-md font-black text-teal-600">0</h3>
+                </div>
             </div>
 
             <div class="bg-white rounded shadow-sm overflow-hidden border">
@@ -108,7 +136,7 @@
                     This is to recommend that the application/request for issuance of Land Transfer Clearance (LTC) be <strong>APPROVED</strong> on the parcel of agricultural land with the following pertinent information, to wit;
                 </p>
 
-                <div class="grid grid-cols-[180px_1fr] gap-y-0.5 mb-4 ml-2">
+                <div class="grid grid-cols-[180px_1fr] gap-y-0.5 mb-4 ml-4">
                     <div class="italic font-normal">Lot No/s</div> <div class="underline-data w-full" id="pdf-lot">---</div>
                     <div class="italic font-normal">In the Name of</div> <div class="underline-data w-full font-bold" id="pdf-owner">---</div>
                     <div class="italic font-normal">Registered under</div> <div class="underline-data w-full" id="pdf-tct">---</div>
@@ -133,7 +161,7 @@
                     <div class="italic font-normal text-[9pt]">of a retention area of vendor/transferor</div> <div class="underline-data w-full" id="pdf-retention">---</div>
                 </div>
 
-                <div class="mb-4 flex gap-4 font-bold items-center ml-2">
+                <div class="mb-4 flex gap-4 font-bold items-center ml-4">
                     <span>is hereby:</span>
                     <span class="border-b border-black px-12 py-0 text-lg font-black uppercase">APPROVED</span>
                 </div>
@@ -156,7 +184,7 @@
                         <div>
                             <p class="text-[8pt] italic mb-4">Reviewed and Noted by:</p>
                             <p class="font-bold uppercase border-b border-black min-w-[180px] leading-none">ATTY. JAIME G. RESOCO, JR.</p>
-                            <p class="text-[9pt] italic leading-none">Chief, Legal Division</p>
+                            <p class="text-[9pt] italic leading-none uppercase">Chief, Legal Division</p>
                         </div>
                     </div>
                     <div class="text-right">
@@ -171,6 +199,21 @@
         let currentSelection = null;
         let rawData = [];
 
+        async function loadMenu() {
+            const menuContainer = document.getElementById('dynamicMenu');
+            const user = JSON.parse(sessionStorage.getItem('currentUser'));
+            const { data: items, error } = await supabaseClient.from('clearance_menu').select('*').eq('is_active', true).order('sort_order', { ascending: true });
+            if (!error) {
+                menuContainer.innerHTML = '';
+                items.forEach(item => {
+                    if (item.required_roles.includes(user.role.toUpperCase()) || item.required_roles.length === 0) {
+                        const isCurrent = window.location.pathname.includes(item.url);
+                        menuContainer.innerHTML += `<a href="${item.url}" class="block px-5 py-2 text-[10px] font-black uppercase border-l-4 transition-all ${isCurrent ? 'bg-[#006400] border-[#D4AF37]' : 'border-transparent hover:bg-[#006400]'}">${item.label}</a>`;
+                    }
+                });
+            }
+        }
+
         async function fetchClearanceData() {
             const { data, error } = await supabaseClient.from('land_records').select('*').order('updated_at', { ascending: false });
             if (!error) { rawData = data || []; refreshDashboard(); }
@@ -180,9 +223,18 @@
             const query = document.getElementById('searchInput').value.toLowerCase();
             const tbody = document.getElementById('clearanceTableBody');
             tbody.innerHTML = '';
+            let stats = { rl: 0, rev: 0, pro: 0, sig: 0, dis: 0, fwd: 0, rel: 0 };
             rawData.forEach(item => {
                 if ((item.lot_no || '').toLowerCase().includes(query) || (item.owner_name || '').toLowerCase().includes(query)) {
                     const st = item.status || 'RECEIVED - Legal';
+                    if (st === 'RECEIVED - Legal') stats.rl++; 
+                    else if (st === 'REVIEWED') stats.rev++; 
+                    else if (st === 'PROCESSED') stats.pro++; 
+                    else if (st === 'FOR SIGNATURE - PARPO II') stats.sig++; 
+                    else if (st === 'DISAPPROVED') stats.dis++; 
+                    else if (st === 'FORWARDED - Records') stats.fwd++; 
+                    else if (st === 'RELEASED - Client') stats.rel++;
+
                     tbody.innerHTML += `
                         <tr class="hover:bg-gray-50 border-b">
                             <td class="font-bold">${item.lot_no || '---'}</td>
@@ -193,30 +245,34 @@
                         </tr>`;
                 }
             });
+            updateStats(stats);
         }
 
         function getStatusStyle(s) {
-            if (s === 'DISAPPROVED') return 'bg-red-100 text-red-800';
-            if (s.includes('RECEIVED')) return 'bg-blue-100 text-blue-800';
-            return 'bg-green-100 text-green-800';
+            const colors = { 'RECEIVED - Legal': 'bg-blue-100 text-blue-800', 'REVIEWED': 'bg-purple-100 text-purple-800', 'PROCESSED': 'bg-cyan-100 text-cyan-800', 'FOR SIGNATURE - PARPO II': 'bg-orange-100 text-orange-800', 'DISAPPROVED': 'bg-red-100 text-red-800', 'FORWARDED - Records': 'bg-green-100 text-green-800', 'RELEASED - Client': 'bg-teal-100 text-teal-800' };
+            return colors[s] || 'bg-gray-100';
         }
 
         function showReview(id) {
             currentSelection = rawData.find(r => r.id === id);
             const user = JSON.parse(sessionStorage.getItem('currentUser'));
+
+            // Map data
+            const fields = ['lot_no', 'owner_name', 'registered_under', 'area', 'td_no', 'location', 'deed_type', 'executed_by', 'in_favor_of', 'doc_no', 'page_no', 'book_no', 'series_of', 'dated', 'notary_public', 'retention_area_names'];
+            const pdfMap = ['lot', 'owner', 'tct', 'area', 'td', 'location', 'deed', 'executed', 'favor', 'doc', 'page', 'book', 'series', 'dated', 'notary', 'retention'];
             
-            // Map Data
-            const fields = ['lot', 'owner', 'tct', 'area', 'td', 'location', 'deed', 'executed', 'favor', 'doc', 'page', 'book', 'series', 'dated', 'notary', 'retention'];
-            fields.forEach(f => document.getElementById(`pdf-${f}`).innerText = currentSelection[f] || currentSelection[`${f}_no`] || ' ');
+            pdfMap.forEach((p, index) => {
+                document.getElementById(`pdf-${p}`).innerText = currentSelection[fields[index]] || ' ';
+            });
 
             document.getElementById('preparedByName').innerText = user.full_name;
             document.getElementById('preparedByPosition').innerText = user.role || 'Personnel';
-            document.getElementById('pdf-qrcode').src = `https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=DAR-LTC-${currentSelection.id}`;
+            document.getElementById('pdf-qrcode').src = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=DAR-LTC-${currentSelection.id}`;
             
             const now = new Date();
             document.getElementById('pdf-today').innerText = `${now.getDate()}${getOrdinal(now.getDate())} day of ${["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"][now.getMonth()]}, ${now.getFullYear()}.`;
 
-            // Logic: RECEIVED shows buttons, REVIEWED/DISAPPROVED shows Print
+            // Display Logic: ACTION for RECEIVED, PRINT for evaluated status
             const isEvaluated = currentSelection.status !== 'RECEIVED - Legal' && currentSelection.status !== 'RECEIVED';
             document.getElementById('btnPrint').classList.toggle('hidden', !isEvaluated);
             document.getElementById('actionButtons').classList.toggle('hidden', isEvaluated);
@@ -229,9 +285,11 @@
             if (!error) { await fetchClearanceData(); showReview(currentSelection.id); }
         }
 
-        function getOrdinal(d) { if (d > 3 && d < 21) return 'th'; switch (d % 10) { case 1: return "st"; case 2: return "nd"; case 3: return "rd"; default: return "th"; } }
         function closeReview() { document.getElementById('reviewModal').classList.add('hidden'); }
+        function getOrdinal(d) { if (d > 3 && d < 21) return 'th'; switch (d % 10) { case 1: return "st"; case 2: return "nd"; case 3: return "rd"; default: return "th"; } }
+        function updateStats(s) { document.getElementById('stat-received-legal').innerText = s.rl; document.getElementById('stat-reviewed').innerText = s.rev; document.getElementById('stat-processed').innerText = s.pro; document.getElementById('stat-signature').innerText = s.sig; document.getElementById('stat-disapproved').innerText = s.dis; document.getElementById('stat-forwarded').innerText = s.fwd; document.getElementById('stat-released').innerText = s.rel; }
         function logout() { sessionStorage.removeItem('currentUser'); window.location.href = 'index.html'; }
+        
         window.onload = () => { fetchClearanceData(); loadMenu(); };
     </script>
 </body>
