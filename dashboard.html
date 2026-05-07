@@ -125,11 +125,11 @@
                     <thead class="bg-gray-50 border-b uppercase font-bold text-[#003811] tracking-wider">
                         <tr>
                             <th class="w-[15%]">LTC Number</th>
-                            <th class="w-[15%]">Title</th>
-                            <th class="w-[25%]">Land Owner</th>
+                            <th class="w-[20%]">Land Owner</th>
+                            <th class="w-[15%]">Encoded By</th>
                             <th class="w-[15%]">Status</th>
                             <th class="w-[20%] text-center">Action</th>
-                            <th class="w-[10%] text-right">Date Updated</th>
+                            <th class="w-[15%] text-right">Date Updated</th>
                         </tr>
                     </thead>
                     <tbody id="clearanceTableBody" class="divide-y divide-gray-100"></tbody>
@@ -256,7 +256,7 @@
                     The applicant submitted all the necessary requirements for the issuance of Land Transfer Clearance in compliance with DAR Administrative Order No. 4, series of 2021.
                 </p>
 
-                <div class="mt-4 mb-6 ml-10 page-break-avoid indent-10">
+                <div class="mt-4 mb-6 page-break-avoid indent-10">
                     Done this <span class="pdf-today-ordinal font-bold">---</span>. Naga City, Camarines Sur.
                 </div>
 
@@ -266,7 +266,8 @@
                         <p class="preparedByName font-bold uppercase underline underline-offset-4 inline-block">---</p>
                         <p class="preparedByPosition text-[9pt] uppercase mt-1">---</p>
                     </div>
-                    <div class="absolute left-10 top-12 text-center">
+                    <div class="absolute left-10 top-16 text-center">
+                        <br><br>
                         <p class="mb-4 text-left">Reviewed and Noted by:</p>
                         <p class="sys-chief-name font-bold uppercase underline underline-offset-4 inline-block">---</p>
                         <p class="text-[9pt] mt-1">Chief, Legal Division</p>
@@ -427,8 +428,12 @@
             let stats = { rec: 0, rev: 0, cer: 0, sig: 0, leg: 0, recd: 0, rel: 0, dis: 0 };
             
             let userRole = currentUser.role.toUpperCase();
-            let isLegal = userRole.includes('LEGAL') || userRole.includes('CHIEF');
-            let isParpo = userRole.includes('PARPO');
+            let isParpo = userRole === 'PARPO II' || userRole === 'PARPO';
+            let isChief = userRole === 'CHIEF, LEGAL DIVISION' || userRole === 'DIVISION CHIEF' || userRole === 'CHIEF';
+            let isLegal = userRole.includes('LEGAL') || userRole.includes('SARPO') || userRole.includes('ARPT') || userRole.includes('ARPO');
+            let isEncoder = userRole === 'ODTS ENCODER' || userRole.includes('ODTS');
+            let isRecords = userRole.includes('RECORDS');
+            let userFullName = currentUser.full_name;
 
             rawData.forEach(item => {
                 if ((item.registered_under || '').toLowerCase().includes(query) || (item.owner_name || '').toLowerCase().includes(query)) {
@@ -444,57 +449,59 @@
                     else if (st === 'DISAPPROVED') { stats.dis++; st = 'DISAPPROVED'; }
 
                     let currentIndex = statusFlow.indexOf(st);
-                    
-                    if (isParpo && currentIndex < 2 && st !== 'DISAPPROVED') {
-                        return; 
-                    }
-
                     let daysPassed = item.updated_at ? getWorkingDays(new Date(item.updated_at), new Date()) : 0;
                     let warningHTML = daysPassed > 5 ? `<span class="text-red-600 font-black ml-2 text-[12px]" title="Exceeded 5 working days!">⚠️</span>` : '';
 
                     let actions = '';
                     
-                    if (st === 'RECEIVED') {
-                        if (isLegal || (!isLegal && !isParpo)) {
-                            actions += `<button onclick='showReview("${item.id}")' class="bg-[#003811] text-white px-5 py-1.5 rounded shadow text-[10px] font-bold tracking-wide hover:bg-black uppercase transition-colors w-full max-w-[120px]">Review</button>`;
-                            actions += `<button onclick='createVariant("${item.id}")' class="bg-gray-500 text-white px-2 py-1 mt-1 rounded shadow text-[9px] font-bold hover:bg-gray-700 uppercase transition-colors w-full max-w-[120px]">+ Variant</button>`;
-                        }
-                    } else if (st === 'RECOMMENDED') {
-                        if (isLegal || (!isLegal && !isParpo)) {
-                            actions += `
-                            <div class="flex flex-col gap-1 w-full max-w-[140px] mx-auto">
-                                <button onclick='openPrint("${item.id}", "rec")' class="bg-[#8b5cf6] text-white w-full py-1.5 rounded shadow text-[9px] font-black tracking-wide hover:bg-purple-800 uppercase transition-colors text-center">Recommendation</button>
-                                <button onclick='openPrint("${item.id}", "cert")' class="bg-[#d97706] text-white w-full py-1.5 rounded shadow text-[9px] font-black tracking-wide hover:bg-amber-700 uppercase transition-colors text-center">Certification</button>
-                                <button onclick='createVariant("${item.id}")' class="bg-gray-500 text-white w-full py-1 rounded shadow text-[9px] font-bold hover:bg-gray-700 uppercase transition-colors text-center mt-1">+ Variant</button>
-                            </div>`;
-                        }
-                    } else if (st === 'CERTIFIED') {
-                        actions += `<div class="flex flex-col gap-1 w-full max-w-[140px] mx-auto">`;
-                        if (isLegal || (!isLegal && !isParpo)) {
-                            actions += `
-                                <button onclick='openPrint("${item.id}", "rec")' class="bg-[#8b5cf6] text-white w-full py-1.5 rounded shadow text-[9px] font-black tracking-wide hover:bg-purple-800 uppercase transition-colors text-center">Recommendation</button>
-                                <button onclick='openPrint("${item.id}", "cert")' class="bg-[#d97706] text-white w-full py-1.5 rounded shadow text-[9px] font-black tracking-wide hover:bg-amber-700 uppercase transition-colors text-center">Certification</button>`;
-                        }
-                        if (isParpo) {
-                            actions += `<button onclick='processToNext("${item.id}", "SIGNED")' class="bg-cyan-600 text-white w-full py-1.5 rounded shadow text-[10px] font-bold hover:bg-cyan-700 uppercase transition-colors text-center mt-1">Sign</button>`;
-                        }
-                        actions += `</div>`;
-                    } else if (st === 'SIGNED') {
-                        if (isParpo) {
-                            actions += `<button onclick='processToNext("${item.id}", "TO LEGAL")' class="bg-cyan-600 text-white px-4 py-1.5 rounded shadow text-[10px] font-bold hover:bg-cyan-700 uppercase transition-colors w-full max-w-[120px]">Forward to Legal</button>`;
-                        }
-                    } else if (st !== 'DISAPPROVED') {
-                        if (currentIndex >= 4 && currentIndex < statusFlow.length - 1) {
-                            let nextStatus = statusFlow[currentIndex + 1];
-                            actions += `<button onclick='processToNext("${item.id}", "${nextStatus}")' class="bg-cyan-600 text-white px-4 py-1.5 rounded shadow text-[10px] font-bold hover:bg-cyan-700 uppercase transition-colors w-full max-w-[120px]">Process</button>`;
+                    if (!isEncoder) {
+                        if (st === 'RECEIVED') {
+                            if (isChief || isLegal) {
+                                actions += `<button onclick='showReview("${item.id}")' class="bg-[#003811] text-white px-5 py-1.5 rounded shadow text-[10px] font-bold tracking-wide hover:bg-black uppercase transition-colors w-full max-w-[120px]">Review</button>`;
+                                actions += `<button onclick='createVariant("${item.id}")' class="bg-gray-500 text-white px-2 py-1 mt-1 rounded shadow text-[9px] font-bold hover:bg-gray-700 uppercase transition-colors w-full max-w-[120px]">+ Variant</button>`;
+                            }
+                        } else if (st === 'RECOMMENDED') {
+                            if (isChief || isLegal) {
+                                actions += `
+                                <div class="flex flex-col gap-1 w-full max-w-[140px] mx-auto">
+                                    <button onclick='openPrint("${item.id}", "rec")' class="bg-[#8b5cf6] text-white w-full py-1.5 rounded shadow text-[9px] font-black tracking-wide hover:bg-purple-800 uppercase transition-colors text-center">Recommendation</button>
+                                    <button onclick='openPrint("${item.id}", "cert")' class="bg-[#d97706] text-white w-full py-1.5 rounded shadow text-[9px] font-black tracking-wide hover:bg-amber-700 uppercase transition-colors text-center">Certification</button>
+                                    <button onclick='createVariant("${item.id}")' class="bg-gray-500 text-white w-full py-1 rounded shadow text-[9px] font-bold hover:bg-gray-700 uppercase transition-colors text-center mt-1">+ Variant</button>
+                                </div>`;
+                            }
+                        } else if (st === 'CERTIFIED') {
+                            actions += `<div class="flex flex-col gap-1 w-full max-w-[140px] mx-auto">`;
+                            if (isChief || isLegal) {
+                                actions += `
+                                    <button onclick='openPrint("${item.id}", "rec")' class="bg-[#8b5cf6] text-white w-full py-1.5 rounded shadow text-[9px] font-black tracking-wide hover:bg-purple-800 uppercase transition-colors text-center">Recommendation</button>
+                                    <button onclick='openPrint("${item.id}", "cert")' class="bg-[#d97706] text-white w-full py-1.5 rounded shadow text-[9px] font-black tracking-wide hover:bg-amber-700 uppercase transition-colors text-center">Certification</button>`;
+                            }
+                            if (isParpo) {
+                                actions += `<button onclick='processToNext("${item.id}", "SIGNED")' class="bg-cyan-600 text-white w-full py-1.5 rounded shadow text-[10px] font-bold hover:bg-cyan-700 uppercase transition-colors text-center mt-1">Sign</button>`;
+                            }
+                            actions += `</div>`;
+                        } else if (st === 'SIGNED') {
+                            if (isParpo) {
+                                actions += `<button onclick='processToNext("${item.id}", "TO LEGAL")' class="bg-cyan-600 text-white px-4 py-1.5 rounded shadow text-[10px] font-bold hover:bg-cyan-700 uppercase transition-colors w-full max-w-[120px]">Forward to Legal</button>`;
+                            }
+                        } else if (st === 'TO LEGAL') {
+                            if (isChief || (isLegal && item.encoded_by === userFullName)) {
+                                actions += `<button onclick='processToNext("${item.id}", "TO RECORDS")' class="bg-cyan-600 text-white px-4 py-1.5 rounded shadow text-[10px] font-bold hover:bg-cyan-700 uppercase transition-colors w-full max-w-[120px]">Process to Records</button>`;
+                            }
+                        } else if (st === 'TO RECORDS') {
+                            if (isRecords) {
+                                actions += `<button onclick='processToNext("${item.id}", "RELEASE TO CLIENT")' class="bg-cyan-600 text-white px-4 py-1.5 rounded shadow text-[10px] font-bold hover:bg-cyan-700 uppercase transition-colors w-full max-w-[120px]">Release</button>`;
+                            }
                         }
                     }
 
+                    let encodedBy = item.encoded_by || item.created_by || '---'; 
+
                     tbody.innerHTML += `
                         <tr class="hover:bg-gray-50 transition-colors">
-                            <td class="font-bold">${item.ltc_no || '---'}</td>
-                            <td class="font-bold">${item.registered_under || '---'}</td>
+                            <td class="font-bold">${item.LTC_ID_NUMBER || '---'}</td>
                             <td class="uppercase font-semibold">${item.owner_name}</td>
+                            <td class="text-xs text-gray-500">${encodedBy}</td>
                             <td><span class="px-2 py-1 rounded text-[8px] shadow-sm font-black uppercase ${getStatusStyle(st)}">${st}</span>${warningHTML}</td>
                             <td class="text-center align-middle">${actions}</td>
                             <td class="text-right font-mono text-gray-500">${item.updated_at ? new Date(item.updated_at).toLocaleString('en-US', { hour12: true }) : '---'}</td>
@@ -508,7 +515,7 @@
             const record = rawData.find(r => r.id === id);
             if (!record) return;
 
-            let baseNo = record.ltc_no || '';
+            let baseNo = record.LTC_ID_NUMBER || '';
             let newNo = '';
             
             const match = baseNo.match(/-\((\d+)\)$/);
@@ -522,7 +529,10 @@
             if (!confirm(`Create a new variant for this clearance?\nNew LTC No will be: ${newNo}`)) return;
 
             const { id: oldId, created_at, updated_at, ...newRecordData } = record;
-            newRecordData.ltc_no = newNo;
+            
+            if(newRecordData.ltc_no !== undefined) delete newRecordData.ltc_no;
+
+            newRecordData.LTC_ID_NUMBER = newNo;
             newRecordData.status = 'RECEIVED'; 
 
             const { error } = await supabaseClient.from('land_records').insert([newRecordData]);
@@ -554,8 +564,8 @@
         }
 
         function generateQRs(identifier) {
-            const baseUrl = window.location.origin + "/verify.html?id=";
-            const scanUrl = baseUrl + encodeURIComponent(identifier || 'NO-ID');
+            const currentPath = window.location.href.substring(0, window.location.href.lastIndexOf('/'));
+            const scanUrl = currentPath + "/verify.html?id=" + encodeURIComponent(identifier || 'NO-ID');
 
             ['qr-rec', 'qr-cert'].forEach(id => {
                 const el = document.getElementById(id);
@@ -574,7 +584,7 @@
             currentNavIndex = currentNavList.findIndex(r => r.id === id);
             currentSelection = currentNavList[currentNavIndex];
 
-            const qrIdentifier = currentSelection.LTC_ID_NUMBER || currentSelection.ltc_no || 'PENDING';
+            const qrIdentifier = currentSelection.LTC_ID_NUMBER || 'PENDING';
             generateQRs(qrIdentifier);
 
             document.getElementById('btnPrev').disabled = currentNavIndex <= 0;
@@ -653,7 +663,7 @@
             document.getElementById('modalMainTitle').parentElement.classList.add('hidden');
             
             let elementToPrint;
-            let filename = `Clearance_${currentSelection.ltc_no || id}.pdf`;
+            let filename = `Clearance_${currentSelection.LTC_ID_NUMBER || id}.pdf`;
 
             if (type === 'rec') {
                 document.getElementById('docRecommendation').classList.remove('hidden');
@@ -673,7 +683,8 @@
                     filename:     filename,
                     image:        { type: 'jpeg', quality: 0.98 },
                     html2canvas:  { scale: 2, useCORS: true },
-                    jsPDF:        { unit: 'in', format: [8.5, 13], orientation: 'portrait' }
+                    jsPDF:        { unit: 'in', format: [8.5, 13], orientation: 'portrait' },
+                    pagebreak:    { mode: ['css', 'legacy'] }
                 };
 
                 html2pdf().set(opt).from(elementToPrint).save().then(async () => {
