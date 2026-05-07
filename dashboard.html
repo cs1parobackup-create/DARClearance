@@ -200,7 +200,7 @@
             </div>
 
             <div id="docRecommendation" class="bg-white text-black doc-print-area mx-auto hidden pt-8">
-                <div class="text-right font-bold mb-4" id="rec-header-id">LTC-PENDING</div>
+                <div class="text-right font-bold mb-4 mr-10" id="rec-header-id">LTC-PENDING</div>
                 
                 <div class="text-center mb-6">
                     <div class="font-bold text-[12pt]">RECOMMENDATION</div>
@@ -252,18 +252,16 @@
                     Done this <span class="pdf-today-ordinal font-bold">---</span>. Naga City, Camarines Sur.
                 </div>
 
-                <div class="page-break-avoid w-full">
-                    <div class="flex justify-end mr-10 mb-4">
-                        <div class="text-center">
-                            <p class="mb-6 text-left ml-4">Prepared by:</p>
-                            <p class="preparedByName font-bold uppercase underline underline-offset-4 inline-block">---</p>
-                            <p class="preparedByPosition text-[9pt]">---</p>
-                        </div>
+                <div class="page-break-avoid w-full relative h-32 mt-4">
+                    <div class="absolute right-10 top-0 text-center">
+                        <p class="mb-4 text-left ml-4">Prepared by:</p>
+                        <p class="preparedByName font-bold uppercase underline underline-offset-4 inline-block">---</p>
+                        <p class="preparedByPosition text-[9pt] uppercase mt-1">---</p>
                     </div>
-                    <div class="ml-10">
-                        <p class="mb-6">Reviewed and Noted by:</p>
+                    <div class="absolute left-10 top-12 text-center">
+                        <p class="mb-4 text-left">Reviewed and Noted by:</p>
                         <p class="sys-chief-name font-bold uppercase underline underline-offset-4 inline-block">---</p>
-                        <p class="text-[9pt]">Chief, Legal Division</p>
+                        <p class="text-[9pt] mt-1">Chief, Legal Division</p>
                     </div>
                 </div>
 
@@ -273,6 +271,11 @@
             </div>
 
             <div id="docCertification" class="bg-white text-black doc-print-area mx-auto hidden pt-8">
+                <div class="text-right font-bold mb-4 flex flex-col items-end mr-10" style="margin-top: -10px;">
+                    <span class="italic font-normal text-[10pt]">LTC Form No. 5</span>
+                    <span id="cert-header-id">LTC-PENDING</span>
+                </div>
+
                 <div class="text-center mb-6">
                     <div class="font-bold text-[12pt]">CERTIFICATION</div>
                     <div class="text-[10pt]">(Land Transfer Clearance)</div>
@@ -333,12 +336,8 @@
                     Done and issued this <span class="pdf-today-ordinal font-bold">---</span> at the DAR Provincial Office.
                 </div>
 
-                <div class="flex justify-between mt-8 page-break-avoid ml-10 mr-10">
-                    <div class="w-1/2">
-                        <p class="sys-chief-name font-bold uppercase underline underline-offset-4 inline-block">---</p>
-                        <p class="text-[9pt] uppercase mt-1">CHIEF, LEGAL DIVISION</p>
-                    </div>
-                    <div class="w-1/2 text-left">
+                <div class="flex justify-end mt-8 page-break-avoid mr-10">
+                    <div class="text-center">
                         <p class="sys-parpo-name font-bold uppercase underline underline-offset-4 inline-block">---</p>
                         <p class="text-[9pt] uppercase mt-1">PARPO II</p>
                     </div>
@@ -365,9 +364,9 @@
         let currentNavIndex = -1;
         const statusFlow = ['RECEIVED', 'RECOMMENDED', 'CERTIFIED', 'SIGNED', 'TO LEGAL', 'TO RECORDS', 'RELEASE TO CLIENT'];
 
-        // DYNAMIC SIGNATORIES VARIABLES
-        let chiefLegalName = "ATTY. JAIME G. RESOCO, JR.";
-        let parpoName = "RICARDO C. GARCIA";
+        // DYNAMIC SIGNATORIES VARIABLES (Empty Defaults)
+        let chiefLegalName = "---";
+        let parpoName = "---";
 
         async function loadMenu() {
             const menuContainer = document.getElementById('dynamicMenu');
@@ -584,9 +583,12 @@
                 if(certEl) certEl.innerText = val;
             }
 
-            // Set Header LTC NO (Mapped to LTC_ID_NUMBER)
+            // Set Headers (Mapped to LTC_ID_NUMBER)
             const recHeaderId = document.getElementById('rec-header-id');
-            if(recHeaderId) recHeaderId.innerText = currentSelection.LTC_ID_NUMBER || 'LTC-PENDING';
+            const certHeaderId = document.getElementById('cert-header-id');
+            const headerVal = currentSelection.LTC_ID_NUMBER || 'LTC-PENDING';
+            if(recHeaderId) recHeaderId.innerText = headerVal;
+            if(certHeaderId) certHeaderId.innerText = headerVal;
 
             document.querySelectorAll('.sys-chief-name').forEach(el => el.innerText = chiefLegalName);
             document.querySelectorAll('.sys-parpo-name').forEach(el => el.innerText = parpoName);
@@ -623,12 +625,12 @@
                 document.getElementById('docRecommendation').classList.remove('hidden');
                 document.getElementById('docCertification').classList.add('hidden');
                 elementToPrint = document.getElementById('docRecommendation');
-                filename = `Recommendation_${currentSelection.ltc_no || id}.pdf`;
+                filename = `Recommendation_${currentSelection.LTC_ID_NUMBER || id}.pdf`;
             } else if (type === 'cert') {
                 document.getElementById('docRecommendation').classList.add('hidden');
                 document.getElementById('docCertification').classList.remove('hidden');
                 elementToPrint = document.getElementById('docCertification');
-                filename = `Certification_${currentSelection.ltc_no || id}.pdf`;
+                filename = `Certification_${currentSelection.LTC_ID_NUMBER || id}.pdf`;
             }
 
             setTimeout(() => { 
