@@ -489,7 +489,7 @@
                                 actions += `<button onclick='processToNext("${item.id}", "TO RECORDS")' class="bg-cyan-600 text-white px-4 py-1.5 rounded shadow text-[10px] font-bold hover:bg-cyan-700 uppercase transition-colors w-full max-w-[120px]">Process to Records</button>`;
                             }
                         } else if (st === 'TO RECORDS') {
-                            if (isRecords) {
+                            if (isRecords || isChief) {
                                 actions += `<button onclick='processToNext("${item.id}", "RELEASE TO CLIENT")' class="bg-cyan-600 text-white px-4 py-1.5 rounded shadow text-[10px] font-bold hover:bg-cyan-700 uppercase transition-colors w-full max-w-[120px]">Release</button>`;
                             }
                         }
