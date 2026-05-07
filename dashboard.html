@@ -18,22 +18,25 @@
         @media print {
             @page { size: 8.5in 13in; margin: 1in; }
             body { background: white !important; }
-            nav, header, .no-print, #reviewSection { display: none !important; }
+            nav, header, .no-print, #actionButtons, #remarksSection, .modal-header-actions { display: none !important; }
             #reviewModal { position: static; display: block; background: transparent; padding: 0; box-shadow: none; }
             
             .doc-print-area { 
                 visibility: visible !important;
                 display: block !important;
-                width: 6.5in !important; 
+                width: 6.5in !important; /* Adjusted for 1 inch margins */
                 margin: 0 auto !important;
                 font-family: 'Roboto', sans-serif !important;
                 font-size: 10pt !important;
                 line-height: 1.1 !important;
                 color: black !important;
             }
+            .page-break-avoid { page-break-inside: avoid; }
+            .underline-data { background-color: transparent !important; border-bottom: 1.5px solid black !important; }
         }
 
-        .underline-data { border-bottom: 1.5px solid black; font-weight: 700; padding: 0 4px; display: inline-block; min-width: 80px; text-transform: uppercase; }
+        .doc-format { font-family: 'Roboto', sans-serif; font-size: 10pt; color: black; line-height: 1.1; }
+        .underline-data { border-bottom: 1.5px solid black; font-weight: 700; padding: 0 4px; display: inline-block; min-width: 80px; text-transform: uppercase; transition: background-color 0.2s; }
         
         .scroll-area::-webkit-scrollbar { width: 4px; }
         .scroll-area::-webkit-scrollbar-track { background: #f1f1f1; }
@@ -47,10 +50,10 @@
             color: #1e3a8a !important;
             background-color: #fefce8 !important;
             border-bottom: 3px solid #fde047 !important;
-            padding: 4px 8px !important;
+            padding: 6px 12px !important;
             border-radius: 4px;
             display: inline-block;
-            min-width: 150px;
+            min-width: 200px;
             text-transform: uppercase;
             outline: none;
             transition: all 0.2s;
@@ -141,11 +144,14 @@
     </main>
 
     <div id="reviewModal" class="fixed inset-0 bg-black/60 z-50 hidden flex items-start justify-center p-4 overflow-y-auto no-print">
-        <div class="bg-white max-w-4xl w-full p-8 rounded-lg shadow-2xl relative my-4 no-print">
+        <div class="bg-white max-w-5xl w-full p-8 rounded-lg shadow-2xl relative my-4 no-print">
             
-            <div class="flex justify-between items-center mb-6 border-b border-gray-200 pb-4 no-print">
+            <div class="flex justify-between items-center mb-6 border-b border-gray-200 pb-4 modal-header-actions">
                 <div class="flex items-center gap-4">
                     <h2 id="modalMainTitle" class="text-4xl font-black text-[#003811] uppercase tracking-widest">REVIEW</h2>
+                    <div id="editNotice" class="bg-yellow-100 text-yellow-800 text-[10px] px-3 py-1 rounded hidden font-bold uppercase tracking-wide border border-yellow-300">
+                        EDIT MODE ACTIVE (VALUES ENLARGED FOR REVIEW)
+                    </div>
                 </div>
                 <div class="flex gap-2 items-center">
                     <button id="btnPrev" onclick="navigateReview(-1)" class="bg-gray-200 hover:bg-gray-300 px-4 py-2 rounded text-xs font-black uppercase transition-colors text-gray-800">&larr; Prev</button>
@@ -155,60 +161,60 @@
             </div>
 
             <div id="reviewSection" class="mb-8 space-y-6 no-print">
-                <div class="bg-blue-50 p-6 rounded-lg border border-blue-200 space-y-4">
-                    <p class="text-xs font-bold text-gray-500 uppercase tracking-widest mb-4">Document Details (Editable)</p>
+                <div class="bg-blue-50 p-6 rounded-lg border border-blue-200 space-y-6">
+                    <p class="text-xs font-bold text-gray-500 uppercase tracking-widest mb-4">Document Details (Editable - Click to Edit)</p>
                     
-                    <div class="grid grid-cols-[200px_1fr] items-center gap-y-6">
-                        <div class="font-bold text-gray-600 uppercase text-xs">Lot No/s:</div>
+                    <div class="grid grid-cols-[200px_1fr] items-center gap-y-8">
+                        <div class="font-bold text-gray-600 uppercase text-sm">Lot No/s:</div>
                         <div id="edit-lot" class="edit-big">---</div>
 
-                        <div class="font-bold text-gray-600 uppercase text-xs">In the Name of:</div>
+                        <div class="font-bold text-gray-600 uppercase text-sm">In the Name of:</div>
                         <div id="edit-owner" class="edit-big">---</div>
 
-                        <div class="font-bold text-gray-600 uppercase text-xs">Registered under:</div>
+                        <div class="font-bold text-gray-600 uppercase text-sm">Registered under:</div>
                         <div id="edit-tct" class="edit-big">---</div>
 
-                        <div class="font-bold text-gray-600 uppercase text-xs">Area (in has.):</div>
+                        <div class="font-bold text-gray-600 uppercase text-sm">Area (in has.):</div>
                         <div id="edit-area" class="edit-big">---</div>
 
-                        <div class="font-bold text-gray-600 uppercase text-xs">Declared under T.D. No:</div>
+                        <div class="font-bold text-gray-600 uppercase text-sm">Declared under T.D. No:</div>
                         <div id="edit-td" class="edit-big">---</div>
 
-                        <div class="font-bold text-gray-600 uppercase text-xs">Located at:</div>
+                        <div class="font-bold text-gray-600 uppercase text-sm">Located at:</div>
                         <div id="edit-location" class="edit-big">---</div>
 
-                        <div class="font-bold text-gray-600 uppercase text-xs">Subjected of the Deed of:</div>
+                        <div class="font-bold text-gray-600 uppercase text-sm">Subjected of the Deed of:</div>
                         <div id="edit-deed" class="edit-big">---</div>
 
-                        <div class="font-bold text-gray-600 uppercase text-xs">Executed by:</div>
+                        <div class="font-bold text-gray-600 uppercase text-sm">Executed by:</div>
                         <div id="edit-executed" class="edit-big">---</div>
 
-                        <div class="font-bold text-gray-600 uppercase text-xs">In favor of:</div>
+                        <div class="font-bold text-gray-600 uppercase text-sm">In favor of:</div>
                         <div id="edit-favor" class="edit-big">---</div>
                     </div>
                     
                     <div class="pt-4 border-t border-blue-200"></div>
                     
-                    <div class="grid grid-cols-[200px_1fr] items-center gap-y-6">
-                        <div class="font-bold text-gray-600 uppercase text-xs">Doc. No:</div>
+                    <div class="grid grid-cols-[200px_1fr] items-center gap-y-8">
+                        <div class="font-bold text-gray-600 uppercase text-sm">Doc. No:</div>
                         <div id="edit-doc" class="edit-big">---</div>
                         
-                        <div class="font-bold text-gray-600 uppercase text-xs">Page No:</div>
+                        <div class="font-bold text-gray-600 uppercase text-sm">Page No:</div>
                         <div id="edit-page" class="edit-big">---</div>
                         
-                        <div class="font-bold text-gray-600 uppercase text-xs">Book No:</div>
+                        <div class="font-bold text-gray-600 uppercase text-sm">Book No:</div>
                         <div id="edit-book" class="edit-big">---</div>
 
-                        <div class="font-bold text-gray-600 uppercase text-xs">Series of:</div>
+                        <div class="font-bold text-gray-600 uppercase text-sm">Series of:</div>
                         <div id="edit-series" class="edit-big">---</div>
 
-                        <div class="font-bold text-gray-600 uppercase text-xs">Dated:</div>
+                        <div class="font-bold text-gray-600 uppercase text-sm">Dated:</div>
                         <div id="edit-dated" class="edit-big">---</div>
 
-                        <div class="font-bold text-gray-600 uppercase text-xs">Notary Public:</div>
+                        <div class="font-bold text-gray-600 uppercase text-sm">Notary Public:</div>
                         <div id="edit-notary" class="edit-big">---</div>
 
-                        <div class="font-bold text-gray-600 uppercase text-xs text-[10px]">Retention area of vendor:</div>
+                        <div class="font-bold text-gray-600 uppercase text-sm">Retention area of vendor:</div>
                         <div id="edit-retention" class="edit-big">---</div>
                     </div>
                 </div>
@@ -233,10 +239,10 @@
                 </div>
                 
                 <p class="mb-4 text-justify">
-                    This is to recommend that the application/request for issuance of Land Transfer Clearance (LTC) be <strong>APPROVED</strong> on the parcel of agricultural land with the following pertinent information, to wit;
+                    This is to recommend that the application/request for Issuance of Land Transfer Clearance (LTC) be <strong>APPROVED</strong> on the parcel of agricultural land with the following pertinent information, to wit;
                 </p>
 
-                <div class="grid grid-cols-[200px_1fr] gap-y-1 mb-6 ml-4">
+                <div class="grid grid-cols-[200px_1fr] gap-y-1.5 mb-6 ml-4">
                     <div class="italic">Lot No/s</div> <div class="underline-data w-full" id="rec-lot">---</div>
                     <div class="italic">In the Name of</div> <div class="underline-data w-full font-bold uppercase" id="rec-owner">---</div>
                     <div class="italic">Registered under</div> <div class="underline-data w-full" id="rec-tct">---</div>
@@ -262,53 +268,53 @@
                     <div class="italic text-[9.5pt]">of a retention area of vendor/transferor</div> <div class="underline-data w-full uppercase" id="rec-retention">---</div>
                 </div>
 
-                <div class="mb-6 flex gap-4 font-bold items-center ml-4">
-                    <span>is hereby:</span>
-                    <span class="border-b-2 border-black px-16 py-1 text-lg tracking-widest font-black uppercase">APPROVED</span>
+                <div class="mb-6 flex gap-4 items-center ml-4 page-break-avoid">
+                    <span class="italic">is hereby:</span>
+                    <span class="px-16 text-lg font-bold underline">APPROVED</span>
                 </div>
 
-                <p class="mb-6 text-[9.5pt] text-justify italic leading-tight">
+                <p class="mb-6 text-[9.5pt] text-justify leading-tight page-break-avoid">
                     The applicant submitted all the necessary requirements for the issuance of Land Transfer Clearance in compliance with DAR Administrative Order No. 4, series of 2021.
                 </p>
 
-                <div class="mt-4 mb-10">
-                    Done this <span class="pdf-today font-bold underline">---</span> Naga City, Camarines Sur.
+                <div class="mt-4 mb-10 page-break-avoid ml-4">
+                    Done this <span class="pdf-today font-bold">---</span>. Naga City, Camarines Sur.
                 </div>
 
-                <div class="flex justify-between items-start mt-12">
-                    <div class="space-y-10 w-1/2">
+                <div class="flex justify-between items-start mt-12 page-break-avoid">
+                    <div class="space-y-10 w-1/2 ml-4">
                         <div>
-                            <p class="text-xs mb-6">Reviewed and Noted by:</p>
+                            <p class="mb-6">Reviewed and Noted by:</p>
                             <p class="font-bold uppercase border-b border-black min-w-[220px] inline-block">ATTY. JAIME G. RESOCO, JR.</p>
-                            <p class="text-[10pt] italic">Chief, Legal Division</p>
+                            <p class="text-[10pt]">Chief, Legal Division</p>
                         </div>
                     </div>
                     <div class="w-1/2 text-right">
-                        <div class="inline-block text-left">
-                            <p class="text-xs mb-6">Prepared by:</p>
+                        <div class="inline-block text-center mr-10">
+                            <p class="mb-6 text-left">Prepared by:</p>
                             <p class="preparedByName font-bold uppercase border-b border-black min-w-[220px] inline-block text-center">---</p>
-                            <p class="preparedByPosition text-[10pt] italic text-center">---</p>
+                            <p class="preparedByPosition text-[10pt] text-center">---</p>
                         </div>
                     </div>
                 </div>
             </div>
 
             <div id="docCertification" class="bg-white text-black doc-print-area mx-auto hidden">
-                <div class="text-center mb-6 uppercase font-bold text-lg leading-tight mt-8">
+                <div class="text-center mb-6 uppercase font-bold text-lg leading-tight mt-8 tracking-widest">
                     CERTIFICATION<br>
-                    <span class="text-sm font-normal normal-case">(Land Transfer Clearance)</span>
+                    <span class="text-sm font-normal normal-case tracking-normal">(Land Transfer Clearance)</span>
                 </div>
                 
-                <p class="mb-4 text-justify">
-                    This is to certify that the application/request for issuance of Land Transfer Clearance (LTC) filed to this Office with the following pertinent information, to wit:
+                <p class="mb-4 text-justify indent-8">
+                    This is to certify that the application/request for Issuance of Land Transfer Clearance (LTC) filed to this Office with the following pertinent information, to wit:
                 </p>
 
-                <div class="grid grid-cols-[200px_1fr] gap-y-1 mb-6 ml-4">
+                <div class="grid grid-cols-[200px_1fr] gap-y-1.5 mb-6 ml-4">
                     <div class="italic">Lot No/s</div> <div class="underline-data w-full font-bold" id="cert-lot">---</div>
                     <div class="italic">In the Name of</div> <div class="underline-data w-full font-bold uppercase" id="cert-owner">---</div>
-                    <div class="italic">Registered under</div> <div class="underline-data w-full font-bold" id="cert-tct">---</div>
+                    <div class="italic">Registered under</div> <div class="underline-data w-full font-bold uppercase" id="cert-tct">---</div>
                     <div class="italic">With an area (in has.) of</div> <div class="underline-data w-full font-bold" id="cert-area">---</div>
-                    <div class="italic">Declared under T.D. No.</div> <div class="underline-data w-full font-bold" id="cert-td">---</div>
+                    <div class="italic">Declared under T.D. No.</div> <div class="underline-data w-full font-bold uppercase" id="cert-td">---</div>
                     <div class="italic">Located at</div> <div class="underline-data w-full font-bold uppercase" id="cert-location">---</div>
                     <div class="italic">Subjected of the Deed of</div> <div class="underline-data w-full font-bold uppercase" id="cert-deed">---</div>
                     <div class="italic">Executed by</div> <div class="underline-data w-full font-bold uppercase" id="cert-executed">---</div>
@@ -329,34 +335,34 @@
                     <div class="italic text-[9.5pt]">of a retention area of vendor/transferor</div> <div class="underline-data font-bold w-full uppercase" id="cert-retention">---</div>
                 </div>
 
-                <div class="mb-4 flex gap-4 font-bold items-center ml-4">
-                    <span>is hereby:</span>
-                    <span class="px-12 text-lg tracking-widest font-black uppercase">APPROVED</span>
+                <div class="mb-4 flex gap-4 items-center ml-4 page-break-avoid">
+                    <span class="italic">is hereby:</span>
+                    <span class="px-12 text-lg font-bold underline">APPROVED</span>
                 </div>
 
-                <p class="mb-4 text-[9.5pt] text-justify leading-tight ml-4">
+                <p class="mb-4 text-[10pt] text-justify leading-tight ml-4 indent-8 page-break-avoid">
                     based on the Attestation of the CARPO-LTS/FOD and from the report and recommendation of the Chief Legal Division/Authorized Legal Officer pursuant to Administrative Order (AO) No. 4 Series of 2021.
                 </p>
 
-                <p class="mb-4 text-[9.5pt] text-justify leading-tight ml-4">
+                <p class="mb-4 text-[10pt] text-justify leading-tight ml-4 indent-8 page-break-avoid">
                     Any actual change in the use of the land and/or development over the subject land, requires a prior Order of Conversion or Exemption/Exclusion from the Office of the DAR Regional Director.
                 </p>
 
-                <p class="mb-4 text-[9.5pt] text-justify leading-tight ml-4">
+                <p class="mb-4 text-[10pt] text-justify leading-tight ml-4 indent-8 page-break-avoid">
                     This Office reserves the right to revoke this Certification of LTC in case of findings of misrepresentation or submission of falsified documents by either or both parties to the Deed of Transfer and any third person who may be affected by the transfer.
                 </p>
 
-                <p class="mb-6 text-[9.5pt] text-justify leading-tight ml-4">
+                <p class="mb-6 text-[10pt] text-justify leading-tight ml-4 indent-8 page-break-avoid">
                     This Certification is hereby issued only for the purpose stated in the application/request for issuance of LTC.
                 </p>
 
-                <div class="mt-4 mb-12 ml-4">
-                    Done and issued this <span class="pdf-today font-bold underline">---</span> at the DAR Provincial Office.
+                <div class="mt-4 mb-12 ml-4 indent-8 page-break-avoid">
+                    Done and issued this <span class="pdf-today font-bold">---</span> at the DAR Provincial Office.
                 </div>
 
-                <div class="flex justify-end mt-16 mr-10">
+                <div class="flex justify-end mt-16 mr-10 page-break-avoid">
                     <div class="text-center">
-                        <p class="font-bold uppercase border-b border-black min-w-[250px] inline-block text-lg">RICARDO C. GARCIA</p>
+                        <p class="font-bold uppercase border-b border-black min-w-[250px] inline-block text-[11pt]">RICARDO C. GARCIA</p>
                         <p class="text-[11pt] font-bold uppercase mt-1">PARPO II</p>
                     </div>
                 </div>
@@ -446,21 +452,24 @@
 
                     let actions = '';
                     
-                    // Table Logic: Only show REVIEW if RECEIVED
+                    // Table Logic: ONLY show REVIEW if RECEIVED
                     if (st === 'RECEIVED' || st === 'RECEIVED - Legal') {
-                        actions += `<button onclick='showReview("${item.id}")' class="bg-[#003811] text-white px-5 py-1.5 rounded shadow text-[10px] font-bold tracking-wide hover:bg-black uppercase transition-colors">Review</button>`;
+                        actions += `<button onclick='showReview("${item.id}")' class="bg-[#003811] text-white px-5 py-1.5 rounded shadow text-[10px] font-bold tracking-wide hover:bg-black uppercase transition-colors w-full max-w-[120px]">Review</button>`;
                     } 
-                    // Show 2 MAGKAIBANG BUTTON if RECOMMENDED
+                    // Show 2 MAGKAIBANG BUTTON if RECOMMENDED. Ginawang pantay ang lapad via w-full sa flex column.
                     else if (st === 'RECOMMENDED') {
-                        actions += `<button onclick='openPrint("${item.id}", "rec")' class="bg-purple-700 text-white px-3 py-1.5 rounded shadow text-[9px] font-black tracking-wide hover:bg-purple-800 uppercase mr-1 transition-colors">Recommendation</button>`;
-                        actions += `<button onclick='openPrint("${item.id}", "cert")' class="bg-amber-600 text-white px-3 py-1.5 rounded shadow text-[9px] font-black tracking-wide hover:bg-amber-700 uppercase transition-colors">Certification</button>`;
+                        actions += `
+                        <div class="flex flex-col gap-1 w-full max-w-[140px] mx-auto">
+                            <button onclick='openPrint("${item.id}", "rec")' class="bg-[#8b5cf6] text-white w-full py-1.5 rounded shadow text-[9px] font-black tracking-wide hover:bg-purple-800 uppercase transition-colors text-center">Recommendation</button>
+                            <button onclick='openPrint("${item.id}", "cert")' class="bg-[#d97706] text-white w-full py-1.5 rounded shadow text-[9px] font-black tracking-wide hover:bg-amber-700 uppercase transition-colors text-center">Certification</button>
+                        </div>`;
                     } 
                     // Other states
                     else if (st !== 'DISAPPROVED') {
                         let currentIndex = statusFlow.indexOf(st);
                         if (currentIndex >= 2 && currentIndex < statusFlow.length - 1) {
                             let nextStatus = statusFlow[currentIndex + 1];
-                            actions += `<button onclick='processToNext("${item.id}", "${nextStatus}")' class="bg-cyan-600 text-white px-4 py-1.5 rounded shadow text-[10px] font-bold hover:bg-cyan-700 uppercase transition-colors">Process</button>`;
+                            actions += `<button onclick='processToNext("${item.id}", "${nextStatus}")' class="bg-cyan-600 text-white px-4 py-1.5 rounded shadow text-[10px] font-bold hover:bg-cyan-700 uppercase transition-colors w-full max-w-[120px]">Process</button>`;
                         }
                     }
 
@@ -470,7 +479,7 @@
                             <td class="font-bold">${item.registered_under || '---'}</td>
                             <td class="uppercase font-semibold">${item.owner_name}</td>
                             <td><span class="px-2 py-1 rounded text-[8px] shadow-sm font-black uppercase ${getStatusStyle(st)}">${st}</span>${warningHTML}</td>
-                            <td class="text-center">${actions}</td>
+                            <td class="text-center align-middle">${actions}</td>
                             <td class="text-right font-mono text-gray-500">${item.updated_at ? new Date(item.updated_at).toLocaleString('en-US', { hour12: true }) : '---'}</td>
                         </tr>`;
                 }
@@ -499,7 +508,7 @@
             }
         }
 
-        // Logic para i-setup ang BIG Edit screen o Print Screen
+        // Logic para i-setup ang BIG Edit screen (Reviewing)
         function showReview(id) {
             const query = document.getElementById('searchInput').value.toLowerCase();
             currentNavList = rawData.filter(item => {
@@ -508,7 +517,6 @@
             currentNavIndex = currentNavList.findIndex(r => r.id === id);
             currentSelection = currentNavList[currentNavIndex];
 
-            // Setup Prev/Next Navigation
             document.getElementById('btnPrev').disabled = currentNavIndex <= 0;
             document.getElementById('btnPrev').className = currentNavIndex <= 0 ? 'bg-gray-100 text-gray-400 px-4 py-2 rounded text-xs font-black uppercase cursor-not-allowed' : 'bg-gray-200 hover:bg-gray-300 px-4 py-2 rounded text-xs font-black uppercase transition-colors text-gray-800';
             
@@ -517,7 +525,7 @@
 
             const fields = ['lot_no', 'owner_name', 'registered_under', 'area', 'td_no', 'location', 'deed_type', 'executed_by', 'in_favor_of', 'doc_no', 'page_no', 'book_no', 'series_of', 'dated', 'notary_public', 'retention_area_names'];
             
-            // MAP DATA SA REVIEW SECTION (UI EDITING)
+            // MAP DATA SA BIG EDITABLE REVIEW SECTION
             fields.forEach(field => {
                 let editEl = document.getElementById(`edit-${field.replace(/_no|_name|_under|_type|_of|s_of|_public|_area_names/g, '')}`);
                 if(editEl) {
@@ -546,29 +554,31 @@
             document.querySelectorAll('.pdf-today').forEach(el => el.innerText = dateStr);
 
             // Hide/Show correct UI Sections
+            document.getElementById('modalMainTitle').innerText = "REVIEW";
             document.getElementById('docRecommendation').classList.add('hidden');
             document.getElementById('docCertification').classList.add('hidden');
             document.getElementById('reviewSection').classList.remove('hidden');
             document.getElementById('actionButtons').classList.remove('hidden');
+            document.getElementById('editNotice').classList.remove('hidden');
 
             document.getElementById('reviewRemarks').value = currentSelection.remarks || '';
             document.getElementById('reviewModal').classList.remove('hidden');
         }
 
-        // Logic kapag clinic yung Recommendation o Certification Button sa Table
+        // Logic kapag kinlik yung Recommendation o Certification Button sa Table
         function openPrint(id, type) {
-            showReview(id); // load data first
+            showReview(id); // Load the data into the DOM first
             
             document.getElementById('reviewSection').classList.add('hidden');
             document.getElementById('actionButtons').classList.add('hidden');
+            document.getElementById('editNotice').classList.add('hidden');
+            document.getElementById('modalMainTitle').parentElement.classList.add('hidden'); // Hide the entire header in print mode
             
             if (type === 'rec') {
-                document.getElementById('modalMainTitle').innerText = "PRINT RECOMMENDATION";
                 document.getElementById('docRecommendation').classList.remove('hidden');
                 document.getElementById('docCertification').classList.add('hidden');
-                setTimeout(() => { window.print(); closeReview(); }, 300);
+                setTimeout(() => { window.print(); closeReview(); document.getElementById('modalMainTitle').parentElement.classList.remove('hidden'); }, 300);
             } else if (type === 'cert') {
-                document.getElementById('modalMainTitle').innerText = "PRINT CERTIFICATION";
                 document.getElementById('docRecommendation').classList.add('hidden');
                 document.getElementById('docCertification').classList.remove('hidden');
                 
@@ -577,6 +587,7 @@
                     await supabaseClient.from('land_records').update({ status: 'CERTIFIED', updated_at: new Date() }).eq('id', id);
                     fetchClearanceData();
                     closeReview(); 
+                    document.getElementById('modalMainTitle').parentElement.classList.remove('hidden');
                 }, 300);
             }
         }
@@ -591,7 +602,7 @@
             const updateData = { status: newSt, updated_at: new Date() };
             if (remarks.trim()) updateData.remarks = remarks;
 
-            // HARVEST BIG EDITABLE FIELDS KUNG APPROVED
+            // HARVEST BIG EDITABLE FIELDS DURING APPROVAL
             if (newSt === 'RECOMMENDED') {
                 const fieldsMap = {
                     'lot_no': 'edit-lot', 'owner_name': 'edit-owner', 'registered_under': 'edit-tct', 
