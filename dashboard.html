@@ -260,21 +260,21 @@
                     Done this <span class="pdf-today-ordinal font-bold">---</span>. Naga City, Camarines Sur.
                 </div>
 
-                <div class="page-break-avoid w-full relative h-32 mt-4">
+                <div class="page-break-avoid w-full relative h-40 mt-4">
                     <div class="absolute right-10 top-0 text-center">
                         <p class="mb-4 text-left ml-4">Prepared by:</p>
                         <p class="preparedByName font-bold uppercase underline underline-offset-4 inline-block">---</p>
                         <p class="preparedByPosition text-[9pt] uppercase mt-1">---</p>
                     </div>
-                    <div class="absolute left-10 top-16 text-center">
-                        <br><br>
+                    <div class="absolute left-10 top-20 text-center">
+                        <br><br><br><br>
                         <p class="mb-4 text-left">Reviewed and Noted by:</p>
                         <p class="sys-chief-name font-bold uppercase underline underline-offset-4 inline-block">---</p>
                         <p class="text-[9pt] mt-1">Chief, Legal Division</p>
                     </div>
                 </div>
 
-                <div class="flex justify-end mt-12 page-break-avoid">
+                <div class="flex justify-end mt-20 page-break-avoid">
                     <div id="qr-rec" class="border p-1 bg-white"></div>
                 </div>
             </div>
@@ -437,15 +437,16 @@
 
             rawData.forEach(item => {
                 if ((item.registered_under || '').toLowerCase().includes(query) || (item.owner_name || '').toLowerCase().includes(query)) {
-                    let st = item.status || 'RECEIVED';
+                    // Added trim and toUpperCase to handle space typos in db
+                    let st = (item.status || 'RECEIVED').trim().toUpperCase();
                     
-                    if (st === 'RECEIVED' || st === 'RECEIVED - Legal') { stats.rec++; st = 'RECEIVED'; }
+                    if (st === 'RECEIVED' || st === 'RECEIVED - LEGAL') { stats.rec++; st = 'RECEIVED'; }
                     else if (st === 'RECOMMENDED' || st === 'REVIEWED AND RECOMMENDED' || st === 'REVIEWED') { stats.rev++; st = 'RECOMMENDED'; }
                     else if (st === 'CERTIFIED' || st === 'PROCESSED') { stats.cer++; st = 'CERTIFIED'; }
                     else if (st === 'SIGNED' || st === 'FOR SIGNATURE - PARPO II') { stats.sig++; st = 'SIGNED'; }
-                    else if (st === 'TO LEGAL' || st === 'FORWARDED - Records') { stats.leg++; st = 'TO LEGAL'; }
+                    else if (st === 'TO LEGAL' || st === 'FORWARDED - RECORDS') { stats.leg++; st = 'TO LEGAL'; }
                     else if (st === 'TO RECORDS') { stats.recd++; st = 'TO RECORDS'; }
-                    else if (st === 'RELEASE TO CLIENT' || st === 'RELEASED - Client') { stats.rel++; st = 'RELEASE TO CLIENT'; }
+                    else if (st === 'RELEASE TO CLIENT' || st === 'RELEASED - CLIENT') { stats.rel++; st = 'RELEASE TO CLIENT'; }
                     else if (st === 'DISAPPROVED') { stats.dis++; st = 'DISAPPROVED'; }
 
                     let currentIndex = statusFlow.indexOf(st);
