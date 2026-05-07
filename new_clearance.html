@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>New DAR Clearance - DARPO</title>
+    <title>New DAR Clearance - DARPO-CS</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="supabase-config.js"></script>
@@ -38,7 +38,7 @@
     <nav class="bg-[#003811] md:w-64 flex flex-col text-white flex-shrink-0 shadow-xl z-20">
         <div class="p-6 border-b border-[#006400]">
             <h2 class="text-xl font-bold text-[#D4AF37]">DARPO-CS</h2>
-            <p id="userRoleBadge" class="text-[10px] text-gray-300 uppercase tracking-widest mt-1 font-bold"></p>
+            <p id="userRoleBadge" class="text-[10px] text-gray-300 uppercase tracking-widest mt-1 font-bold">---</p>
         </div>
         
         <div id="dynamicMenu" class="flex-1 overflow-y-auto py-2">
@@ -46,14 +46,14 @@
 
         <div class="p-4 bg-black/20">
             <p id="activeUser" class="text-xs text-gray-300 truncate mb-2 font-bold"></p>
-            <button onclick="logout()" class="w-full bg-red-800 py-2 text-xs font-bold rounded shadow hover:bg-red-700 transition-colors">LOGOUT</button>
+            <button onclick="logout()" class="w-full bg-red-800 py-2 text-xs font-bold rounded shadow hover:bg-red-700 transition-colors uppercase">Logout</button>
         </div>
     </nav>
 
     <main class="flex-1 flex flex-col overflow-hidden">
         <header class="bg-white shadow-sm border-b px-8 py-4 flex justify-between items-center">
             <h1 class="text-lg font-bold text-[#003811] uppercase tracking-tight">New DAR Clearance Application</h1>
-            <div class="text-[10px] font-bold text-gray-400 uppercase">Step 1: Document Entry</div>
+            <div class="text-[10px] font-bold text-gray-400 uppercase">Document Entry Phase</div>
         </header>
 
         <div class="flex-1 overflow-y-auto p-8 scroll-area">
@@ -63,7 +63,7 @@
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
                             <label class="form-label">Lot No/s</label>
-                            <input type="text" name="lot_no" class="form-input" placeholder="e.g. 24757">
+                            <input type="text" name="lot_no" class="form-input" placeholder="e.g. 24757" required>
                         </div>
                         <div>
                             <label class="form-label">Registered under</label>
@@ -73,7 +73,7 @@
 
                     <div>
                         <label class="form-label">In the Name of</label>
-                        <textarea name="owner_name" class="form-input" placeholder="Enter name(s)..."></textarea>
+                        <textarea name="owner_name" class="form-input" placeholder="Enter name(s)..." required></textarea>
                         <div class="hint">Line breaks here will be reflected on the printed PDF.</div>
                     </div>
 
@@ -145,7 +145,7 @@
                     </div>
 
                     <div class="flex justify-end gap-4 border-t pt-6">
-                        <button type="reset" class="px-6 py-2 border border-gray-300 rounded text-sm font-bold hover:bg-gray-50 transition-colors">CLEAR FORM</button>
+                        <button type="reset" class="px-6 py-2 border border-gray-300 rounded text-sm font-bold hover:bg-gray-50 transition-colors uppercase">Clear Form</button>
                         <button type="submit" id="btnSubmit" class="px-8 py-2 bg-[#003811] text-white rounded text-sm font-bold shadow hover:bg-[#006400] transition-colors uppercase">Save Application</button>
                     </div>
                 </form>
@@ -174,12 +174,13 @@
 
             if (error) return console.error("Menu Error:", error);
 
+            menuContainer.innerHTML = '';
             menuItems.forEach(item => {
                 if (item.required_roles.includes(userRole) || item.required_roles.length === 0) {
                     const isCurrent = window.location.pathname.includes(item.url);
                     const link = document.createElement('a');
                     link.href = item.url;
-                    link.className = `block px-6 py-4 text-sm font-bold border-l-4 transition-all ${isCurrent ? 'bg-[#006400] border-[#D4AF37]' : 'border-transparent hover:bg-[#006400]'}`;
+                    link.className = `block px-6 py-4 text-[11px] font-black uppercase border-l-4 transition-all ${isCurrent ? 'bg-[#006400] border-[#D4AF37]' : 'border-transparent hover:bg-[#006400]'}`;
                     link.innerText = item.label;
                     menuContainer.appendChild(link);
                 }
@@ -195,10 +196,11 @@
             const formData = new FormData(this);
             const payload = Object.fromEntries(formData.entries());
             
-            // Set initial status
-            payload.status = 'RECEIVED';
+            // Set initial status to match the first monitoring stage
+            payload.status = 'RECEIVED - Legal';
 
             try {
+                // Ensure table name 'land_records' matches your schema
                 const { error } = await supabaseClient.from('land_records').insert([payload]);
                 if (error) throw error;
                 
