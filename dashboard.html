@@ -35,7 +35,18 @@
         }
 
         .doc-print-area { font-family: 'Roboto', sans-serif; font-size: 9pt; color: black; line-height: 1.5; }
-        .data-value { font-weight: bold; text-decoration: underline; text-underline-offset: 3px; text-transform: uppercase; }
+        
+        /* UPDATED DATA VALUE FOR PERFECT LINE ALIGNMENT */
+        .data-value { 
+            font-weight: bold; 
+            border-bottom: 1.5px solid black; 
+            display: inline-block; 
+            min-width: 40px; 
+            text-transform: uppercase; 
+            line-height: 1.1; 
+            padding-bottom: 1px;
+        }
+        
         .page-break-avoid { page-break-inside: avoid; }
         
         .scroll-area::-webkit-scrollbar { width: 4px; }
@@ -211,7 +222,7 @@
                     This is to recommend that the application/request for Issuance of Land Transfer Clearance (LTC) be <span class="font-bold">APPROVED</span> on the parcel of agricultural land with the following pertinent information, to wit;
                 </p>
 
-                <div class="grid grid-cols-[250px_1fr] gap-y-1.5 mb-4 ml-10">
+                <div class="grid grid-cols-[220px_1fr] gap-y-1.5 mb-4 ml-10">
                     <div class="italic">Lot No/s</div> <div class="data-value" id="rec-lot">---</div>
                     <div class="italic">In the Name of</div> <div class="data-value" id="rec-owner">---</div>
                     <div class="italic">Registered under</div> <div class="data-value" id="rec-tct">---</div>
@@ -223,25 +234,23 @@
                     <div class="italic">In favor of</div> <div class="data-value" id="rec-favor">---</div>
                     
                     <div class="italic">Under Doc. No.</div> 
-                    <div class="flex gap-6">
-                        <span class="data-value" id="rec-doc">---</span>
-                        <span>Page No. <span class="data-value ml-2" id="rec-page">---</span></span>
-                        <span>Book No. <span class="data-value ml-2" id="rec-book">---</span></span>
+                    <div class="flex items-end gap-2">
+                        <span class="data-value text-center" id="rec-doc">---</span>
+                        <span class="italic ml-2">Page No.</span> <span class="data-value text-center" id="rec-page">---</span>
+                        <span class="italic ml-2">Book No.</span> <span class="data-value text-center" id="rec-book">---</span>
                     </div>
                     
                     <div class="italic">Series of</div> 
-                    <div class="flex gap-6">
-                        <span class="data-value" id="rec-series">---</span>
-                        <span>Dated <span class="data-value ml-2" id="rec-dated">---</span></span>
+                    <div class="flex items-end gap-2">
+                        <span class="data-value text-center" id="rec-series">---</span>
+                        <span class="italic ml-4">Dated</span> <span class="data-value text-center" id="rec-dated">---</span>
                     </div>
                     
                     <div class="italic">of Notary Public</div> <div class="data-value" id="rec-notary">---</div>
-                    <div class="italic">of a retention area of vendor/transferor</div> <div class="data-value" id="rec-retention">---</div>
-                </div>
+                    <div class="italic text-[9pt]">of a retention area of vendor/transferor</div> <div class="data-value" id="rec-retention">---</div>
 
-                <div class="mb-4 flex gap-12 items-center ml-10 page-break-avoid">
-                    <span class="italic">is hereby:</span>
-                    <span class="font-bold text-[11pt] underline underline-offset-4">APPROVED</span>
+                    <div class="italic mt-5">is hereby:</div>
+                    <div class="mt-5"><span class="font-bold text-[11pt] border-b-[1.5px] border-black pb-0.5">APPROVED</span></div>
                 </div>
 
                 <p class="mb-4 text-justify indent-10 page-break-avoid">
@@ -285,7 +294,7 @@
                     This is to certify that the application/request for Issuance of Land Transfer Clearance (LTC) filed to this Office with the following pertinent information, to wit:
                 </p>
 
-                <div class="grid grid-cols-[250px_1fr] gap-y-1.5 mb-4 ml-10">
+                <div class="grid grid-cols-[220px_1fr] gap-y-1.5 mb-4 ml-10">
                     <div class="italic">Lot No/s</div> <div class="data-value" id="cert-lot">---</div>
                     <div class="italic">In the Name of</div> <div class="data-value" id="cert-owner">---</div>
                     <div class="italic">Registered under</div> <div class="data-value" id="cert-tct">---</div>
@@ -297,42 +306,42 @@
                     <div class="italic">In favor of</div> <div class="data-value" id="cert-favor">---</div>
                     
                     <div class="italic">Under Doc. No.</div> 
-                    <div class="flex gap-6">
-                        <span class="data-value" id="cert-doc">---</span>
-                        <span>Page No. <span class="data-value ml-2" id="cert-page">---</span></span>
-                        <span>Book No. <span class="data-value ml-2" id="cert-book">---</span></span>
+                    <div class="flex items-end gap-2">
+                        <span class="data-value text-center" id="cert-doc">---</span>
+                        <span class="italic ml-2">Page No.</span> <span class="data-value text-center" id="cert-page">---</span>
+                        <span class="italic ml-2">Book No.</span> <span class="data-value text-center" id="cert-book">---</span>
                     </div>
+                    
                     <div class="italic">Series of</div> 
-                    <div class="flex gap-6">
-                        <span class="data-value" id="cert-series">---</span>
-                        <span>Dated <span class="data-value ml-2" id="cert-dated">---</span></span>
+                    <div class="flex items-end gap-2">
+                        <span class="data-value text-center" id="cert-series">---</span>
+                        <span class="italic ml-4">Dated</span> <span class="data-value text-center" id="cert-dated">---</span>
                     </div>
+                    
                     <div class="italic">of Notary Public</div> <div class="data-value" id="cert-notary">---</div>
-                    <div class="italic">of a retention area of vendor/transferor</div> <div class="data-value" id="cert-retention">---</div>
+                    <div class="italic text-[9pt]">of a retention area of vendor/transferor</div> <div class="data-value" id="cert-retention">---</div>
+
+                    <div class="italic mt-5">is hereby:</div>
+                    <div class="mt-5"><span class="font-bold text-[11pt] border-b-[1.5px] border-black pb-0.5">APPROVED</span></div>
                 </div>
 
-                <div class="mb-4 flex gap-12 items-center ml-10 page-break-avoid">
-                    <span class="italic">is hereby:</span>
-                    <span class="font-bold text-[11pt] underline underline-offset-4">APPROVED</span>
-                </div>
-
-                <p class="mb-4 text-justify leading-relaxed ml-10 page-break-avoid">
+                <p class="mb-4 text-justify leading-relaxed page-break-avoid">
                     based on the Attestation of the CARPO-LTS/FOD and from the report and recommendation of the Chief Legal Division/Authorized Legal Officer pursuant to Administrative Order (AO) No. 4 Series of 2021.
                 </p>
 
-                <p class="mb-4 text-justify leading-relaxed ml-10 page-break-avoid">
+                <p class="mb-4 text-justify leading-relaxed page-break-avoid">
                     Any actual change in the use of the land and/or development over the subject land, requires a prior Order of Conversion or Exemption/Exclusion from the Office of the DAR Regional Director.
                 </p>
 
-                <p class="mb-4 text-justify leading-relaxed ml-10 page-break-avoid">
+                <p class="mb-4 text-justify leading-relaxed page-break-avoid">
                     This Office reserves the right to revoke this Certification of LTC in case of findings of misrepresentation or submission of falsified documents by either or both parties to the Deed of Transfer and any third person who may be affected by the transfer.
                 </p>
 
-                <p class="mb-6 text-justify leading-relaxed ml-10 page-break-avoid">
+                <p class="mb-6 text-justify leading-relaxed page-break-avoid">
                     This Certification is hereby issued only for the purpose stated in the application/request for issuance of LTC.
                 </p>
 
-                <div class="mt-4 mb-12 ml-10 page-break-avoid indent-10">
+                <div class="mt-4 mb-12 page-break-avoid indent-10">
                     Done and issued this <span class="pdf-today-ordinal font-bold">---</span> at the DAR Provincial Office.
                 </div>
 
@@ -364,7 +373,6 @@
         let currentNavIndex = -1;
         const statusFlow = ['RECEIVED', 'RECOMMENDED', 'CERTIFIED', 'SIGNED', 'TO LEGAL', 'TO RECORDS', 'RELEASE TO CLIENT'];
 
-        // DYNAMIC SIGNATORIES VARIABLES (Empty Defaults)
         let chiefLegalName = "---";
         let parpoName = "---";
 
@@ -538,7 +546,6 @@
             currentNavIndex = currentNavList.findIndex(r => r.id === id);
             currentSelection = currentNavList[currentNavIndex];
 
-            // Setup QR
             const qrIdentifier = currentSelection.LTC_ID_NUMBER || currentSelection.ltc_no || 'PENDING';
             generateQRs(qrIdentifier);
 
@@ -583,7 +590,6 @@
                 if(certEl) certEl.innerText = val;
             }
 
-            // Set Headers (Mapped to LTC_ID_NUMBER)
             const recHeaderId = document.getElementById('rec-header-id');
             const certHeaderId = document.getElementById('cert-header-id');
             const headerVal = currentSelection.LTC_ID_NUMBER || 'LTC-PENDING';
