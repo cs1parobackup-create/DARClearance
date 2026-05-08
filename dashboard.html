@@ -63,7 +63,7 @@
 </head>
 <body class="flex h-screen overflow-hidden text-[#1F2937]">
 
-    <nav class="bg-[#003811] md:w-64 flex flex-col text-white flex-shrink-0 shadow-xl z-20">
+    <nav class="bg-[#003811] md:w-64 flex flex-col text-white flex-shrink-0 shadow-xl z-20 no-print">
         <div class="p-6 border-b border-[#006400]">
             <h2 class="text-xl font-bold text-[#D4AF37]">DARPO-CS</h2>
             <p id="userRoleBadge" class="text-[10px] text-gray-300 uppercase tracking-widest mt-1 font-bold">---</p>
@@ -231,7 +231,7 @@
                         </div>
                     </div>
                     
-                    <div class="text-center mb-4 mt-2 page-break-avoid">
+                    <div class="text-center mb-6 mt-4 page-break-avoid">
                         <div class="font-black text-[16pt] tracking-wide">RECOMMENDATION</div>
                         <div class="text-[10pt]">(Land Transfer Clearance)</div>
                     </div>
@@ -487,7 +487,8 @@
 
         async function loadMenu() {
             const menuContainer = document.getElementById('dynamicMenu');
-            const userRole = currentUser.role.toUpperCase();
+            if (!currentUser || !currentUser.role) return;
+            const userRole = currentUser.role.toUpperCase().trim();
             
             try {
                 const { data: menuItems, error } = await supabaseClient
@@ -499,18 +500,22 @@
 
                 menuContainer.innerHTML = '';
                 menuItems.forEach(item => {
-                    if (!item.is_active) return;
+                    if (item.is_active === false || item.is_active === 'FALSE') return;
                     
                     let roles = [];
-                    try {
-                        if (typeof item.required_roles === 'string') {
-                            roles = JSON.parse(item.required_roles);
-                        } else if (Array.isArray(item.required_roles)) {
+                    if (item.required_roles) {
+                        if (Array.isArray(item.required_roles)) {
                             roles = item.required_roles;
+                        } else {
+                            try {
+                                roles = JSON.parse(item.required_roles);
+                            } catch(e) {
+                                roles = item.required_roles.replace(/[\[\]"']/g, '').split(',').map(r => r.trim());
+                            }
                         }
-                    } catch(e) { console.warn('Role parse err', e); }
+                    }
 
-                    const hasRole = roles.length === 0 || roles.some(r => userRole.includes(String(r).toUpperCase()));
+                    const hasRole = roles.length === 0 || roles.some(r => userRole.includes(String(r).toUpperCase().trim()));
                     
                     if (hasRole) {
                         const isCurrent = window.location.pathname.includes(item.url);
@@ -644,7 +649,7 @@
                                 actions += `<button onclick='processToNext("${item.id}", "RETURNED TO LEGAL", "${st}")' class="bg-cyan-600 text-white w-full py-1.5 rounded shadow text-[10px] font-bold hover:bg-cyan-700 uppercase transition-colors text-center">Return to Legal</button>`;
                             }
                         } else if (st === 'RETURNED TO LEGAL') {
-                            if (isChief || (isLegal && item.encoded_by === userFullName)) {
+                            if (isChief || isLegal) {
                                 actions += `<button onclick='openPrint("${item.id}", "rec")' class="bg-[#8b5cf6] text-white w-full py-1.5 rounded shadow text-[9px] font-black tracking-wide hover:bg-purple-800 uppercase transition-colors text-center mb-1">Recommendation</button>`;
                                 actions += `<button onclick='openPrint("${item.id}", "cert")' class="bg-[#d97706] text-white w-full py-1.5 rounded shadow text-[9px] font-black tracking-wide hover:bg-amber-700 uppercase transition-colors text-center mb-1">Certification</button>`;
                                 actions += `<button onclick='processToNext("${item.id}", "FORWARDED TO RECORDS", "${st}")' class="bg-cyan-600 text-white w-full py-1.5 rounded shadow text-[10px] font-bold hover:bg-cyan-700 uppercase transition-colors text-center">FORWARD TO RECORDS</button>`;
@@ -771,26 +776,6 @@
             } else {
                 alert('Variant created successfully! You can now edit the "In favor of" details via the Review button.');
                 fetchClearanceData();
-            }
-        }
-
-        window.reIssueRecord = async function(id) {
-            const record = rawData.find(r => r.id === id);
-            if (!record) return;
-
-            const { id: oldId, created_at, updated_at, ...newRecordData } = record;
-            
-            if(newRecordData.ltc_no !== undefined) delete newRecordData.ltc_no;
-
-            newRecordData.LTC_ID_NUMBER = "";
-            newRecordData.status = 'RECEIVED'; 
-
-            const { data, error } = await supabaseClient.from('land_records').insert([newRecordData]).select();
-            if (error) {
-                alert('Error re-issuing record: ' + error.message);
-            } else {
-                await fetchClearanceData();
-                showReview(data[0].id, 'RE-ISSUANCE');
             }
         }
 
@@ -1040,13 +1025,6 @@
                     new QRCode(qrDiv, { text: scanUrl, width: 55, height: 55, correctLevel: QRCode.CorrectLevel.L });
                 });
             });
-
-            // Prevent generation of blank final pages strictly checking for actual content elements
-            const lastPage = pagesArray[pagesArray.length - 1];
-            if (lastPage && lastPage.contentElement.children.length === 0) {
-                wrapper.removeChild(lastPage.pageElement);
-                pagesArray.pop();
-            }
 
             const opt = {
                 margin:       0,
