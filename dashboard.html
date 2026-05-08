@@ -20,10 +20,54 @@
             body { background: white !important; }
             nav, header, .no-print, #actionButtons, #remarksSection, .modal-header-actions { display: none !important; }
             #reviewModal { position: static; display: block; background: transparent; padding: 0; box-shadow: none; }
+            
+            .doc-print-area { 
+                visibility: visible !important;
+                display: block !important;
+                width: 8.5in !important; 
+                height: 13in !important;
+                padding: 0 !important;
+                margin: 0 !important;
+            }
         }
 
-        /* HIDDEN BLUEPRINTS - Used strictly for content cloning by the paging script */
-        .doc-print-area { display: none; }
+        .doc-print-area { 
+            position: relative;
+            z-index: 1; 
+            font-family: 'Roboto', sans-serif; 
+            font-size: 9pt; 
+            color: black; 
+            line-height: 1.5; 
+            width: 8.5in; 
+            min-height: 13in;
+            margin: 0 auto; 
+            padding: 0;
+            overflow: hidden;
+            background: transparent;
+            box-sizing: border-box;
+        }
+
+        .print-bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1; 
+            object-fit: fill;
+        }
+
+        .doc-content {
+            position: relative;
+            z-index: 10; 
+            padding: 1in; 
+            width: 100%;
+            height: 100%;
+            box-sizing: border-box;
+            background: transparent;
+            display: flex;
+            flex-direction: column;
+        }
         
         .data-value { 
             font-weight: bold; 
@@ -118,7 +162,7 @@
                         <tr>
                             <th class="w-[15%]">LTC Number</th>
                             <th class="w-[20%]">Land Owner</th>
-                            <th class="w-[15%]">Encoded By</th>
+                            <th class="w-[15%]">Legal Officer</th>
                             <th class="w-[15%]">Status</th>
                             <th class="w-[20%] text-center">Action</th>
                             <th class="w-[15%] text-right">Date Updated</th>
@@ -150,7 +194,11 @@
             <div id="reviewSection" class="mb-8 space-y-6 no-print">
                 <div class="bg-blue-50 p-6 rounded-lg border border-blue-200 space-y-6">
                     <p class="text-xs font-bold text-gray-500 uppercase tracking-widest mb-4">Document Details (Editable - Click to Edit)</p>
+                    
                     <div class="grid grid-cols-[200px_1fr] items-center gap-y-8">
+                        <div class="font-bold text-red-700 uppercase text-sm">LTC Number:</div>
+                        <div id="edit-LTC_ID_NUMBER" class="edit-big border-red-400 bg-red-50 text-red-800">---</div>
+                        
                         <div class="font-bold text-gray-600 uppercase text-sm">Lot No/s:</div>
                         <div id="edit-lot" class="edit-big">---</div>
                         <div class="font-bold text-gray-600 uppercase text-sm">In the Name of:</div>
@@ -597,7 +645,8 @@
                     }
                     actions += `</div>`;
 
-                    let encodedBy = item.encoded_by || item.created_by || '---'; 
+                    // STRATEGY 8: Display legalOfficer variable
+                    let encodedBy = item.legalOfficer || item.legalofficer || item.encoded_by || item.created_by || '---'; 
 
                     if (query !== '' || displayCount < 30) {
                         tbody.innerHTML += `
@@ -709,24 +758,21 @@
             const record = rawData.find(r => r.id === id);
             if (!record) return;
 
-            // Strategy 6: Manual LTC Input for Re-Issue
-            let manualLtc = prompt("RE-ISSUE CLEARANCE\nPlease manually input the new assigned LTC Number for this re-issuance:", "");
-            if (manualLtc === null || manualLtc.trim() === "") {
-                return; // User cancelled or left it blank
-            }
+            if (!confirm(`Are you sure you want to duplicate this record for RE-ISSUE?`)) return;
 
             const { id: oldId, created_at, updated_at, ...newRecordData } = record;
             
             if(newRecordData.ltc_no !== undefined) delete newRecordData.ltc_no;
 
-            newRecordData.LTC_ID_NUMBER = manualLtc.trim();
+            // Clear LTC number so user can edit it manually in the Review form later.
+            newRecordData.LTC_ID_NUMBER = "";
             newRecordData.status = 'RECEIVED'; 
 
             const { error } = await supabaseClient.from('land_records').insert([newRecordData]);
             if (error) {
                 alert('Error re-issuing record: ' + error.message);
             } else {
-                alert('Clearance successfully re-issued! The new record is now in RECEIVED status.');
+                alert('Clearance duplicated for Re-Issue! Please open the new record under RECEIVED status to manually input the new LTC Number.');
                 fetchClearanceData();
             }
         }
@@ -781,6 +827,7 @@
             document.getElementById('btnNext').className = currentNavIndex >= currentNavList.length - 1 ? 'bg-gray-100 text-gray-400 px-4 py-2 rounded text-xs font-black uppercase cursor-not-allowed' : 'bg-gray-200 hover:bg-gray-300 px-4 py-2 rounded text-xs font-black uppercase transition-colors text-gray-800';
 
             const dbToHtmlMap = {
+                'LTC_ID_NUMBER': 'LTC_ID_NUMBER', // Included per Instruction 7
                 'lot_no': 'lot',
                 'owner_name': 'owner',
                 'registered_under': 'tct',
@@ -842,7 +889,7 @@
 
             document.getElementById('reviewModal').classList.remove('hidden');
 
-            let encoderName = currentSelection.encoded_by || currentSelection.created_by || '---';
+            let encoderName = currentSelection.legalOfficer || currentSelection.legalofficer || currentSelection.encoded_by || currentSelection.created_by || '---';
             document.querySelectorAll('.preparedByName').forEach(el => el.innerText = encoderName);
             document.querySelectorAll('.preparedByPosition').forEach(el => el.innerText = 'Fetching...');
             
@@ -917,22 +964,23 @@
 
             function createPage() {
                 const page = document.createElement('div');
+                // Strict 8.5 x 13 boundary
                 page.style.cssText = 'width: 8.5in; height: 13in; min-height: 13in; max-height: 13in; position: relative; background: white; margin-bottom: 20px; overflow: hidden; flex-shrink: 0;';
                 
-                // STRATEGY 4: Background image is absolutely positioned behind the content container.
+                // STRATEGY 4: Fixed background layer. Unaffected by the content inside.
                 const bg = document.createElement('img');
                 bg.src = backgroundImageUrl;
                 bg.crossOrigin = "anonymous";
-                bg.style.cssText = 'position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; object-fit: fill; display: block;';
+                bg.style.cssText = 'position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; object-fit: fill; display: block; pointer-events: none;';
                 page.appendChild(bg);
                 
                 const content = document.createElement('div');
-                // STRATEGY 1 & 3: Content area strictly bound by 1.15in margins top and bottom.
+                // STRATEGY 1 & 2: 1.15" fixed margin bounding box. QR code will naturally render inside this box.
                 content.style.cssText = 'position: absolute; top: 1.15in; left: 1in; right: 1in; bottom: 1.15in; z-index: 10; display: block; font-family: "Roboto", sans-serif; font-size: 9pt; color: black; line-height: 1.5; overflow: hidden;';
                 page.appendChild(content);
                 
                 wrapper.appendChild(page);
-                pagesArray.push(page);
+                pagesArray.push({ pageElement: page, contentElement: content });
                 return content;
             }
 
@@ -941,7 +989,7 @@
             blocks.forEach(block => {
                 currentContent.appendChild(block);
                 
-                // STRATEGY 3: Next page logic if height exceeds the margin boundaries
+                // STRATEGY 3: Next page logic if height exceeds the physical bounding box.
                 if (currentContent.scrollHeight > currentContent.clientHeight) {
                     currentContent.removeChild(block); 
                     currentContent = createPage(); 
@@ -956,6 +1004,13 @@
                     new QRCode(qrDiv, { text: scanUrl, width: 55, height: 55, correctLevel: QRCode.CorrectLevel.L });
                 });
             });
+
+            // STRATEGY 9: Automatically remove blank pages
+            const lastPage = pagesArray[pagesArray.length - 1];
+            if (lastPage && lastPage.contentElement.children.length === 0) {
+                wrapper.removeChild(lastPage.pageElement);
+                pagesArray.pop();
+            }
 
             const opt = {
                 margin:       0,
@@ -997,6 +1052,7 @@
 
             if (newSt === 'REVIEWED' || newSt === 'PRINTED LTC' || newSt === 'FORWARDED TO RECORDS' || newSt === 'RELEASED TO CLIENT') {
                 const dbToHtmlMap = {
+                    'LTC_ID_NUMBER': 'edit-LTC_ID_NUMBER',
                     'lot_no': 'edit-lot', 'owner_name': 'edit-owner', 'registered_under': 'edit-tct', 
                     'area': 'edit-area', 'td_no': 'edit-td', 'location': 'edit-location', 
                     'deed_type': 'edit-deed', 'executed_by': 'edit-executed', 'in_favor_of': 'edit-favor', 
