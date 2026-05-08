@@ -220,7 +220,6 @@
                 <div class="doc-content">
                     <div class="relative w-full mb-6 page-break-avoid">
                         <div class="absolute right-0 top-0 text-right font-bold flex flex-col items-end">
-                            <span class="font-bold text-[10pt]">LTC Form No. 5</span>
                             <span class="font-bold text-[10pt] mt-4 underline" id="rec-header-id-top">LTC-PENDING</span>
                         </div>
                         <div class="text-center text-[10pt] leading-snug font-bold uppercase">
@@ -231,7 +230,7 @@
                         </div>
                     </div>
                     
-                    <div class="text-center mb-4 mt-2 page-break-avoid">
+                    <div class="text-center mb-6 mt-4 page-break-avoid">
                         <div class="font-black text-[16pt] tracking-wide">RECOMMENDATION</div>
                         <div class="text-[10pt]">(Land Transfer Clearance)</div>
                     </div>
@@ -605,6 +604,11 @@
                 if (matchesSearch) {
                     
                     let st = (item.status || 'RECEIVED').trim().toUpperCase();
+
+                    // Apply exact instruction: RECORDS could only view DAR CLEARANCE FORWARDED TO THEM
+                    if (isRecords && st !== 'FORWARDED TO RECORDS') {
+                        return; // Skips this iteration entirely for the Records role
+                    }
                     
                     if (st === 'RECEIVED' || st === 'RECEIVED - LEGAL') { stats.rec++; st = 'RECEIVED'; }
                     else if (st === 'REVIEWED' || st === 'REVIEWED AND RECOMMENDED' || st === 'RECOMMENDED') { stats.rev++; st = 'REVIEWED'; }
@@ -658,7 +662,7 @@
                             if (st === 'FORWARDED TO RECORDS' && (isRecords || isChief)) {
                                 actions += `<button onclick='processToNext("${item.id}", "RELEASED TO CLIENT", "${st}")' class="bg-cyan-600 text-white w-full py-1.5 rounded shadow text-[10px] font-bold hover:bg-cyan-700 uppercase transition-colors text-center mb-1">Release</button>`;
                             }
-                            if (st === 'RELEASED TO CLIENT' && (isRecords || isChief || isLegal)) {
+                            if (st === 'RELEASED TO CLIENT' && (isChief || isLegal)) {
                                 actions += `<button onclick='showReview("${item.id}", "CORRECTION")' class="bg-yellow-500 text-white w-full py-1.5 rounded shadow text-[10px] font-bold hover:bg-yellow-600 uppercase transition-colors text-center mb-1">Correction</button>`;
                                 actions += `<button onclick='showReview("${item.id}", "RE-ISSUANCE")' class="bg-blue-500 text-white w-full py-1.5 rounded shadow text-[10px] font-bold hover:bg-blue-600 uppercase transition-colors text-center mb-1">Re-Issue</button>`;
                             }
@@ -1049,6 +1053,12 @@
                     new QRCode(qrDiv, { text: scanUrl, width: 55, height: 55, correctLevel: QRCode.CorrectLevel.L });
                 });
             });
+
+            const lastPage = pagesArray[pagesArray.length - 1];
+            if (lastPage && lastPage.contentElement.children.length === 0) {
+                wrapper.removeChild(lastPage.pageElement);
+                pagesArray.pop();
+            }
 
             const opt = {
                 margin:       0,
