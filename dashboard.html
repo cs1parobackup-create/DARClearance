@@ -34,7 +34,7 @@
 
         .doc-print-area { 
             position: relative;
-            z-index: 1; /* Establishes a strict stacking context */
+            z-index: 1;
             font-family: 'Roboto', sans-serif; 
             font-size: 9pt; 
             color: black; 
@@ -44,22 +44,12 @@
             margin: 0 auto; 
             padding: 0;
             overflow: hidden;
-            background: transparent;
-        }
-
-        .print-bg {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 1; /* Layer 1: Strictly behind content */
-            object-fit: cover;
+            background-color: white;
         }
 
         .doc-content {
             position: relative;
-            z-index: 10; /* Layer 10: Strictly above background */
+            z-index: 10;
             padding: 1in;
             width: 100%;
             height: 100%;
@@ -125,23 +115,23 @@
                     <h3 id="stat-received" class="text-lg font-black text-blue-600">0</h3>
                 </div>
                 <div class="bg-white p-3 rounded border-l-4 border-purple-500 text-center shadow-sm">
-                    <p class="text-[8px] font-bold text-gray-400 uppercase">Reviewed</p>
+                    <p class="text-[8px] font-bold text-gray-400 uppercase">Recommended</p>
                     <h3 id="stat-recommended" class="text-lg font-black text-purple-600">0</h3>
                 </div>
                 <div class="bg-white p-3 rounded border-l-4 border-cyan-500 text-center shadow-sm">
-                    <p class="text-[8px] font-bold text-gray-400 uppercase">Printed LTC</p>
+                    <p class="text-[8px] font-bold text-gray-400 uppercase">Certified</p>
                     <h3 id="stat-certified" class="text-lg font-black text-cyan-600">0</h3>
                 </div>
                 <div class="bg-white p-3 rounded border-l-4 border-orange-500 text-center shadow-sm">
-                    <p class="text-[8px] font-bold text-gray-400 uppercase">Signed by PARPO</p>
+                    <p class="text-[8px] font-bold text-gray-400 uppercase">Signed</p>
                     <h3 id="stat-signed" class="text-lg font-black text-orange-600">0</h3>
                 </div>
                 <div class="bg-white p-3 rounded border-l-4 border-red-500 text-center shadow-sm">
-                    <p class="text-[8px] font-bold text-gray-400 uppercase">Returned to Legal</p>
+                    <p class="text-[8px] font-bold text-gray-400 uppercase">To Legal</p>
                     <h3 id="stat-legal" class="text-lg font-black text-red-600">0</h3>
                 </div>
                 <div class="bg-white p-3 rounded border-l-4 border-green-500 text-center shadow-sm">
-                    <p class="text-[8px] font-bold text-gray-400 uppercase">Forwarded to Records</p>
+                    <p class="text-[8px] font-bold text-gray-400 uppercase">To Records</p>
                     <h3 id="stat-records" class="text-lg font-black text-green-600">0</h3>
                 </div>
                 <div class="bg-white p-3 rounded border-l-4 border-teal-500 text-center shadow-sm">
@@ -159,11 +149,11 @@
                     <thead class="bg-gray-50 border-b uppercase font-bold text-[#003811] tracking-wider">
                         <tr>
                             <th class="w-[15%]">LTC Number</th>
-                            <th class="w-[20%]">Land Owner</th>
-                            <th class="w-[15%]">Encoded By</th>
+                            <th class="w-[15%]">Title</th>
+                            <th class="w-[25%]">Land Owner</th>
                             <th class="w-[15%]">Status</th>
                             <th class="w-[20%] text-center">Action</th>
-                            <th class="w-[15%] text-right">Date Updated</th>
+                            <th class="w-[10%] text-right">Date Updated</th>
                         </tr>
                     </thead>
                     <tbody id="clearanceTableBody" class="divide-y divide-gray-100"></tbody>
@@ -239,8 +229,7 @@
             <div id="actionButtons" class="flex justify-between items-center no-print">
             </div>
 
-            <div id="docRecommendation" class="doc-print-area mx-auto hidden pt-8">
-                <img class="print-bg" crossorigin="anonymous" src="">
+            <div id="docRecommendation" class="doc-print-area mx-auto hidden">
                 <div class="doc-content">
                     <div class="text-right font-bold mb-4 mr-10 mt-[0.1in]" id="rec-header-id">LTC-PENDING</div>
                     
@@ -292,35 +281,35 @@
                         Done this <span class="pdf-today-ordinal font-bold">---</span>. Naga City, Camarines Sur.
                     </div>
 
-                    <div class="page-break-avoid w-full ml-10 flex justify-between pr-10">
+                    <div class="page-break-avoid w-full grid grid-cols-2 gap-8 px-10 mt-12">
                         <div>
-                            <p class="text-left">Prepared by:</p>
-                            <div class="text-center inline-block mt-12">
-                                <p class="preparedByName font-bold uppercase underline underline-offset-4">---</p>
-                                <p class="preparedByPosition text-[9pt] uppercase mt-1">---</p>
-                            </div>
-                        </div>
-                        <div>
-                            <p class="text-left">Reviewed and Noted by:</p>
-                            <div class="text-center inline-block mt-12">
+                            <p class="text-left mb-12">Reviewed and Noted by:</p>
+                            <div class="text-center inline-block">
                                 <p class="sys-chief-name font-bold uppercase underline underline-offset-4">---</p>
                                 <p class="text-[9pt] mt-1">Chief, Legal Division</p>
+                            </div>
+                            <div id="qr-rec" class="mt-4 flex justify-center w-full"></div>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-left w-full mb-12">Prepared by:</p>
+                            <div class="text-center inline-block">
+                                <p class="preparedByName font-bold uppercase underline underline-offset-4">---</p>
+                                <p class="preparedByPosition text-[9pt] uppercase mt-1">---</p>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <div id="docCertification" class="doc-print-area mx-auto hidden pt-8">
-                <img class="print-bg" crossorigin="anonymous" src="">
+            <div id="docCertification" class="doc-print-area mx-auto hidden">
                 <div class="doc-content">
                     
-                    <div class="relative w-full mb-6">
-                        <div class="absolute right-0 top-0 text-right font-bold flex flex-col items-end">
-                            <span class="font-bold text-[10pt]">LTC Form No. 5</span>
-                            <span class="font-bold text-[10pt] mt-4 underline" id="cert-header-id">LTC-PENDING</span>
+                    <div class="relative w-full mb-8 mt-2">
+                        <div class="absolute right-0 top-0 text-right flex flex-col items-end mr-10">
+                            <span class="font-bold text-[10pt] italic">LTC Form No. 5</span>
+                            <span class="font-bold text-[10pt] mt-8 underline" id="cert-header-id">LTC-PENDING</span>
                         </div>
-                        <div class="text-center text-[10pt] leading-snug font-bold uppercase">
+                        <div class="text-center text-[10pt] leading-snug font-bold">
                             <p>Republic of the Philippines</p>
                             <p>DEPARTMENT OF AGRARIAN REFORM</p>
                             <p>Region V</p>
@@ -328,9 +317,9 @@
                         </div>
                     </div>
 
-                    <div class="text-center mb-6 mt-8">
-                        <div class="font-black text-[16pt] tracking-wide">CERTIFICATION</div>
-                        <div class="text-[10pt]">(Land Transfer Clearance)</div>
+                    <div class="text-center mb-6 mt-10">
+                        <div class="font-black text-[16pt] tracking-[0.3em]">C E R T I F I C A T I O N</div>
+                        <div class="text-[10pt] font-bold">(Land Transfer Clearance)</div>
                     </div>
                     
                     <p class="mb-4 text-justify indent-10">
@@ -386,11 +375,13 @@
                         Done and issued this <span class="pdf-today-ordinal font-bold">---</span> at the DAR Provincial Office.
                     </div>
 
-                    <div class="flex flex-col items-end mt-12 page-break-avoid mr-10">
-                        <div class="text-center w-60">
-                            <p class="sys-parpo-name font-bold uppercase underline underline-offset-4 inline-block">---</p>
-                            <p class="text-[9pt] uppercase mt-1">PARPO II</p>
-                            <div id="qr-cert" class="mt-2 flex justify-center w-full"></div>
+                    <div class="flex justify-end mt-12 page-break-avoid mr-10">
+                        <div class="flex items-center gap-4">
+                            <div id="qr-cert" class="p-1 bg-white"></div>
+                            <div class="text-center w-60">
+                                <p class="sys-parpo-name font-bold uppercase underline underline-offset-4 inline-block">---</p>
+                                <p class="text-[9pt] uppercase mt-1">PARPO II</p>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -410,7 +401,7 @@
         let rawData = [];
         let currentNavList = [];
         let currentNavIndex = -1;
-        const statusFlow = ['RECEIVED', 'REVIEWED', 'PRINTED LTC', 'SIGNED BY PARPO', 'RETURNED TO LEGAL', 'FORWARDED TO RECORDS', 'RELEASED TO CLIENT', 'DISAPPROVED'];
+        const statusFlow = ['RECEIVED', 'RECOMMENDED', 'CERTIFIED', 'SIGNED', 'TO LEGAL', 'TO RECORDS', 'RELEASE TO CLIENT'];
 
         let chiefLegalName = "---";
         let parpoName = "---";
@@ -451,9 +442,10 @@
             const { data } = supabaseClient.storage.from('bg').getPublicUrl('ltc_bg.jpg');
             if (data && data.publicUrl) {
                 backgroundImageUrl = data.publicUrl;
-                document.querySelectorAll('.print-bg').forEach(img => {
-                    img.src = backgroundImageUrl;
-                    img.style.display = 'block';
+                document.querySelectorAll('.doc-print-area').forEach(el => {
+                    el.style.backgroundImage = `url('${backgroundImageUrl}')`;
+                    el.style.backgroundSize = '8.5in 13in';
+                    el.style.backgroundRepeat = 'repeat-y';
                 });
             }
         }
@@ -481,92 +473,78 @@
             let stats = { rec: 0, rev: 0, cer: 0, sig: 0, leg: 0, recd: 0, rel: 0, dis: 0 };
             
             let userRole = currentUser.role.toUpperCase();
-            let isParpo = userRole === 'PARPO II' || userRole === 'PARPO';
-            let isChief = userRole === 'CHIEF, LEGAL DIVISION' || userRole === 'DIVISION CHIEF' || userRole === 'CHIEF';
-            let isLegal = (userRole.includes('LEGAL') || userRole.includes('SARPO') || userRole.includes('ARPT') || userRole.includes('ARPO')) && !isParpo;
-            let isEncoder = userRole === 'ODTS ENCODER' || userRole.includes('ODTS');
-            let isRecords = userRole.includes('RECORDS');
-            let userFullName = currentUser.full_name;
-
-            let displayCount = 0;
+            let isLegal = userRole.includes('LEGAL') || userRole.includes('CHIEF');
+            let isParpo = userRole.includes('PARPO');
 
             rawData.forEach(item => {
-                let matchesSearch = (item.registered_under || '').toLowerCase().includes(query) || 
-                                    (item.owner_name || '').toLowerCase().includes(query) || 
-                                    (item.LTC_ID_NUMBER || '').toLowerCase().includes(query);
-
-                if (matchesSearch) {
+                if ((item.registered_under || '').toLowerCase().includes(query) || (item.owner_name || '').toLowerCase().includes(query)) {
+                    let st = item.status || 'RECEIVED';
                     
-                    let st = (item.status || 'RECEIVED').trim().toUpperCase();
-                    
-                    if (st === 'RECEIVED' || st === 'RECEIVED - LEGAL') { stats.rec++; st = 'RECEIVED'; }
-                    else if (st === 'REVIEWED' || st === 'REVIEWED AND RECOMMENDED' || st === 'RECOMMENDED') { stats.rev++; st = 'REVIEWED'; }
-                    else if (st === 'PRINTED LTC' || st === 'CERTIFIED' || st === 'PROCESSED') { stats.cer++; st = 'PRINTED LTC'; }
-                    else if (st === 'SIGNED BY PARPO' || st === 'SIGNED' || st === 'FOR SIGNATURE - PARPO II') { stats.sig++; st = 'SIGNED BY PARPO'; }
-                    else if (st === 'RETURNED TO LEGAL' || st === 'TO LEGAL' || st === 'FORWARDED - RECORDS') { stats.leg++; st = 'RETURNED TO LEGAL'; }
-                    else if (st === 'FORWARDED TO RECORDS' || st === 'TO RECORDS') { stats.recd++; st = 'FORWARDED TO RECORDS'; }
-                    else if (st === 'RELEASED TO CLIENT' || st === 'RELEASED - CLIENT' || st === 'RELEASE TO CLIENT') { stats.rel++; st = 'RELEASED TO CLIENT'; }
+                    if (st === 'RECEIVED' || st === 'RECEIVED - Legal') { stats.rec++; st = 'RECEIVED'; }
+                    else if (st === 'RECOMMENDED' || st === 'REVIEWED AND RECOMMENDED' || st === 'REVIEWED') { stats.rev++; st = 'RECOMMENDED'; }
+                    else if (st === 'CERTIFIED' || st === 'PROCESSED') { stats.cer++; st = 'CERTIFIED'; }
+                    else if (st === 'SIGNED' || st === 'FOR SIGNATURE - PARPO II') { stats.sig++; st = 'SIGNED'; }
+                    else if (st === 'TO LEGAL' || st === 'FORWARDED - Records') { stats.leg++; st = 'TO LEGAL'; }
+                    else if (st === 'TO RECORDS') { stats.recd++; st = 'TO RECORDS'; }
+                    else if (st === 'RELEASE TO CLIENT' || st === 'RELEASED - Client') { stats.rel++; st = 'RELEASE TO CLIENT'; }
                     else if (st === 'DISAPPROVED') { stats.dis++; st = 'DISAPPROVED'; }
 
                     let currentIndex = statusFlow.indexOf(st);
+                    
+                    if (isParpo && currentIndex < 2 && st !== 'DISAPPROVED') {
+                        return; 
+                    }
+
                     let daysPassed = item.updated_at ? getWorkingDays(new Date(item.updated_at), new Date()) : 0;
                     let warningHTML = daysPassed > 5 ? `<span class="text-red-600 font-black ml-2 text-[12px]" title="Exceeded 5 working days!">⚠️</span>` : '';
 
-                    let actions = '<div class="flex flex-col gap-1 w-full max-w-[120px] mx-auto">';
+                    let actions = '';
                     
-                    if (!isEncoder) {
-                        if (st === 'RECEIVED') {
-                            if (isChief || isLegal) {
-                                actions += `<button onclick='showReview("${item.id}")' class="bg-[#003811] text-white w-full py-1.5 rounded shadow text-[10px] font-bold tracking-wide hover:bg-black uppercase transition-colors text-center">Review</button>`;
-                                actions += `<button onclick='createVariant("${item.id}")' class="bg-gray-500 text-white w-full py-1 mt-1 rounded shadow text-[9px] font-bold hover:bg-gray-700 uppercase transition-colors text-center">+ Variant</button>`;
-                                actions += `<button onclick='deleteRecord("${item.id}")' class="bg-red-600 text-white w-full py-1 mt-1 rounded shadow text-[9px] font-bold hover:bg-red-800 uppercase transition-colors text-center">Delete</button>`;
-                            }
-                        } else if (st === 'REVIEWED') {
-                            if (isChief || isLegal) {
-                                actions += `<button onclick='openPrint("${item.id}", "rec")' class="bg-[#8b5cf6] text-white w-full py-1.5 rounded shadow text-[9px] font-black tracking-wide hover:bg-purple-800 uppercase transition-colors text-center">Recommendation</button>`;
-                                actions += `<button onclick='openPrint("${item.id}", "cert")' class="bg-[#d97706] text-white w-full py-1.5 rounded shadow text-[9px] font-black tracking-wide hover:bg-amber-700 uppercase transition-colors text-center">Certification</button>`;
-                                actions += `<button onclick='createVariant("${item.id}")' class="bg-gray-500 text-white w-full py-1 rounded shadow text-[9px] font-bold hover:bg-gray-700 uppercase transition-colors text-center mt-1">+ Variant</button>`;
-                            }
-                        } else if (st === 'PRINTED LTC') {
-                            if (isParpo) {
-                                actions += `<button onclick='showReview("${item.id}")' class="bg-[#003811] text-white w-full py-1.5 rounded shadow text-[9px] font-black tracking-wide hover:bg-black uppercase transition-colors text-center">Edit</button>`;
-                                actions += `<button onclick='openPrint("${item.id}", "rec")' class="bg-[#8b5cf6] text-white w-full py-1.5 rounded shadow text-[9px] font-black tracking-wide hover:bg-purple-800 uppercase transition-colors text-center">Recommendation</button>`;
-                                actions += `<button onclick='openPrint("${item.id}", "cert")' class="bg-[#d97706] text-white w-full py-1.5 rounded shadow text-[9px] font-black tracking-wide hover:bg-amber-700 uppercase transition-colors text-center">Certification</button>`;
-                                actions += `<button onclick='processToNext("${item.id}", "SIGNED BY PARPO")' class="bg-cyan-600 text-white w-full py-1.5 rounded shadow text-[10px] font-bold hover:bg-cyan-700 uppercase transition-colors text-center mt-1">Sign</button>`;
-                            } else if (isChief || isLegal) {
-                                actions += `<button onclick='openPrint("${item.id}", "rec")' class="bg-[#8b5cf6] text-white w-full py-1.5 rounded shadow text-[9px] font-black tracking-wide hover:bg-purple-800 uppercase transition-colors text-center">Recommendation</button>`;
-                                actions += `<button onclick='openPrint("${item.id}", "cert")' class="bg-[#d97706] text-white w-full py-1.5 rounded shadow text-[9px] font-black tracking-wide hover:bg-amber-700 uppercase transition-colors text-center">Certification</button>`;
-                            }
-                        } else if (st === 'SIGNED BY PARPO') {
-                            if (isParpo) {
-                                actions += `<button onclick='processToNext("${item.id}", "RETURNED TO LEGAL")' class="bg-cyan-600 text-white w-full py-1.5 rounded shadow text-[10px] font-bold hover:bg-cyan-700 uppercase transition-colors text-center">Return to Legal</button>`;
-                            }
-                        } else if (st === 'RETURNED TO LEGAL') {
-                            if (isChief || (isLegal && item.encoded_by === userFullName)) {
-                                actions += `<button onclick='processToNext("${item.id}", "FORWARDED TO RECORDS")' class="bg-cyan-600 text-white w-full py-1.5 rounded shadow text-[10px] font-bold hover:bg-cyan-700 uppercase transition-colors text-center">FORWARD TO RECORDS</button>`;
-                            }
-                        } else if (st === 'FORWARDED TO RECORDS') {
-                            if (isRecords || isChief) {
-                                actions += `<button onclick='processToNext("${item.id}", "RELEASED TO CLIENT")' class="bg-cyan-600 text-white w-full py-1.5 rounded shadow text-[10px] font-bold hover:bg-cyan-700 uppercase transition-colors text-center">Release</button>`;
-                            }
+                    if (st === 'RECEIVED') {
+                        if (isLegal || (!isLegal && !isParpo)) {
+                            actions += `<button onclick='showReview("${item.id}")' class="bg-[#003811] text-white px-5 py-1.5 rounded shadow text-[10px] font-bold tracking-wide hover:bg-black uppercase transition-colors w-full max-w-[120px]">Review</button>`;
+                            actions += `<button onclick='createVariant("${item.id}")' class="bg-gray-500 text-white px-2 py-1 mt-1 rounded shadow text-[9px] font-bold hover:bg-gray-700 uppercase transition-colors w-full max-w-[120px]">+ Variant</button>`;
+                        }
+                    } else if (st === 'RECOMMENDED') {
+                        if (isLegal || (!isLegal && !isParpo)) {
+                            actions += `
+                            <div class="flex flex-col gap-1 w-full max-w-[140px] mx-auto">
+                                <button onclick='openPrint("${item.id}", "rec")' class="bg-[#8b5cf6] text-white w-full py-1.5 rounded shadow text-[9px] font-black tracking-wide hover:bg-purple-800 uppercase transition-colors text-center">Recommendation</button>
+                                <button onclick='openPrint("${item.id}", "cert")' class="bg-[#d97706] text-white w-full py-1.5 rounded shadow text-[9px] font-black tracking-wide hover:bg-amber-700 uppercase transition-colors text-center">Certification</button>
+                                <button onclick='createVariant("${item.id}")' class="bg-gray-500 text-white w-full py-1 rounded shadow text-[9px] font-bold hover:bg-gray-700 uppercase transition-colors text-center mt-1">+ Variant</button>
+                            </div>`;
+                        }
+                    } else if (st === 'CERTIFIED') {
+                        actions += `<div class="flex flex-col gap-1 w-full max-w-[140px] mx-auto">`;
+                        if (isLegal || (!isLegal && !isParpo)) {
+                            actions += `
+                                <button onclick='openPrint("${item.id}", "rec")' class="bg-[#8b5cf6] text-white w-full py-1.5 rounded shadow text-[9px] font-black tracking-wide hover:bg-purple-800 uppercase transition-colors text-center">Recommendation</button>
+                                <button onclick='openPrint("${item.id}", "cert")' class="bg-[#d97706] text-white w-full py-1.5 rounded shadow text-[9px] font-black tracking-wide hover:bg-amber-700 uppercase transition-colors text-center">Certification</button>`;
+                        }
+                        if (isParpo || (!isLegal && !isParpo)) {
+                            actions += `<button onclick='processToNext("${item.id}", "SIGNED")' class="bg-cyan-600 text-white w-full py-1.5 rounded shadow text-[10px] font-bold hover:bg-cyan-700 uppercase transition-colors text-center mt-1">Sign</button>`;
+                        }
+                        actions += `</div>`;
+                    } else if (st === 'SIGNED') {
+                        if (isParpo || (!isLegal && !isParpo)) {
+                            actions += `<button onclick='processToNext("${item.id}", "TO LEGAL")' class="bg-cyan-600 text-white px-4 py-1.5 rounded shadow text-[10px] font-bold hover:bg-cyan-700 uppercase transition-colors w-full max-w-[120px]">Forward to Legal</button>`;
+                        }
+                    } else if (st !== 'DISAPPROVED') {
+                        if (currentIndex >= 4 && currentIndex < statusFlow.length - 1) {
+                            let nextStatus = statusFlow[currentIndex + 1];
+                            actions += `<button onclick='processToNext("${item.id}", "${nextStatus}")' class="bg-cyan-600 text-white px-4 py-1.5 rounded shadow text-[10px] font-bold hover:bg-cyan-700 uppercase transition-colors w-full max-w-[120px]">Process</button>`;
                         }
                     }
-                    actions += `</div>`;
 
-                    let encodedBy = item.encoded_by || item.created_by || '---'; 
-
-                    if (query !== '' || displayCount < 30) {
-                        tbody.innerHTML += `
-                            <tr class="hover:bg-gray-50 transition-colors">
-                                <td class="font-bold">${item.LTC_ID_NUMBER || item.ltc_no || '---'}</td>
-                                <td class="uppercase font-semibold">${item.owner_name}</td>
-                                <td class="text-xs text-gray-500">${encodedBy}</td>
-                                <td><span class="px-2 py-1 rounded text-[8px] shadow-sm font-black uppercase ${getStatusStyle(st)}">${st}</span>${warningHTML}</td>
-                                <td class="text-center align-middle">${actions}</td>
-                                <td class="text-right font-mono text-gray-500">${item.updated_at ? new Date(item.updated_at).toLocaleString('en-US', { hour12: true }) : '---'}</td>
-                            </tr>`;
-                        displayCount++;
-                    }
+                    tbody.innerHTML += `
+                        <tr class="hover:bg-gray-50 transition-colors">
+                            <td class="font-bold">${item.ltc_no || '---'}</td>
+                            <td class="font-bold">${item.registered_under || '---'}</td>
+                            <td class="uppercase font-semibold">${item.owner_name}</td>
+                            <td><span class="px-2 py-1 rounded text-[8px] shadow-sm font-black uppercase ${getStatusStyle(st)}">${st}</span>${warningHTML}</td>
+                            <td class="text-center align-middle">${actions}</td>
+                            <td class="text-right font-mono text-gray-500">${item.updated_at ? new Date(item.updated_at).toLocaleString('en-US', { hour12: true }) : '---'}</td>
+                        </tr>`;
                 }
             });
             
@@ -575,7 +553,7 @@
                 let currentSt = (currentSelection.status || 'RECEIVED').trim().toUpperCase();
                 let printButtons = '';
                 
-                if (currentSt === 'REVIEWED' || currentSt === 'PRINTED LTC') {
+                if (currentSt === 'REVIEWED' || currentSt === 'PRINTED LTC' || currentSt === 'RECOMMENDED' || currentSt === 'CERTIFIED') {
                     if (isChief || isLegal || isParpo) {
                         printButtons = `
                             <button onclick='openPrint("${currentSelection.id}", "rec")' class="bg-[#8b5cf6] text-white px-4 py-2 rounded text-xs font-black uppercase shadow hover:bg-purple-800 transition-colors">Print Recommendation</button>
@@ -584,18 +562,18 @@
                     }
                 }
 
-                if (currentSt === 'PRINTED LTC' && (uRole === 'PARPO II' || uRole === 'PARPO')) {
+                if (currentSt === 'CERTIFIED' && (uRole === 'PARPO II' || uRole === 'PARPO')) {
                     actionDiv.innerHTML = `
                         <div class="flex gap-2 w-full justify-end">
                             ${printButtons}
-                            <button onclick="decideStatus('PRINTED LTC')" class="bg-green-700 text-white px-8 py-3 rounded text-sm font-black uppercase shadow-lg hover:bg-green-800 transition-colors">Update Details</button>
+                            <button onclick="decideStatus('CERTIFIED')" class="bg-green-700 text-white px-8 py-3 rounded text-sm font-black uppercase shadow-lg hover:bg-green-800 transition-colors">Update Details</button>
                         </div>
                     `;
-                } else if (currentSt === 'RECEIVED' || currentSt === 'REVIEWED') {
+                } else if (currentSt === 'RECEIVED' || currentSt === 'RECOMMENDED') {
                     actionDiv.innerHTML = `
                         <div class="flex gap-2 w-full justify-end">
                             ${printButtons}
-                            <button onclick="decideStatus('REVIEWED')" class="bg-green-700 text-white px-8 py-3 rounded text-sm font-black uppercase shadow-lg hover:bg-green-800 transition-colors">Approve</button>
+                            <button onclick="decideStatus('RECOMMENDED')" class="bg-green-700 text-white px-8 py-3 rounded text-sm font-black uppercase shadow-lg hover:bg-green-800 transition-colors">Approve</button>
                             <button onclick="decideStatus('DISAPPROVED')" class="bg-red-700 text-white px-8 py-3 rounded text-sm font-black uppercase shadow-lg hover:bg-red-800 transition-colors">Disapprove</button>
                         </div>
                     `;
@@ -626,7 +604,7 @@
             const record = rawData.find(r => r.id === id);
             if (!record) return;
 
-            let baseNo = record.LTC_ID_NUMBER || record.ltc_no || '';
+            let baseNo = record.ltc_no || '';
             let newNo = '';
             
             const match = baseNo.match(/-\((\d+)\)$/);
@@ -640,10 +618,7 @@
             if (!confirm(`Create a new variant for this clearance?\nNew LTC No will be: ${newNo}`)) return;
 
             const { id: oldId, created_at, updated_at, ...newRecordData } = record;
-            
-            if(newRecordData.ltc_no !== undefined) delete newRecordData.ltc_no;
-
-            newRecordData.LTC_ID_NUMBER = newNo;
+            newRecordData.ltc_no = newNo;
             newRecordData.status = 'RECEIVED'; 
 
             const { error } = await supabaseClient.from('land_records').insert([newRecordData]);
@@ -658,11 +633,11 @@
         function getStatusStyle(s) {
             const colors = { 
                 'RECEIVED': 'bg-blue-100 text-blue-800 border border-blue-200', 
-                'REVIEWED': 'bg-purple-100 text-purple-800 border border-purple-200', 
-                'PRINTED LTC': 'bg-cyan-100 text-cyan-800 border border-cyan-200', 
-                'SIGNED BY PARPO': 'bg-orange-100 text-orange-800 border border-orange-200', 
-                'RETURNED TO LEGAL': 'bg-red-100 text-red-800 border border-red-200', 
-                'FORWARDED TO RECORDS': 'bg-green-100 text-green-800 border border-green-200', 
+                'RECOMMENDED': 'bg-purple-100 text-purple-800 border border-purple-200', 
+                'CERTIFIED': 'bg-cyan-100 text-cyan-800 border border-cyan-200', 
+                'SIGNED': 'bg-orange-100 text-orange-800 border border-orange-200', 
+                'TO LEGAL': 'bg-red-100 text-red-800 border border-red-200', 
+                'TO RECORDS': 'bg-green-100 text-green-800 border border-green-200', 
                 'RELEASE TO CLIENT': 'bg-teal-100 text-teal-800 border border-teal-200',
                 'DISAPPROVED': 'bg-gray-200 text-gray-800 border border-gray-300'
             };
@@ -687,7 +662,7 @@
             });
         }
 
-        async function showReview(id) {
+        function showReview(id) {
             const query = document.getElementById('searchInput').value.toLowerCase();
             currentNavList = rawData.filter(item => {
                 return (item.registered_under || '').toLowerCase().includes(query) || (item.owner_name || '').toLowerCase().includes(query);
@@ -747,61 +722,34 @@
 
             document.querySelectorAll('.sys-chief-name').forEach(el => el.innerText = chiefLegalName);
             document.querySelectorAll('.sys-parpo-name').forEach(el => el.innerText = parpoName);
-
-            document.getElementById('modalMainTitle').innerText = "REVIEW";
-            document.getElementById('docRecommendation').classList.add('hidden');
-            document.getElementById('docCertification').classList.add('hidden');
-            document.getElementById('reviewSection').classList.remove('hidden');
-            document.getElementById('actionButtons').classList.remove('hidden');
-            document.getElementById('editNotice').classList.remove('hidden');
-            document.getElementById('reviewRemarks').value = currentSelection.Remarks || currentSelection.remarks || '';
+            document.querySelectorAll('.preparedByName').forEach(el => el.innerText = currentUser.full_name);
+            document.querySelectorAll('.preparedByPosition').forEach(el => el.innerText = currentUser.role || 'Personnel');
             
             refreshDashboard(); 
 
             document.getElementById('reviewModal').classList.remove('hidden');
-
-            let encoderName = currentSelection.encoded_by || currentSelection.created_by || '---';
-            document.querySelectorAll('.preparedByName').forEach(el => el.innerText = encoderName);
-            document.querySelectorAll('.preparedByPosition').forEach(el => el.innerText = 'Fetching...');
-            
-            if (encoderName !== '---') {
-                const { data: encData } = await supabaseClient.from('users').select('role').eq('full_name', encoderName).single();
-                if (encData && encData.role) {
-                    document.querySelectorAll('.preparedByPosition').forEach(el => el.innerText = encData.role);
-                } else {
-                    document.querySelectorAll('.preparedByPosition').forEach(el => el.innerText = 'Personnel');
-                }
-            } else {
-                document.querySelectorAll('.preparedByPosition').forEach(el => el.innerText = 'Personnel');
-            }
         }
 
         function openPrint(id, type) {
             showReview(id); 
-            
-            const now = new Date();
-            const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
-            const dateStrOrdinal = `${now.getDate()}${getOrdinal(now.getDate())} day of ${monthNames[now.getMonth()]}, ${now.getFullYear()}`;
-            document.querySelectorAll('.pdf-today-ordinal').forEach(el => el.innerText = dateStrOrdinal);
-
             document.getElementById('reviewSection').classList.add('hidden');
             document.getElementById('actionButtons').classList.add('hidden');
             document.getElementById('editNotice').classList.add('hidden');
             document.getElementById('modalMainTitle').parentElement.classList.add('hidden');
             
             let elementToPrint;
-            let filename = `Clearance_${currentSelection.LTC_ID_NUMBER || currentSelection.ltc_no || id}.pdf`;
+            let filename = `Clearance_${currentSelection.ltc_no || id}.pdf`;
 
             if (type === 'rec') {
                 document.getElementById('docRecommendation').classList.remove('hidden');
                 document.getElementById('docCertification').classList.add('hidden');
                 elementToPrint = document.getElementById('docRecommendation');
-                filename = `Recommendation_${currentSelection.LTC_ID_NUMBER || currentSelection.ltc_no || id}.pdf`;
+                filename = `Recommendation_${currentSelection.ltc_no || id}.pdf`;
             } else if (type === 'cert') {
                 document.getElementById('docRecommendation').classList.add('hidden');
                 document.getElementById('docCertification').classList.remove('hidden');
                 elementToPrint = document.getElementById('docCertification');
-                filename = `Certification_${currentSelection.LTC_ID_NUMBER || currentSelection.ltc_no || id}.pdf`;
+                filename = `Certification_${currentSelection.ltc_no || id}.pdf`;
             }
 
             setTimeout(() => { 
@@ -809,7 +757,7 @@
                     margin:       0,
                     filename:     filename,
                     image:        { type: 'jpeg', quality: 1.0 },
-                    html2canvas:  { scale: 5, useCORS: true },
+                    html2canvas:  { scale: 4, useCORS: true },
                     jsPDF:        { unit: 'in', format: [8.5, 13], orientation: 'portrait' }
                 };
 
@@ -822,8 +770,8 @@
                         pdf.text(currentSelection.LTC_ID_NUMBER || currentSelection.ltc_no || 'LTC-PENDING', 0.5, 11.5, { angle: 90 });
                     }
                 }).save().then(async () => {
-                    if (type === 'cert' && currentSelection.status === 'REVIEWED') {
-                        await supabaseClient.from('land_records').update({ status: 'PRINTED LTC', updated_at: new Date() }).eq('id', id);
+                    if (type === 'cert' && currentSelection.status !== 'CERTIFIED') {
+                        await supabaseClient.from('land_records').update({ status: 'CERTIFIED', updated_at: new Date() }).eq('id', id);
                         fetchClearanceData();
                     }
                     closeReview(); 
@@ -839,7 +787,7 @@
             const updateData = { status: newSt, updated_at: new Date() };
             if (remarks.trim()) updateData.Remarks = remarks; 
 
-            if (newSt === 'REVIEWED' || newSt === 'PRINTED LTC') {
+            if (newSt === 'RECOMMENDED') {
                 const dbToHtmlMap = {
                     'lot_no': 'edit-lot', 'owner_name': 'edit-owner', 'registered_under': 'edit-tct', 
                     'area': 'edit-area', 'td_no': 'edit-td', 'location': 'edit-location', 
