@@ -20,19 +20,53 @@
             body { background: white !important; }
             nav, header, .no-print, #actionButtons, #remarksSection, .modal-header-actions { display: none !important; }
             #reviewModal { position: static; display: block; background: transparent; padding: 0; box-shadow: none; }
+            
+            .doc-print-area { 
+                visibility: visible !important;
+                display: block !important;
+                width: 8.5in !important; 
+                height: 13in !important;
+                padding: 0 !important;
+                margin: 0 !important;
+            }
         }
 
-        /* HIDDEN BLUEPRINTS */
-        .doc-print-area { display: none; }
+        .doc-print-area { 
+            position: relative;
+            z-index: 1; 
+            font-family: 'Roboto', sans-serif; 
+            font-size: 9pt; 
+            color: black; 
+            line-height: 1.5; 
+            width: 8.5in; 
+            min-height: 13in;
+            margin: 0 auto; 
+            padding: 0;
+            overflow: hidden;
+            background: transparent;
+            box-sizing: border-box;
+        }
 
-        .absolute-footer {
+        .print-bg {
             position: absolute;
-            bottom: 1.25in; 
+            top: 0;
             left: 0;
             width: 100%;
-            padding: 0 1in;
+            height: 100%;
+            z-index: 1; 
+            object-fit: fill;
+        }
+
+        .doc-content {
+            position: relative;
+            z-index: 10; 
+            padding: 1in; 
+            width: 100%;
+            height: 100%;
             box-sizing: border-box;
-            z-index: 20;
+            background: transparent;
+            display: flex;
+            flex-direction: column;
         }
         
         .data-value { 
@@ -43,6 +77,11 @@
             text-transform: uppercase; 
             line-height: 1.1; 
             padding-bottom: 1px;
+        }
+        
+        .page-break-avoid { 
+            page-break-inside: avoid !important;
+            break-inside: avoid !important;
         }
         
         .scroll-area::-webkit-scrollbar { width: 4px; }
@@ -207,6 +246,7 @@
             </div>
 
             <div id="docRecommendation" class="doc-print-area mx-auto hidden pt-8">
+                <img class="print-bg" crossorigin="anonymous" src="">
                 <div class="doc-content">
                     <div class="text-right font-bold mb-4 mr-10 mt-[0.1in]" id="rec-header-id">LTC-PENDING</div>
                     
@@ -220,34 +260,34 @@
                     </p>
 
                     <div class="mb-4 ml-10 space-y-1.5">
-                        <div class="flex items-end mb-1.5">
+                        <div class="flex items-end page-break-avoid">
                             <div class="italic w-[220px] shrink-0">Lot No/s</div> <div class="data-value flex-1" id="rec-lot">---</div>
                         </div>
-                        <div class="flex items-end mb-1.5">
+                        <div class="flex items-end page-break-avoid">
                             <div class="italic w-[220px] shrink-0">In the Name of</div> <div class="data-value flex-1" id="rec-owner">---</div>
                         </div>
-                        <div class="flex items-end mb-1.5">
+                        <div class="flex items-end page-break-avoid">
                             <div class="italic w-[220px] shrink-0">Registered under</div> <div class="data-value flex-1" id="rec-tct">---</div>
                         </div>
-                        <div class="flex items-end mb-1.5">
+                        <div class="flex items-end page-break-avoid">
                             <div class="italic w-[220px] shrink-0">With an area (in has.) of</div> <div class="data-value flex-1" id="rec-area">---</div>
                         </div>
-                        <div class="flex items-end mb-1.5">
+                        <div class="flex items-end page-break-avoid">
                             <div class="italic w-[220px] shrink-0">Declared under T.D. No.</div> <div class="data-value flex-1" id="rec-td">---</div>
                         </div>
-                        <div class="flex items-end mb-1.5">
+                        <div class="flex items-end page-break-avoid">
                             <div class="italic w-[220px] shrink-0">Located at</div> <div class="data-value flex-1" id="rec-location">---</div>
                         </div>
-                        <div class="flex items-end mb-1.5">
+                        <div class="flex items-end page-break-avoid">
                             <div class="italic w-[220px] shrink-0">Subjected of the Deed of</div> <div class="data-value flex-1" id="rec-deed">---</div>
                         </div>
-                        <div class="flex items-end mb-1.5">
+                        <div class="flex items-end page-break-avoid">
                             <div class="italic w-[220px] shrink-0">Executed by</div> <div class="data-value flex-1" id="rec-executed">---</div>
                         </div>
-                        <div class="flex items-end mb-1.5">
+                        <div class="flex items-end page-break-avoid">
                             <div class="italic w-[220px] shrink-0">In favor of</div> <div class="data-value flex-1" id="rec-favor">---</div>
                         </div>
-                        <div class="flex items-end mb-1.5">
+                        <div class="flex items-end page-break-avoid">
                             <div class="italic w-[220px] shrink-0">Under Doc. No.</div> 
                             <div class="flex items-end gap-2 flex-1">
                                 <span class="data-value text-center" id="rec-doc">---</span>
@@ -255,70 +295,68 @@
                                 <span class="italic ml-2">Book No.</span> <span class="data-value text-center" id="rec-book">---</span>
                             </div>
                         </div>
-                        <div class="flex items-end mb-1.5">
+                        <div class="flex items-end page-break-avoid">
                             <div class="italic w-[220px] shrink-0">Series of</div> 
                             <div class="flex items-end gap-2 flex-1">
                                 <span class="data-value text-center" id="rec-series">---</span>
                                 <span class="italic ml-4">Dated</span> <span class="data-value text-center flex-1" id="rec-dated">---</span>
                             </div>
                         </div>
-                        <div class="flex items-end mb-1.5">
+                        <div class="flex items-end page-break-avoid">
                             <div class="italic w-[220px] shrink-0">of Notary Public</div> <div class="data-value flex-1" id="rec-notary">---</div>
                         </div>
-                        <div class="flex items-end mb-1.5">
+                        <div class="flex items-end page-break-avoid">
                             <div class="italic w-[220px] shrink-0 text-[9pt]">of a retention area of vendor/transferor</div> <div class="data-value flex-1" id="rec-retention">---</div>
                         </div>
                     </div>
 
-                    <div class="flex items-end ml-10 mt-5 mb-4">
+                    <div class="flex items-end ml-10 mt-5 mb-4 page-break-avoid">
                         <div class="italic w-[220px] shrink-0">is hereby:</div>
                         <div class="flex-1"><span class="font-bold text-[11pt] border-b-[1.5px] border-black pb-0.5">APPROVED</span></div>
                     </div>
 
-                    <p class="mb-4 text-justify indent-10">
+                    <p class="mb-4 text-justify indent-10 page-break-avoid">
                         The applicant submitted all the necessary requirements for the issuance of Land Transfer Clearance in compliance with DAR Administrative Order No. 4, series of 2021.
                     </p>
 
-                    <div class="mt-4 mb-4 indent-10">
+                    <div class="mt-4 mb-4 page-break-avoid indent-10">
                         Done this <span class="pdf-today-ordinal font-bold">---</span>. Naga City, Camarines Sur.
                     </div>
 
-                    <div class="w-full flex justify-end mb-4 mt-8 page-break-avoid">
-                        <div class="flex flex-col items-center mr-10">
+                    <div class="w-full mt-8 mb-6 flex justify-end px-10 page-break-avoid">
+                        <div class="text-center">
                             <p class="text-left w-full mb-6">Prepared by:</p>
-                            <div class="text-center inline-block">
-                                <p class="preparedByName font-bold uppercase underline underline-offset-4">---</p>
-                                <p class="preparedByPosition text-[9pt] uppercase mt-1">---</p>
-                            </div>
+                            <p class="preparedByName font-bold uppercase underline underline-offset-4">---</p>
+                            <p class="preparedByPosition text-[9pt] uppercase mt-1">---</p>
                         </div>
                     </div>
 
-                    <div class="w-full flex flex-col items-start mb-6 page-break-avoid">
-                        <p class="text-left mb-6">Reviewed and Noted by:</p>
-                        <div class="text-center inline-block">
+                    <div class="w-full mb-6 flex justify-start px-10 page-break-avoid">
+                        <div class="text-center">
+                            <p class="text-left mb-6">Reviewed and Noted by:</p>
                             <p class="sys-chief-name font-bold uppercase underline underline-offset-4">---</p>
                             <p class="text-[9pt] mt-1">Chief, Legal Division</p>
                         </div>
                     </div>
 
-                    <div class="absolute-footer">
-                        <div class="w-full">
-                            <div class="flex items-start gap-2 text-[7pt] leading-[1.2] text-left">
-                                <div id="qr-rec" class="w-[55px] h-[55px] shrink-0"></div>
-                                <div class="pt-0.5">
-                                    <p>Copy distribution:</p>
-                                    <p>Original - Applicant</p>
-                                    <p>Duplicate - LTC Folder</p>
-                                    <p class="mt-0.5">O.R. No.: <span class="font-bold" id="rec-or_number">---</span> &nbsp;&nbsp;Date: <span class="font-bold" id="rec-or_date">---</span></p>
-                                    <p class="font-bold underline underline-offset-2 mt-0.5" id="rec-footer-id">LTC-PENDING</p>
-                                </div>
+                    <div class="w-full mt-8 px-10 page-break-avoid">
+                        <div class="flex items-start gap-2 text-[7pt] leading-[1.2] text-left">
+                            <div id="qr-rec" class="w-[55px] h-[55px] shrink-0"></div>
+                            <div class="pt-0.5">
+                                <p>Copy distribution:</p>
+                                <p>Original - Applicant</p>
+                                <p>Duplicate - LTC Folder</p>
+                                <p class="mt-0.5">O.R. No.: <span class="font-bold" id="rec-or_number">---</span> &nbsp;&nbsp;Date: <span class="font-bold" id="rec-or_date">---</span></p>
+                                <p class="font-bold underline underline-offset-2 mt-0.5" id="rec-footer-id">LTC-PENDING</p>
                             </div>
                         </div>
                     </div>
+
                 </div>
             </div>
 
             <div id="docCertification" class="doc-print-area mx-auto hidden pt-8">
+                <img class="print-bg" crossorigin="anonymous" src="">
                 <div class="doc-content">
                     
                     <div class="relative w-full mb-6">
@@ -344,34 +382,34 @@
                     </p>
 
                     <div class="mb-4 ml-10 space-y-1.5">
-                        <div class="flex items-end mb-1.5">
+                        <div class="flex items-end page-break-avoid">
                             <div class="italic w-[220px] shrink-0">Lot No/s</div> <div class="data-value flex-1" id="cert-lot">---</div>
                         </div>
-                        <div class="flex items-end mb-1.5">
+                        <div class="flex items-end page-break-avoid">
                             <div class="italic w-[220px] shrink-0">In the Name of</div> <div class="data-value flex-1" id="cert-owner">---</div>
                         </div>
-                        <div class="flex items-end mb-1.5">
+                        <div class="flex items-end page-break-avoid">
                             <div class="italic w-[220px] shrink-0">Registered under</div> <div class="data-value flex-1" id="cert-tct">---</div>
                         </div>
-                        <div class="flex items-end mb-1.5">
+                        <div class="flex items-end page-break-avoid">
                             <div class="italic w-[220px] shrink-0">With an area (in has.) of</div> <div class="data-value flex-1" id="cert-area">---</div>
                         </div>
-                        <div class="flex items-end mb-1.5">
+                        <div class="flex items-end page-break-avoid">
                             <div class="italic w-[220px] shrink-0">Declared under T.D. No.</div> <div class="data-value flex-1" id="cert-td">---</div>
                         </div>
-                        <div class="flex items-end mb-1.5">
+                        <div class="flex items-end page-break-avoid">
                             <div class="italic w-[220px] shrink-0">Located at</div> <div class="data-value flex-1" id="cert-location">---</div>
                         </div>
-                        <div class="flex items-end mb-1.5">
+                        <div class="flex items-end page-break-avoid">
                             <div class="italic w-[220px] shrink-0">Subjected of the Deed of</div> <div class="data-value flex-1" id="cert-deed">---</div>
                         </div>
-                        <div class="flex items-end mb-1.5">
+                        <div class="flex items-end page-break-avoid">
                             <div class="italic w-[220px] shrink-0">Executed by</div> <div class="data-value flex-1" id="cert-executed">---</div>
                         </div>
-                        <div class="flex items-end mb-1.5">
+                        <div class="flex items-end page-break-avoid">
                             <div class="italic w-[220px] shrink-0">In favor of</div> <div class="data-value flex-1" id="cert-favor">---</div>
                         </div>
-                        <div class="flex items-end mb-1.5">
+                        <div class="flex items-end page-break-avoid">
                             <div class="italic w-[220px] shrink-0">Under Doc. No.</div> 
                             <div class="flex items-end gap-2 flex-1">
                                 <span class="data-value text-center" id="cert-doc">---</span>
@@ -379,66 +417,62 @@
                                 <span class="italic ml-2">Book No.</span> <span class="data-value text-center" id="cert-book">---</span>
                             </div>
                         </div>
-                        <div class="flex items-end mb-1.5">
+                        <div class="flex items-end page-break-avoid">
                             <div class="italic w-[220px] shrink-0">Series of</div> 
                             <div class="flex items-end gap-2 flex-1">
                                 <span class="data-value text-center" id="cert-series">---</span>
                                 <span class="italic ml-4">Dated</span> <span class="data-value text-center flex-1" id="cert-dated">---</span>
                             </div>
                         </div>
-                        <div class="flex items-end mb-1.5">
+                        <div class="flex items-end page-break-avoid">
                             <div class="italic w-[220px] shrink-0">of Notary Public</div> <div class="data-value flex-1" id="cert-notary">---</div>
                         </div>
-                        <div class="flex items-end mb-1.5">
+                        <div class="flex items-end page-break-avoid">
                             <div class="italic w-[220px] shrink-0 text-[9pt]">of a retention area of vendor/transferor</div> <div class="data-value flex-1" id="cert-retention">---</div>
                         </div>
                     </div>
 
-                    <div class="flex items-end ml-10 mt-5 mb-4">
+                    <div class="flex items-end ml-10 mt-5 mb-4 page-break-avoid">
                         <div class="italic w-[220px] shrink-0">is hereby:</div>
                         <div class="flex-1"><span class="font-bold text-[11pt] border-b-[1.5px] border-black pb-0.5">APPROVED</span></div>
                     </div>
 
-                    <p class="mb-4 text-justify leading-relaxed indent-10">
+                    <p class="mb-4 text-justify leading-relaxed page-break-avoid indent-10">
                         based on the Attestation of the CARPO-LTS/FOD and from the report and recommendation of the Chief Legal Division/Authorized Legal Officer pursuant to Administrative Order (AO) No. 4 Series of 2021.
                     </p>
 
-                    <p class="mb-4 text-justify leading-relaxed indent-10">
+                    <p class="mb-4 text-justify leading-relaxed page-break-avoid indent-10">
                         Any actual change in the use of the land and/or development over the subject land, requires a prior Order of Conversion or Exemption/Exclusion from the Office of the DAR Regional Director.
                     </p>
 
-                    <p class="mb-4 text-justify leading-relaxed indent-10">
+                    <p class="mb-4 text-justify leading-relaxed page-break-avoid indent-10">
                         This Office reserves the right to revoke this Certification of LTC in case of findings of misrepresentation or submission of falsified documents by either or both parties to the Deed of Transfer and any third person who may be affected by the transfer.
                     </p>
 
-                    <p class="mb-6 text-justify leading-relaxed indent-10">
+                    <p class="mb-6 text-justify leading-relaxed page-break-avoid indent-10">
                         This Certification is hereby issued only for the purpose stated in the application/request for issuance of LTC.
                     </p>
 
-                    <div class="mt-4 mb-4 indent-10">
+                    <div class="mt-4 mb-4 page-break-avoid indent-10">
                         Done and issued this <span class="pdf-today-ordinal font-bold">---</span> at the DAR Provincial Office.
                     </div>
 
-                    <div class="w-full flex justify-end mb-4 mt-8 page-break-avoid">
-                        <div class="flex flex-col items-center">
-                            <div class="text-center w-60">
-                                <p class="sys-parpo-name font-bold uppercase underline underline-offset-4 inline-block text-[11pt]">---</p>
-                                <p class="text-[9pt] uppercase mt-1">PARPO II</p>
-                            </div>
+                    <div class="w-full mt-8 mb-6 flex justify-end px-10 page-break-avoid">
+                        <div class="text-center w-60">
+                            <p class="sys-parpo-name font-bold uppercase underline underline-offset-4 inline-block text-[11pt]">---</p>
+                            <p class="text-[9pt] uppercase mt-1">PARPO II</p>
                         </div>
                     </div>
 
-                    <div class="absolute-footer">
-                        <div class="w-full">
-                            <div class="flex items-start gap-2 text-[7pt] leading-[1.2] text-left">
-                                <div id="qr-cert" class="w-[55px] h-[55px] shrink-0"></div>
-                                <div class="pt-0.5">
-                                    <p>Copy distribution:</p>
-                                    <p>Original - Applicant</p>
-                                    <p>Duplicate - LTC Folder</p>
-                                    <p class="mt-0.5">O.R. No.: <span class="font-bold" id="cert-or_number">---</span> &nbsp;&nbsp;Date: <span class="font-bold" id="cert-or_date">---</span></p>
-                                    <p class="font-bold underline underline-offset-2 mt-0.5" id="cert-footer-id">LTC-PENDING</p>
-                                </div>
+                    <div class="w-full mt-8 px-10 page-break-avoid">
+                        <div class="flex items-start gap-2 text-[7pt] leading-[1.2] text-left">
+                            <div id="qr-cert" class="w-[55px] h-[55px] shrink-0"></div>
+                            <div class="pt-0.5">
+                                <p>Copy distribution:</p>
+                                <p>Original - Applicant</p>
+                                <p>Duplicate - LTC Folder</p>
+                                <p class="mt-0.5">O.R. No.: <span class="font-bold" id="cert-or_number">---</span> &nbsp;&nbsp;Date: <span class="font-bold" id="cert-or_date">---</span></p>
+                                <p class="font-bold underline underline-offset-2 mt-0.5" id="cert-footer-id">LTC-PENDING</p>
                             </div>
                         </div>
                     </div>
@@ -501,6 +535,10 @@
             const { data } = supabaseClient.storage.from('bg').getPublicUrl('ltc_bg.jpg');
             if (data && data.publicUrl) {
                 backgroundImageUrl = data.publicUrl;
+                document.querySelectorAll('.print-bg').forEach(img => {
+                    img.src = backgroundImageUrl;
+                    img.style.display = 'block';
+                });
             }
         }
 
@@ -528,7 +566,7 @@
             
             let userRole = currentUser.role.toUpperCase();
             let isParpo = userRole === 'PARPO II' || userRole === 'PARPO';
-            let isChief = userRole === 'CHIEF, Legal Division'.toUpperCase() || userRole === 'DIVISION CHIEF' || userRole === 'CHIEF';
+            let isChief = userRole === 'CHIEF, LEGAL DIVISION' || userRole === 'DIVISION CHIEF' || userRole === 'CHIEF';
             let isLegal = (userRole.includes('LEGAL') || userRole.includes('SARPO') || userRole.includes('ARPT') || userRole.includes('ARPO')) && !isParpo;
             let isEncoder = userRole === 'ODTS ENCODER' || userRole.includes('ODTS');
             let isRecords = userRole.includes('RECORDS');
@@ -551,7 +589,7 @@
                     else if (st === 'SIGNED BY PARPO' || st === 'SIGNED' || st === 'FOR SIGNATURE - PARPO II') { stats.sig++; st = 'SIGNED BY PARPO'; }
                     else if (st === 'RETURNED TO LEGAL' || st === 'TO LEGAL' || st === 'FORWARDED - RECORDS') { stats.leg++; st = 'RETURNED TO LEGAL'; }
                     else if (st === 'FORWARDED TO RECORDS' || st === 'TO RECORDS') { stats.recd++; st = 'FORWARDED TO RECORDS'; }
-                    else if (st === 'RELEASE TO CLIENT' || st === 'RELEASED - CLIENT' || st === 'RELEASED TO CLIENT') { stats.rel++; st = 'RELEASED TO CLIENT'; }
+                    else if (st === 'RELEASED TO CLIENT' || st === 'RELEASED - CLIENT' || st === 'RELEASE TO CLIENT') { stats.rel++; st = 'RELEASED TO CLIENT'; }
                     else if (st === 'DISAPPROVED') { stats.dis++; st = 'DISAPPROVED'; }
 
                     let currentIndex = statusFlow.indexOf(st);
@@ -564,7 +602,7 @@
                         if (st === 'RECEIVED') {
                             if (isChief || isLegal) {
                                 actions += `<button onclick='showReview("${item.id}")' class="bg-[#003811] text-white w-full py-1.5 rounded shadow text-[10px] font-bold tracking-wide hover:bg-black uppercase transition-colors text-center">Review</button>`;
-                                actions += `<button onclick='createVariant("${item.id}")' class="bg-gray-50 text-white w-full py-1 mt-1 rounded shadow text-[9px] font-bold hover:bg-gray-700 uppercase transition-colors text-center">+ Variant</button>`;
+                                actions += `<button onclick='createVariant("${item.id}")' class="bg-gray-500 text-white w-full py-1 mt-1 rounded shadow text-[9px] font-bold hover:bg-gray-700 uppercase transition-colors text-center">+ Variant</button>`;
                                 actions += `<button onclick='deleteRecord("${item.id}")' class="bg-red-600 text-white w-full py-1 mt-1 rounded shadow text-[9px] font-bold hover:bg-red-800 uppercase transition-colors text-center">Delete</button>`;
                             }
                         } else if (st === 'REVIEWED') {
@@ -593,9 +631,11 @@
                                 actions += `<button onclick='openPrint("${item.id}", "cert")' class="bg-[#d97706] text-white w-full py-1.5 rounded shadow text-[9px] font-black tracking-wide hover:bg-amber-700 uppercase transition-colors text-center mb-1">Certification</button>`;
                                 actions += `<button onclick='processToNext("${item.id}", "FORWARDED TO RECORDS")' class="bg-cyan-600 text-white w-full py-1.5 rounded shadow text-[10px] font-bold hover:bg-cyan-700 uppercase transition-colors text-center">FORWARD TO RECORDS</button>`;
                             }
-                        } else if (st === 'FORWARDED TO RECORDS') {
-                            if (isRecords || isChief) {
+                        } else if (st === 'FORWARDED TO RECORDS' || st === 'RELEASED TO CLIENT') {
+                            if (st === 'FORWARDED TO RECORDS' && (isRecords || isChief)) {
                                 actions += `<button onclick='processToNext("${item.id}", "RELEASED TO CLIENT")' class="bg-cyan-600 text-white w-full py-1.5 rounded shadow text-[10px] font-bold hover:bg-cyan-700 uppercase transition-colors text-center mb-1">Release</button>`;
+                            }
+                            if (isRecords || isChief || isLegal || isParpo) {
                                 actions += `<button onclick='showReview("${item.id}")' class="bg-yellow-500 text-white w-full py-1.5 rounded shadow text-[10px] font-bold hover:bg-yellow-600 uppercase transition-colors text-center mb-1">Correction</button>`;
                                 actions += `<button onclick='reIssueRecord("${item.id}")' class="bg-blue-500 text-white w-full py-1.5 rounded shadow text-[10px] font-bold hover:bg-blue-600 uppercase transition-colors text-center">Re-Issue</button>`;
                             }
@@ -649,10 +689,10 @@
                             <button onclick="decideStatus('DISAPPROVED')" class="bg-red-700 text-white px-8 py-3 rounded text-sm font-black uppercase shadow-lg hover:bg-red-800 transition-colors">Disapprove</button>
                         </div>
                     `;
-                } else if (currentSt === 'FORWARDED TO RECORDS') {
+                } else if (currentSt === 'FORWARDED TO RECORDS' || currentSt === 'RELEASED TO CLIENT') {
                     actionDiv.innerHTML = `
                         <div class="flex gap-2 w-full justify-end">
-                            <button onclick="decideStatus('FORWARDED TO RECORDS')" class="bg-yellow-600 text-white px-8 py-3 rounded text-sm font-black uppercase shadow-lg hover:bg-yellow-700 transition-colors">Save Corrections</button>
+                            <button onclick="decideStatus('${currentSt}')" class="bg-yellow-600 text-white px-8 py-3 rounded text-sm font-black uppercase shadow-lg hover:bg-yellow-700 transition-colors">Save Corrections</button>
                         </div>
                     `;
                 } else {
@@ -905,8 +945,7 @@
                     filename:     filename,
                     image:        { type: 'jpeg', quality: 1.0 },
                     html2canvas:  { scale: 4, useCORS: true },
-                    jsPDF:        { unit: 'in', format: [8.5, 13], orientation: 'portrait' },
-                    pagebreak:    { mode: ['css', 'legacy'] }
+                    jsPDF:        { unit: 'in', format: [8.5, 13], orientation: 'portrait' }
                 };
 
                 html2pdf().set(opt).from(elementToPrint).toPdf().get('pdf').then(function(pdf) {
@@ -935,7 +974,7 @@
             const updateData = { status: newSt, updated_at: new Date() };
             if (remarks.trim()) updateData.Remarks = remarks; 
 
-            if (newSt === 'REVIEWED' || newSt === 'PRINTED LTC' || newSt === 'FORWARDED TO RECORDS') {
+            if (newSt === 'REVIEWED' || newSt === 'PRINTED LTC' || newSt === 'FORWARDED TO RECORDS' || newSt === 'RELEASED TO CLIENT') {
                 const dbToHtmlMap = {
                     'lot_no': 'edit-lot', 'owner_name': 'edit-owner', 'registered_under': 'edit-tct', 
                     'area': 'edit-area', 'td_no': 'edit-td', 'location': 'edit-location', 
