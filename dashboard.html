@@ -55,13 +55,14 @@
             width: 100%;
             height: 100%;
             z-index: 1; /* Layer 1: Strictly behind content */
-            object-fit: cover;
+            object-fit: fill; /* Changed from cover to fill to prevent zooming/cropping the visual footer */
         }
 
         .doc-content {
             position: relative;
             z-index: 10; /* Layer 10: Strictly above background */
-            padding: 1in;
+            /* Adjusted padding to leave 1.8 inches of clearance at the bottom for the template footer */
+            padding: 1in 1in 1.8in 1in; 
             width: 100%;
             height: 100%;
             box-sizing: border-box;
@@ -588,7 +589,7 @@
                             }
                         } else if (st === 'FORWARDED TO RECORDS') {
                             if (isRecords || isChief) {
-                                actions += `<button onclick='processToNext("${item.id}", "RELEASED TO CLIENT")' class="bg-cyan-600 text-white w-full py-1.5 rounded shadow text-[10px] font-bold hover:bg-cyan-700 uppercase transition-colors text-center">Release</button>`;
+                                actions += `<button onclick='processToNext("${item.id}", "RELEASE TO CLIENT")' class="bg-cyan-600 text-white w-full py-1.5 rounded shadow text-[10px] font-bold hover:bg-cyan-700 uppercase transition-colors text-center">Release</button>`;
                             }
                         }
                     }
