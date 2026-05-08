@@ -464,7 +464,7 @@
         let rawData = [];
         let currentNavList = [];
         let currentNavIndex = -1;
-        let currentReviewMode = 'review';
+        let currentReviewMode = 'REVIEW';
         const statusFlow = ['RECEIVED', 'REVIEWED', 'PRINTED LTC', 'SIGNED BY PARPO', 'RETURNED TO LEGAL', 'FORWARDED TO RECORDS', 'RELEASED TO CLIENT', 'DISAPPROVED'];
 
         let chiefLegalName = "---";
@@ -542,9 +542,14 @@
             let displayCount = 0;
 
             rawData.forEach(item => {
-                let matchesSearch = (item.registered_under || '').toLowerCase().includes(query) || 
-                                    (item.owner_name || '').toLowerCase().includes(query) || 
-                                    (item.LTC_ID_NUMBER || '').toLowerCase().includes(query);
+                let matchesSearch = false;
+                if (query === '') {
+                    matchesSearch = true;
+                } else {
+                    matchesSearch = Object.values(item).some(val => 
+                        val !== null && val.toString().toLowerCase().includes(query)
+                    );
+                }
 
                 if (matchesSearch) {
                     
@@ -568,7 +573,7 @@
                     if (!isEncoder) {
                         if (st === 'RECEIVED') {
                             if (isChief || isLegal) {
-                                actions += `<button onclick='showReview("${item.id}")' class="bg-[#003811] text-white w-full py-1.5 rounded shadow text-[10px] font-bold tracking-wide hover:bg-black uppercase transition-colors text-center">Review</button>`;
+                                actions += `<button onclick='showReview("${item.id}", "REVIEW")' class="bg-[#003811] text-white w-full py-1.5 rounded shadow text-[10px] font-bold tracking-wide hover:bg-black uppercase transition-colors text-center">Review</button>`;
                                 actions += `<button onclick='createVariant("${item.id}")' class="bg-white text-gray-800 border border-gray-300 w-full py-1 mt-1 rounded shadow text-[9px] font-bold hover:bg-gray-100 uppercase transition-colors text-center">+ Variant</button>`;
                                 actions += `<button onclick='deleteRecord("${item.id}")' class="bg-red-600 text-white w-full py-1 mt-1 rounded shadow text-[9px] font-bold hover:bg-red-800 uppercase transition-colors text-center">Delete</button>`;
                             }
@@ -580,7 +585,7 @@
                             }
                         } else if (st === 'PRINTED LTC') {
                             if (isParpo) {
-                                actions += `<button onclick='showReview("${item.id}")' class="bg-[#003811] text-white w-full py-1.5 rounded shadow text-[9px] font-black tracking-wide hover:bg-black uppercase transition-colors text-center">Edit</button>`;
+                                actions += `<button onclick='showReview("${item.id}", "REVIEW")' class="bg-[#003811] text-white w-full py-1.5 rounded shadow text-[9px] font-black tracking-wide hover:bg-black uppercase transition-colors text-center">Edit</button>`;
                                 actions += `<button onclick='openPrint("${item.id}", "rec")' class="bg-[#8b5cf6] text-white w-full py-1.5 rounded shadow text-[9px] font-black tracking-wide hover:bg-purple-800 uppercase transition-colors text-center">Recommendation</button>`;
                                 actions += `<button onclick='openPrint("${item.id}", "cert")' class="bg-[#d97706] text-white w-full py-1.5 rounded shadow text-[9px] font-black tracking-wide hover:bg-amber-700 uppercase transition-colors text-center">Certification</button>`;
                                 actions += `<button onclick='processToNext("${item.id}", "SIGNED BY PARPO")' class="bg-cyan-600 text-white w-full py-1.5 rounded shadow text-[10px] font-bold hover:bg-cyan-700 uppercase transition-colors text-center mt-1">Sign</button>`;
@@ -604,17 +609,15 @@
                             }
                             if (isRecords || isChief || isLegal) {
                                 actions += `<button onclick='showReview("${item.id}", "CORRECTION")' class="bg-yellow-500 text-white w-full py-1.5 rounded shadow text-[10px] font-bold hover:bg-yellow-600 uppercase transition-colors text-center mb-1">Correction</button>`;
-                                actions += `<button onclick='showReview("${item.id}", "RE-ISSUANCE")' class="bg-blue-500 text-white w-full py-1.5 rounded shadow text-[10px] font-bold hover:bg-blue-600 uppercase transition-colors text-center mb-1">Re-Issue</button>`;
+                                actions += `<button onclick='reIssueRecord("${item.id}")' class="bg-blue-500 text-white w-full py-1.5 rounded shadow text-[10px] font-bold hover:bg-blue-600 uppercase transition-colors text-center mb-1">Re-Issue</button>`;
                             }
-                            // Instruction 3: PARPO only gets a View button once Forwarded to Records
                             if (isParpo) {
-                                actions += `<button onclick='showReview("${item.id}", "VIEW")' class="bg-gray-500 text-white w-full py-1.5 rounded shadow text-[10px] font-bold hover:bg-gray-600 uppercase transition-colors text-center mb-1">View</button>`;
+                                actions += `<button onclick='showReview("${item.id}", "VIEW_CERT")' class="bg-gray-500 text-white w-full py-1.5 rounded shadow text-[10px] font-bold hover:bg-gray-600 uppercase transition-colors text-center mb-1">View</button>`;
                             }
                         }
                     }
                     actions += `</div>`;
 
-                    // Instruction 2: Update Encoded by to legalOfficer
                     let legalOfficerName = item.legalOfficer || item.legalofficer || item.encoded_by || item.created_by || '---'; 
 
                     if (query !== '' || displayCount < 30) {
@@ -646,11 +649,9 @@
                     }
                 }
 
-                // Instruction 3: Hide action buttons on VIEW mode
-                if (currentReviewMode === 'VIEW') {
+                if (currentReviewMode === 'VIEW_CERT') {
                     actionDiv.innerHTML = '';
                 } else if (currentReviewMode === 'CORRECTION' || currentReviewMode === 'RE-ISSUANCE') {
-                    // Instruction 5: Saving Correction or Re-Issuance routes back to PRINTED LTC
                     actionDiv.innerHTML = `
                         <div class="flex gap-2 w-full justify-end">
                             <button onclick="decideStatus('PRINTED LTC')" class="bg-yellow-600 text-white px-8 py-3 rounded text-sm font-black uppercase shadow-lg hover:bg-yellow-700 transition-colors">Save & Route to PARPO</button>
@@ -727,6 +728,28 @@
             }
         }
 
+        window.reIssueRecord = async function(id) {
+            const record = rawData.find(r => r.id === id);
+            if (!record) return;
+
+            if (!confirm(`Are you sure you want to duplicate this record for RE-ISSUE?`)) return;
+
+            const { id: oldId, created_at, updated_at, ...newRecordData } = record;
+            
+            if(newRecordData.ltc_no !== undefined) delete newRecordData.ltc_no;
+
+            newRecordData.LTC_ID_NUMBER = "";
+            newRecordData.status = 'RECEIVED'; 
+
+            const { data, error } = await supabaseClient.from('land_records').insert([newRecordData]).select();
+            if (error) {
+                alert('Error re-issuing record: ' + error.message);
+            } else {
+                await fetchClearanceData();
+                showReview(data[0].id, 'RE-ISSUANCE');
+            }
+        }
+
         function getStatusStyle(s) {
             const colors = { 
                 'RECEIVED': 'bg-blue-100 text-blue-800 border border-blue-200', 
@@ -763,7 +786,15 @@
             currentReviewMode = mode;
             const query = document.getElementById('searchInput').value.toLowerCase();
             currentNavList = rawData.filter(item => {
-                return (item.registered_under || '').toLowerCase().includes(query) || (item.owner_name || '').toLowerCase().includes(query);
+                let matchesSearch = false;
+                if (query === '') {
+                    matchesSearch = true;
+                } else {
+                    matchesSearch = Object.values(item).some(val => 
+                        val !== null && val.toString().toLowerCase().includes(query)
+                    );
+                }
+                return matchesSearch;
             });
             currentNavIndex = currentNavList.findIndex(r => r.id === id);
             currentSelection = currentNavList[currentNavIndex];
@@ -799,14 +830,14 @@
                 'or_date': 'or_date'
             };
 
-            let isEditable = currentReviewMode !== 'VIEW';
+            const isEditable = (currentReviewMode !== 'VIEW_CERT');
 
             for (let dbCol in dbToHtmlMap) {
                 let htmlSuffix = dbToHtmlMap[dbCol];
+                
                 let editEl = document.getElementById(`edit-${htmlSuffix}`);
                 if(editEl) {
                     editEl.innerText = currentSelection[dbCol] || '---';
-                    // Instruction 3: Disable edit if PARPO is just viewing
                     editEl.contentEditable = isEditable ? "true" : "false";
                 }
 
@@ -830,18 +861,26 @@
             document.querySelectorAll('.sys-chief-name').forEach(el => el.innerText = chiefLegalName);
             document.querySelectorAll('.sys-parpo-name').forEach(el => el.innerText = parpoName);
 
-            // Instruction 1: Modal Title adjusts to mode.
-            document.getElementById('modalMainTitle').innerText = currentReviewMode.toUpperCase() + (currentReviewMode === 'VIEW' ? " ONLY" : "");
-            document.getElementById('docRecommendation').classList.add('hidden');
-            document.getElementById('docCertification').classList.add('hidden');
-            document.getElementById('reviewSection').classList.remove('hidden');
-            document.getElementById('actionButtons').classList.remove('hidden');
-            
-            // Instruction 3: Hide yellow edit notice if view only
-            if (isEditable) {
-                document.getElementById('editNotice').classList.remove('hidden');
-            } else {
+            const now = new Date();
+            const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+            const dateStrOrdinal = `${now.getDate()}${getOrdinal(now.getDate())} day of ${monthNames[now.getMonth()]}, ${now.getFullYear()}`;
+            document.querySelectorAll('.pdf-today-ordinal').forEach(el => el.innerText = dateStrOrdinal);
+
+            if (currentReviewMode === 'VIEW_CERT') {
+                document.getElementById('modalMainTitle').innerText = "CERTIFICATION VIEW";
+                document.getElementById('reviewSection').classList.add('hidden');
+                document.getElementById('docRecommendation').classList.add('hidden');
+                document.getElementById('docCertification').classList.remove('hidden');
+                document.getElementById('docCertification').style.display = 'block';
+                document.getElementById('actionButtons').classList.add('hidden');
                 document.getElementById('editNotice').classList.add('hidden');
+            } else {
+                document.getElementById('modalMainTitle').innerText = currentReviewMode.replace('-', ' ').toUpperCase();
+                document.getElementById('docRecommendation').classList.add('hidden');
+                document.getElementById('docCertification').classList.add('hidden');
+                document.getElementById('reviewSection').classList.remove('hidden');
+                document.getElementById('actionButtons').classList.remove('hidden');
+                document.getElementById('editNotice').classList.remove('hidden');
             }
             
             document.getElementById('reviewRemarks').value = currentSelection.Remarks || currentSelection.remarks || '';
@@ -870,11 +909,6 @@
         function openPrint(id, type) {
             showReview(id, 'REVIEW'); 
             
-            const now = new Date();
-            const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
-            const dateStrOrdinal = `${now.getDate()}${getOrdinal(now.getDate())} day of ${monthNames[now.getMonth()]}, ${now.getFullYear()}`;
-            document.querySelectorAll('.pdf-today-ordinal').forEach(el => el.innerText = dateStrOrdinal);
-
             document.getElementById('reviewSection').classList.add('hidden');
             document.getElementById('actionButtons').classList.add('hidden');
             document.getElementById('editNotice').classList.add('hidden');
@@ -926,10 +960,8 @@
 
             function createPage() {
                 const page = document.createElement('div');
-                // Strict physical boundary 8.5x13 pages
-                page.style.cssText = 'width: 8.5in; height: 13in; min-height: 13in; max-height: 13in; position: relative; background: white; margin-bottom: 20px; overflow: hidden; flex-shrink: 0;';
+                page.style.cssText = 'width: 8.5in; height: 12.98in; min-height: 12.98in; max-height: 12.98in; position: relative; background: white; margin-bottom: 0px; overflow: hidden; flex-shrink: 0;';
                 
-                // STRATEGY 9: Background image fixed to the page block, unaffected by content.
                 const bg = document.createElement('img');
                 bg.src = backgroundImageUrl;
                 bg.crossOrigin = "anonymous";
@@ -937,8 +969,7 @@
                 page.appendChild(bg);
                 
                 const content = document.createElement('div');
-                // STRATEGY 6 & 7: 1.15in margins set top and bottom creating a strict safe zone. QR is inside this.
-                content.style.cssText = 'position: absolute; top: 1.15in; left: 1in; right: 1in; height: 10.7in; max-height: 10.7in; z-index: 10; display: flex; flex-direction: column; font-family: "Roboto", sans-serif; font-size: 9pt; color: black; line-height: 1.5; overflow: hidden;';
+                content.style.cssText = 'position: absolute; top: 1.15in; left: 1in; right: 1in; bottom: 1.15in; z-index: 10; display: flex; flex-direction: column; font-family: "Roboto", sans-serif; font-size: 9pt; color: black; line-height: 1.5; overflow: hidden;';
                 page.appendChild(content);
                 
                 wrapper.appendChild(page);
@@ -951,14 +982,12 @@
             blocks.forEach(block => {
                 currentContent.appendChild(block);
                 
-                // STRATEGY 8: Text hits the margin boundary -> automatic next page
                 if (currentContent.scrollHeight > currentContent.clientHeight) {
                     currentContent.removeChild(block); 
                     currentContent = createPage(); 
                     currentContent.appendChild(block); 
                 }
 
-                // QR re-rendering
                 const qrDivs = block.querySelectorAll('[id^="qr-"]');
                 qrDivs.forEach(qrDiv => {
                     qrDiv.innerHTML = '';
@@ -968,9 +997,9 @@
                 });
             });
 
-            // STRATEGY 4: Blank page removal
+            // Prevent generation of blank final pages
             const lastPage = pagesArray[pagesArray.length - 1];
-            if (lastPage && lastPage.contentElement.children.length === 0) {
+            if (lastPage && lastPage.contentElement.innerHTML.trim() === '') {
                 wrapper.removeChild(lastPage.pageElement);
                 pagesArray.pop();
             }
@@ -1015,18 +1044,17 @@
 
             if (newSt === 'REVIEWED' || newSt === 'PRINTED LTC' || newSt === 'FORWARDED TO RECORDS' || newSt === 'RELEASED TO CLIENT') {
                 const dbToHtmlMap = {
-                    'LTC_ID_NUMBER': 'LTC_ID_NUMBER', // Maps edit-LTC_ID_NUMBER to updateData.LTC_ID_NUMBER
-                    'lot_no': 'lot', 'owner_name': 'owner', 'registered_under': 'tct', 
-                    'area': 'area', 'td_no': 'td', 'location': 'location', 
-                    'deed_type': 'deed', 'executed_by': 'executed', 'in_favor_of': 'favor', 
-                    'doc_no': 'doc', 'page_no': 'page', 'book_no': 'book', 
-                    'series_of': 'series', 'dated': 'dated', 'notary_public': 'notary', 
-                    'retention_area_names': 'retention', 'or_number': 'or_number', 'or_date': 'or_date'
+                    'LTC_ID_NUMBER': 'edit-LTC_ID_NUMBER',
+                    'lot_no': 'edit-lot', 'owner_name': 'edit-owner', 'registered_under': 'edit-tct', 
+                    'area': 'edit-area', 'td_no': 'edit-td', 'location': 'edit-location', 
+                    'deed_type': 'edit-deed', 'executed_by': 'edit-executed', 'in_favor_of': 'edit-favor', 
+                    'doc_no': 'edit-doc', 'page_no': 'edit-page', 'book_no': 'edit-book', 
+                    'series_of': 'edit-series', 'dated': 'edit-dated', 'notary_public': 'edit-notary', 
+                    'retention_area_names': 'edit-retention', 'or_number': 'edit-or_number', 'or_date': 'edit-or_date'
                 };
 
                 for (let dbCol in dbToHtmlMap) {
-                    let htmlSuffix = dbToHtmlMap[dbCol];
-                    let el = document.getElementById(`edit-${htmlSuffix}`);
+                    let el = document.getElementById(dbToHtmlMap[dbCol]);
                     if (el && el.innerText.trim() !== '---') { updateData[dbCol] = el.innerText.trim(); }
                 }
             }
@@ -1040,7 +1068,11 @@
             if (!error) { await fetchClearanceData(); }
         }
 
-        function closeReview() { document.getElementById('reviewModal').classList.add('hidden'); }
+        function closeReview() { 
+            document.getElementById('reviewModal').classList.add('hidden'); 
+            document.getElementById('docCertification').style.display = 'none';
+        }
+        
         function getOrdinal(d) { if (d > 3 && d < 21) return 'th'; switch (d % 10) { case 1: return "st"; case 2: return "nd"; case 3: return "rd"; default: return "th"; } }
         
         function updateStats(s) { 
