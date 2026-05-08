@@ -308,7 +308,7 @@
                         </div>
                     </div>
 
-                    <div class="w-full mt-4 page-break-avoid qr-distribution-block">
+                    <div class="w-full mt-4 page-break-avoid">
                         <div class="flex items-start gap-2 text-[7pt] leading-[1.2] text-left">
                             <div id="qr-rec" class="w-[55px] h-[55px] shrink-0"></div>
                             <div class="pt-0.5">
@@ -405,23 +405,23 @@
                         <div class="flex-1"><span class="font-bold text-[11pt] border-b-[1.5px] border-black pb-0.5">APPROVED</span></div>
                     </div>
 
-                    <p class="mb-4 text-justify leading-relaxed indent-10 page-break-avoid">
+                    <p class="mb-4 text-justify leading-relaxed page-break-avoid indent-10">
                         based on the Attestation of the CARPO-LTS/FOD and from the report and recommendation of the Chief Legal Division/Authorized Legal Officer pursuant to Administrative Order (AO) No. 4 Series of 2021.
                     </p>
 
-                    <p class="mb-4 text-justify leading-relaxed indent-10 page-break-avoid">
+                    <p class="mb-4 text-justify leading-relaxed page-break-avoid indent-10">
                         Any actual change in the use of the land and/or development over the subject land, requires a prior Order of Conversion or Exemption/Exclusion from the Office of the DAR Regional Director.
                     </p>
 
-                    <p class="mb-4 text-justify leading-relaxed indent-10 page-break-avoid">
+                    <p class="mb-4 text-justify leading-relaxed page-break-avoid indent-10">
                         This Office reserves the right to revoke this Certification of LTC in case of findings of misrepresentation or submission of falsified documents by either or both parties to the Deed of Transfer and any third person who may be affected by the transfer.
                     </p>
 
-                    <p class="mb-6 text-justify leading-relaxed indent-10 page-break-avoid">
+                    <p class="mb-6 text-justify leading-relaxed page-break-avoid indent-10">
                         This Certification is hereby issued only for the purpose stated in the application/request for issuance of LTC.
                     </p>
 
-                    <div class="mt-4 mb-4 indent-10 page-break-avoid">
+                    <div class="mt-4 mb-4 page-break-avoid indent-10">
                         Done and issued this <span class="pdf-today-ordinal font-bold">---</span> at the DAR Provincial Office.
                     </div>
 
@@ -434,7 +434,7 @@
                         </div>
                     </div>
 
-                    <div class="w-full mt-4 page-break-avoid qr-distribution-block">
+                    <div class="w-full mt-4 page-break-avoid">
                         <div class="flex items-start gap-2 text-[7pt] leading-[1.2] text-left">
                             <div id="qr-cert" class="w-[55px] h-[55px] shrink-0"></div>
                             <div class="pt-0.5">
@@ -464,6 +464,7 @@
         let rawData = [];
         let currentNavList = [];
         let currentNavIndex = -1;
+        let currentReviewMode = 'review';
         const statusFlow = ['RECEIVED', 'REVIEWED', 'PRINTED LTC', 'SIGNED BY PARPO', 'RETURNED TO LEGAL', 'FORWARDED TO RECORDS', 'RELEASED TO CLIENT', 'DISAPPROVED'];
 
         let chiefLegalName = "---";
@@ -601,23 +602,27 @@
                             if (st === 'FORWARDED TO RECORDS' && (isRecords || isChief)) {
                                 actions += `<button onclick='processToNext("${item.id}", "RELEASED TO CLIENT")' class="bg-cyan-600 text-white w-full py-1.5 rounded shadow text-[10px] font-bold hover:bg-cyan-700 uppercase transition-colors text-center mb-1">Release</button>`;
                             }
-                            if (isRecords || isChief || isLegal || isParpo) {
-                                actions += `<button onclick='showReview("${item.id}")' class="bg-yellow-500 text-white w-full py-1.5 rounded shadow text-[10px] font-bold hover:bg-yellow-600 uppercase transition-colors text-center mb-1">Correction</button>`;
-                                actions += `<button onclick='reIssueRecord("${item.id}")' class="bg-blue-500 text-white w-full py-1.5 rounded shadow text-[10px] font-bold hover:bg-blue-600 uppercase transition-colors text-center">Re-Issue</button>`;
+                            if (isRecords || isChief || isLegal) {
+                                actions += `<button onclick='showReview("${item.id}", "CORRECTION")' class="bg-yellow-500 text-white w-full py-1.5 rounded shadow text-[10px] font-bold hover:bg-yellow-600 uppercase transition-colors text-center mb-1">Correction</button>`;
+                                actions += `<button onclick='showReview("${item.id}", "RE-ISSUANCE")' class="bg-blue-500 text-white w-full py-1.5 rounded shadow text-[10px] font-bold hover:bg-blue-600 uppercase transition-colors text-center mb-1">Re-Issue</button>`;
+                            }
+                            // Instruction 3: PARPO only gets a View button once Forwarded to Records
+                            if (isParpo) {
+                                actions += `<button onclick='showReview("${item.id}", "VIEW")' class="bg-gray-500 text-white w-full py-1.5 rounded shadow text-[10px] font-bold hover:bg-gray-600 uppercase transition-colors text-center mb-1">View</button>`;
                             }
                         }
                     }
                     actions += `</div>`;
 
-                    // STRATEGY 2: Update Encoded by to legalOfficer
-                    let encodedBy = item.legalOfficer || item.legalofficer || '---'; 
+                    // Instruction 2: Update Encoded by to legalOfficer
+                    let legalOfficerName = item.legalOfficer || item.legalofficer || item.encoded_by || item.created_by || '---'; 
 
                     if (query !== '' || displayCount < 30) {
                         tbody.innerHTML += `
                             <tr class="hover:bg-gray-50 transition-colors">
                                 <td class="font-bold">${item.LTC_ID_NUMBER || item.ltc_no || '---'}</td>
                                 <td class="uppercase font-semibold">${item.owner_name}</td>
-                                <td class="text-xs text-gray-500">${encodedBy}</td>
+                                <td class="text-xs text-gray-500">${legalOfficerName}</td>
                                 <td><span class="px-2 py-1 rounded text-[8px] shadow-sm font-black uppercase ${getStatusStyle(st)}">${st}</span>${warningHTML}</td>
                                 <td class="text-center align-middle">${actions}</td>
                                 <td class="text-right font-mono text-gray-500">${item.updated_at ? new Date(item.updated_at).toLocaleString('en-US', { hour12: true }) : '---'}</td>
@@ -641,7 +646,17 @@
                     }
                 }
 
-                if (currentSt === 'PRINTED LTC' && (userRole === 'PARPO II' || userRole === 'PARPO')) {
+                // Instruction 3: Hide action buttons on VIEW mode
+                if (currentReviewMode === 'VIEW') {
+                    actionDiv.innerHTML = '';
+                } else if (currentReviewMode === 'CORRECTION' || currentReviewMode === 'RE-ISSUANCE') {
+                    // Instruction 5: Saving Correction or Re-Issuance routes back to PRINTED LTC
+                    actionDiv.innerHTML = `
+                        <div class="flex gap-2 w-full justify-end">
+                            <button onclick="decideStatus('PRINTED LTC')" class="bg-yellow-600 text-white px-8 py-3 rounded text-sm font-black uppercase shadow-lg hover:bg-yellow-700 transition-colors">Save & Route to PARPO</button>
+                        </div>
+                    `;
+                } else if (currentSt === 'PRINTED LTC' && (userRole === 'PARPO II' || userRole === 'PARPO')) {
                     actionDiv.innerHTML = `
                         <div class="flex gap-2 w-full justify-end">
                             ${printButtons}
@@ -654,12 +669,6 @@
                             ${printButtons}
                             <button onclick="decideStatus('REVIEWED')" class="bg-green-700 text-white px-8 py-3 rounded text-sm font-black uppercase shadow-lg hover:bg-green-800 transition-colors">Approve</button>
                             <button onclick="decideStatus('DISAPPROVED')" class="bg-red-700 text-white px-8 py-3 rounded text-sm font-black uppercase shadow-lg hover:bg-red-800 transition-colors">Disapprove</button>
-                        </div>
-                    `;
-                } else if (currentSt === 'FORWARDED TO RECORDS' || currentSt === 'RELEASED TO CLIENT') {
-                    actionDiv.innerHTML = `
-                        <div class="flex gap-2 w-full justify-end">
-                            <button onclick="decideStatus('${currentSt}')" class="bg-yellow-600 text-white px-8 py-3 rounded text-sm font-black uppercase shadow-lg hover:bg-yellow-700 transition-colors">Save Corrections</button>
                         </div>
                     `;
                 } else {
@@ -718,29 +727,6 @@
             }
         }
 
-        window.reIssueRecord = async function(id) {
-            const record = rawData.find(r => r.id === id);
-            if (!record) return;
-
-            if (!confirm(`Are you sure you want to duplicate this record for RE-ISSUE?`)) return;
-
-            const { id: oldId, created_at, updated_at, ...newRecordData } = record;
-            
-            if(newRecordData.ltc_no !== undefined) delete newRecordData.ltc_no;
-
-            // Strategy 1: Clear the LTC Number so it can be typed in the review modal
-            newRecordData.LTC_ID_NUMBER = "";
-            newRecordData.status = 'RECEIVED'; 
-
-            const { error } = await supabaseClient.from('land_records').insert([newRecordData]);
-            if (error) {
-                alert('Error re-issuing record: ' + error.message);
-            } else {
-                alert('Clearance duplicated for Re-Issue! Please open the new record under RECEIVED status to manually input the new LTC Number.');
-                fetchClearanceData();
-            }
-        }
-
         function getStatusStyle(s) {
             const colors = { 
                 'RECEIVED': 'bg-blue-100 text-blue-800 border border-blue-200', 
@@ -757,7 +743,7 @@
 
         function navigateReview(dir) {
             let newIndex = currentNavIndex + dir;
-            if(newIndex >= 0 && newIndex < currentNavList.length) { showReview(currentNavList[newIndex].id); }
+            if(newIndex >= 0 && newIndex < currentNavList.length) { showReview(currentNavList[newIndex].id, currentReviewMode); }
         }
 
         function generateQRs(identifier) {
@@ -773,7 +759,8 @@
             });
         }
 
-        async function showReview(id) {
+        async function showReview(id, mode = 'REVIEW') {
+            currentReviewMode = mode;
             const query = document.getElementById('searchInput').value.toLowerCase();
             currentNavList = rawData.filter(item => {
                 return (item.registered_under || '').toLowerCase().includes(query) || (item.owner_name || '').toLowerCase().includes(query);
@@ -812,13 +799,15 @@
                 'or_date': 'or_date'
             };
 
+            let isEditable = currentReviewMode !== 'VIEW';
+
             for (let dbCol in dbToHtmlMap) {
                 let htmlSuffix = dbToHtmlMap[dbCol];
-                
                 let editEl = document.getElementById(`edit-${htmlSuffix}`);
                 if(editEl) {
                     editEl.innerText = currentSelection[dbCol] || '---';
-                    editEl.contentEditable = "true";
+                    // Instruction 3: Disable edit if PARPO is just viewing
+                    editEl.contentEditable = isEditable ? "true" : "false";
                 }
 
                 let val = currentSelection[dbCol] || ' ';
@@ -841,19 +830,28 @@
             document.querySelectorAll('.sys-chief-name').forEach(el => el.innerText = chiefLegalName);
             document.querySelectorAll('.sys-parpo-name').forEach(el => el.innerText = parpoName);
 
-            document.getElementById('modalMainTitle').innerText = "REVIEW";
+            // Instruction 1: Modal Title adjusts to mode.
+            document.getElementById('modalMainTitle').innerText = currentReviewMode.toUpperCase() + (currentReviewMode === 'VIEW' ? " ONLY" : "");
             document.getElementById('docRecommendation').classList.add('hidden');
             document.getElementById('docCertification').classList.add('hidden');
             document.getElementById('reviewSection').classList.remove('hidden');
             document.getElementById('actionButtons').classList.remove('hidden');
-            document.getElementById('editNotice').classList.remove('hidden');
+            
+            // Instruction 3: Hide yellow edit notice if view only
+            if (isEditable) {
+                document.getElementById('editNotice').classList.remove('hidden');
+            } else {
+                document.getElementById('editNotice').classList.add('hidden');
+            }
+            
             document.getElementById('reviewRemarks').value = currentSelection.Remarks || currentSelection.remarks || '';
+            document.getElementById('reviewRemarks').disabled = !isEditable;
             
             refreshDashboard(); 
 
             document.getElementById('reviewModal').classList.remove('hidden');
 
-            let encoderName = currentSelection.legalOfficer || currentSelection.legalofficer || '---';
+            let encoderName = currentSelection.legalOfficer || currentSelection.legalofficer || currentSelection.encoded_by || currentSelection.created_by || '---';
             document.querySelectorAll('.preparedByName').forEach(el => el.innerText = encoderName);
             document.querySelectorAll('.preparedByPosition').forEach(el => el.innerText = 'Fetching...');
             
@@ -870,7 +868,7 @@
         }
 
         function openPrint(id, type) {
-            showReview(id); 
+            showReview(id, 'REVIEW'); 
             
             const now = new Date();
             const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
@@ -928,10 +926,10 @@
 
             function createPage() {
                 const page = document.createElement('div');
-                // Strict 8.5x13 pages
+                // Strict physical boundary 8.5x13 pages
                 page.style.cssText = 'width: 8.5in; height: 13in; min-height: 13in; max-height: 13in; position: relative; background: white; margin-bottom: 20px; overflow: hidden; flex-shrink: 0;';
                 
-                // STRATEGY 8: Background image fixed to the page block.
+                // STRATEGY 9: Background image fixed to the page block, unaffected by content.
                 const bg = document.createElement('img');
                 bg.src = backgroundImageUrl;
                 bg.crossOrigin = "anonymous";
@@ -939,7 +937,7 @@
                 page.appendChild(bg);
                 
                 const content = document.createElement('div');
-                // STRATEGY 3: 1.15in margins set top and bottom creating a 10.7in safe zone.
+                // STRATEGY 6 & 7: 1.15in margins set top and bottom creating a strict safe zone. QR is inside this.
                 content.style.cssText = 'position: absolute; top: 1.15in; left: 1in; right: 1in; height: 10.7in; max-height: 10.7in; z-index: 10; display: flex; flex-direction: column; font-family: "Roboto", sans-serif; font-size: 9pt; color: black; line-height: 1.5; overflow: hidden;';
                 page.appendChild(content);
                 
@@ -953,13 +951,14 @@
             blocks.forEach(block => {
                 currentContent.appendChild(block);
                 
-                // STRATEGY 6: Text hits the margin boundary -> automatic next page
+                // STRATEGY 8: Text hits the margin boundary -> automatic next page
                 if (currentContent.scrollHeight > currentContent.clientHeight) {
                     currentContent.removeChild(block); 
                     currentContent = createPage(); 
                     currentContent.appendChild(block); 
                 }
 
+                // QR re-rendering
                 const qrDivs = block.querySelectorAll('[id^="qr-"]');
                 qrDivs.forEach(qrDiv => {
                     qrDiv.innerHTML = '';
@@ -969,7 +968,7 @@
                 });
             });
 
-            // STRATEGY 7: Blank page removal
+            // STRATEGY 4: Blank page removal
             const lastPage = pagesArray[pagesArray.length - 1];
             if (lastPage && lastPage.contentElement.children.length === 0) {
                 wrapper.removeChild(lastPage.pageElement);
@@ -1016,17 +1015,18 @@
 
             if (newSt === 'REVIEWED' || newSt === 'PRINTED LTC' || newSt === 'FORWARDED TO RECORDS' || newSt === 'RELEASED TO CLIENT') {
                 const dbToHtmlMap = {
-                    'LTC_ID_NUMBER': 'edit-LTC_ID_NUMBER',
-                    'lot_no': 'edit-lot', 'owner_name': 'edit-owner', 'registered_under': 'edit-tct', 
-                    'area': 'edit-area', 'td_no': 'edit-td', 'location': 'edit-location', 
-                    'deed_type': 'edit-deed', 'executed_by': 'edit-executed', 'in_favor_of': 'edit-favor', 
-                    'doc_no': 'edit-doc', 'page_no': 'edit-page', 'book_no': 'edit-book', 
-                    'series_of': 'edit-series', 'dated': 'edit-dated', 'notary_public': 'edit-notary', 
-                    'retention_area_names': 'edit-retention', 'or_number': 'edit-or_number', 'or_date': 'edit-or_date'
+                    'LTC_ID_NUMBER': 'LTC_ID_NUMBER', // Maps edit-LTC_ID_NUMBER to updateData.LTC_ID_NUMBER
+                    'lot_no': 'lot', 'owner_name': 'owner', 'registered_under': 'tct', 
+                    'area': 'area', 'td_no': 'td', 'location': 'location', 
+                    'deed_type': 'deed', 'executed_by': 'executed', 'in_favor_of': 'favor', 
+                    'doc_no': 'doc', 'page_no': 'page', 'book_no': 'book', 
+                    'series_of': 'series', 'dated': 'dated', 'notary_public': 'notary', 
+                    'retention_area_names': 'retention', 'or_number': 'or_number', 'or_date': 'or_date'
                 };
 
                 for (let dbCol in dbToHtmlMap) {
-                    let el = document.getElementById(dbToHtmlMap[dbCol]);
+                    let htmlSuffix = dbToHtmlMap[dbCol];
+                    let el = document.getElementById(`edit-${htmlSuffix}`);
                     if (el && el.innerText.trim() !== '---') { updateData[dbCol] = el.innerText.trim(); }
                 }
             }
