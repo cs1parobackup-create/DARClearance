@@ -20,66 +20,10 @@
             body { background: white !important; }
             nav, header, .no-print, #actionButtons, #remarksSection, .modal-header-actions { display: none !important; }
             #reviewModal { position: static; display: block; background: transparent; padding: 0; box-shadow: none; }
-            
-            .doc-print-area { 
-                visibility: visible !important;
-                display: block !important;
-                width: 8.5in !important; 
-                height: 13in !important;
-                max-height: 13in !important;
-                padding: 0 !important;
-                margin: 0 !important;
-                overflow: hidden !important;
-            }
         }
 
-        .doc-print-area { 
-            position: relative;
-            z-index: 1; 
-            font-family: 'Roboto', sans-serif; 
-            font-size: 9pt; 
-            color: black; 
-            line-height: 1.5; 
-            width: 8.5in; 
-            height: 13in;
-            max-height: 13in;
-            margin: 0 auto; 
-            padding: 0;
-            overflow: hidden;
-            background: transparent;
-            box-sizing: border-box;
-        }
-
-        .print-bg {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 1; 
-            object-fit: fill;
-        }
-
-        .doc-content {
-            position: relative;
-            z-index: 10; 
-            padding: 1in 1in 1.4in 1in; 
-            width: 100%;
-            height: 100%;
-            box-sizing: border-box;
-            background: transparent;
-            display: block; /* Changed to block to allow natural flow */
-        }
-
-        .absolute-footer {
-            position: absolute;
-            bottom: 1.25in; 
-            left: 0;
-            width: 100%;
-            padding: 0 1in;
-            box-sizing: border-box;
-            z-index: 20;
-        }
+        /* HIDDEN BLUEPRINTS - Used strictly for content cloning by the paging script */
+        .doc-print-area { display: none; }
         
         .data-value { 
             font-weight: bold; 
@@ -89,11 +33,6 @@
             text-transform: uppercase; 
             line-height: 1.1; 
             padding-bottom: 1px;
-        }
-        
-        .page-break-avoid { 
-            page-break-inside: avoid !important;
-            break-inside: avoid !important;
         }
         
         .scroll-area::-webkit-scrollbar { width: 4px; }
@@ -258,7 +197,6 @@
             </div>
 
             <div id="docRecommendation" class="doc-print-area mx-auto hidden pt-8">
-                <img class="print-bg" crossorigin="anonymous" src="">
                 <div class="doc-content">
                     <div class="text-right font-bold mb-4 mr-10 mt-[0.1in]" id="rec-header-id">LTC-PENDING</div>
                     
@@ -271,7 +209,7 @@
                         This is to recommend that the application/request for Issuance of Land Transfer Clearance (LTC) be <span class="font-bold">APPROVED</span> on the parcel of agricultural land with the following pertinent information, to wit;
                     </p>
 
-                    <div class="mb-4 ml-10 space-y-1.5 grid-block">
+                    <div class="mb-4 ml-10 space-y-1.5">
                         <div class="flex items-end mb-1.5">
                             <div class="italic w-[220px] shrink-0">Lot No/s</div> <div class="data-value flex-1" id="rec-lot">---</div>
                         </div>
@@ -335,7 +273,7 @@
                         Done this <span class="pdf-today-ordinal font-bold">---</span>. Naga City, Camarines Sur.
                     </div>
 
-                    <div class="w-full flex justify-end mb-4 mt-8 page-break-avoid">
+                    <div class="w-full flex justify-end mb-4 mt-8">
                         <div class="flex flex-col items-center mr-10">
                             <p class="text-left w-full mb-6">Prepared by:</p>
                             <div class="text-center inline-block">
@@ -345,7 +283,7 @@
                         </div>
                     </div>
 
-                    <div class="w-full flex flex-col items-start mb-6 page-break-avoid">
+                    <div class="w-full flex flex-col items-start mb-6">
                         <p class="text-left mb-6">Reviewed and Noted by:</p>
                         <div class="text-center inline-block">
                             <p class="sys-chief-name font-bold uppercase underline underline-offset-4">---</p>
@@ -353,17 +291,15 @@
                         </div>
                     </div>
 
-                    <div class="absolute-footer">
-                        <div class="w-full">
-                            <div class="flex items-start gap-2 text-[7pt] leading-[1.2] text-left">
-                                <div id="qr-rec" class="w-[55px] h-[55px] shrink-0"></div>
-                                <div class="pt-0.5">
-                                    <p>Copy distribution:</p>
-                                    <p>Original - Applicant</p>
-                                    <p>Duplicate - LTC Folder</p>
-                                    <p class="mt-0.5">O.R. No.: <span class="font-bold" id="rec-or_number">---</span> &nbsp;&nbsp;Date: <span class="font-bold" id="rec-or_date">---</span></p>
-                                    <p class="font-bold underline underline-offset-2 mt-0.5" id="rec-footer-id">LTC-PENDING</p>
-                                </div>
+                    <div class="w-full mt-4">
+                        <div class="flex items-start gap-2 text-[7pt] leading-[1.2] text-left">
+                            <div id="qr-rec" class="w-[55px] h-[55px] shrink-0"></div>
+                            <div class="pt-0.5">
+                                <p>Copy distribution:</p>
+                                <p>Original - Applicant</p>
+                                <p>Duplicate - LTC Folder</p>
+                                <p class="mt-0.5">O.R. No.: <span class="font-bold" id="rec-or_number">---</span> &nbsp;&nbsp;Date: <span class="font-bold" id="rec-or_date">---</span></p>
+                                <p class="font-bold underline underline-offset-2 mt-0.5" id="rec-footer-id">LTC-PENDING</p>
                             </div>
                         </div>
                     </div>
@@ -371,7 +307,6 @@
             </div>
 
             <div id="docCertification" class="doc-print-area mx-auto hidden pt-8">
-                <img class="print-bg" crossorigin="anonymous" src="">
                 <div class="doc-content">
                     
                     <div class="relative w-full mb-6">
@@ -396,7 +331,7 @@
                         This is to certify that the application/request for Issuance of Land Transfer Clearance (LTC) filed to this Office with the following pertinent information, to wit:
                     </p>
 
-                    <div class="mb-4 ml-10 space-y-1.5 grid-block">
+                    <div class="mb-4 ml-10 space-y-1.5">
                         <div class="flex items-end mb-1.5">
                             <div class="italic w-[220px] shrink-0">Lot No/s</div> <div class="data-value flex-1" id="cert-lot">---</div>
                         </div>
@@ -472,7 +407,7 @@
                         Done and issued this <span class="pdf-today-ordinal font-bold">---</span> at the DAR Provincial Office.
                     </div>
 
-                    <div class="w-full flex justify-end mb-4 mt-8 page-break-avoid">
+                    <div class="w-full flex justify-end mb-4 mt-8">
                         <div class="flex flex-col items-center">
                             <div class="text-center w-60">
                                 <p class="sys-parpo-name font-bold uppercase underline underline-offset-4 inline-block text-[11pt]">---</p>
@@ -481,17 +416,15 @@
                         </div>
                     </div>
 
-                    <div class="absolute-footer">
-                        <div class="w-full">
-                            <div class="flex items-start gap-2 text-[7pt] leading-[1.2] text-left">
-                                <div id="qr-cert" class="w-[55px] h-[55px] shrink-0"></div>
-                                <div class="pt-0.5">
-                                    <p>Copy distribution:</p>
-                                    <p>Original - Applicant</p>
-                                    <p>Duplicate - LTC Folder</p>
-                                    <p class="mt-0.5">O.R. No.: <span class="font-bold" id="cert-or_number">---</span> &nbsp;&nbsp;Date: <span class="font-bold" id="cert-or_date">---</span></p>
-                                    <p class="font-bold underline underline-offset-2 mt-0.5" id="cert-footer-id">LTC-PENDING</p>
-                                </div>
+                    <div class="w-full mt-4">
+                        <div class="flex items-start gap-2 text-[7pt] leading-[1.2] text-left">
+                            <div id="qr-cert" class="w-[55px] h-[55px] shrink-0"></div>
+                            <div class="pt-0.5">
+                                <p>Copy distribution:</p>
+                                <p>Original - Applicant</p>
+                                <p>Duplicate - LTC Folder</p>
+                                <p class="mt-0.5">O.R. No.: <span class="font-bold" id="cert-or_number">---</span> &nbsp;&nbsp;Date: <span class="font-bold" id="cert-or_date">---</span></p>
+                                <p class="font-bold underline underline-offset-2 mt-0.5" id="cert-footer-id">LTC-PENDING</p>
                             </div>
                         </div>
                     </div>
@@ -554,10 +487,6 @@
             const { data } = supabaseClient.storage.from('bg').getPublicUrl('ltc_bg.jpg');
             if (data && data.publicUrl) {
                 backgroundImageUrl = data.publicUrl;
-                document.querySelectorAll('.print-bg').forEach(img => {
-                    img.src = backgroundImageUrl;
-                    img.style.display = 'block';
-                });
             }
         }
 
@@ -585,7 +514,7 @@
             
             let userRole = currentUser.role.toUpperCase();
             let isParpo = userRole === 'PARPO II' || userRole === 'PARPO';
-            let isChief = userRole === 'CHIEF, LEGAL DIVISION' || userRole === 'DIVISION CHIEF' || userRole === 'CHIEF';
+            let isChief = userRole === 'CHIEF, Legal Division'.toUpperCase() || userRole === 'DIVISION CHIEF' || userRole === 'CHIEF';
             let isLegal = (userRole.includes('LEGAL') || userRole.includes('SARPO') || userRole.includes('ARPT') || userRole.includes('ARPO')) && !isParpo;
             let isEncoder = userRole === 'ODTS ENCODER' || userRole.includes('ODTS');
             let isRecords = userRole.includes('RECORDS');
@@ -608,7 +537,7 @@
                     else if (st === 'SIGNED BY PARPO' || st === 'SIGNED' || st === 'FOR SIGNATURE - PARPO II') { stats.sig++; st = 'SIGNED BY PARPO'; }
                     else if (st === 'RETURNED TO LEGAL' || st === 'TO LEGAL' || st === 'FORWARDED - RECORDS') { stats.leg++; st = 'RETURNED TO LEGAL'; }
                     else if (st === 'FORWARDED TO RECORDS' || st === 'TO RECORDS') { stats.recd++; st = 'FORWARDED TO RECORDS'; }
-                    else if (st === 'RELEASED TO CLIENT' || st === 'RELEASED - CLIENT' || st === 'RELEASE TO CLIENT') { stats.rel++; st = 'RELEASED TO CLIENT'; }
+                    else if (st === 'RELEASE TO CLIENT' || st === 'RELEASED - CLIENT' || st === 'RELEASED TO CLIENT') { stats.rel++; st = 'RELEASED TO CLIENT'; }
                     else if (st === 'DISAPPROVED') { stats.dis++; st = 'DISAPPROVED'; }
 
                     let currentIndex = statusFlow.indexOf(st);
@@ -887,6 +816,9 @@
             }
         }
 
+        // ==========================================
+        // EXPLICIT VISIBLE DOM PAGING
+        // ==========================================
         function openPrint(id, type) {
             showReview(id); 
             
@@ -895,53 +827,121 @@
             const dateStrOrdinal = `${now.getDate()}${getOrdinal(now.getDate())} day of ${monthNames[now.getMonth()]}, ${now.getFullYear()}`;
             document.querySelectorAll('.pdf-today-ordinal').forEach(el => el.innerText = dateStrOrdinal);
 
+            // Hide the modal temporarily
             document.getElementById('reviewSection').classList.add('hidden');
             document.getElementById('actionButtons').classList.add('hidden');
             document.getElementById('editNotice').classList.add('hidden');
             document.getElementById('modalMainTitle').parentElement.classList.add('hidden');
             
-            let elementToPrint;
-            let filename = `Clearance_${currentSelection.LTC_ID_NUMBER || currentSelection.ltc_no || id}.pdf`;
-
-            if (type === 'rec') {
-                document.getElementById('docRecommendation').classList.remove('hidden');
-                document.getElementById('docCertification').classList.add('hidden');
-                elementToPrint = document.getElementById('docRecommendation');
-                filename = `Recommendation_${currentSelection.LTC_ID_NUMBER || currentSelection.ltc_no || id}.pdf`;
-            } else if (type === 'cert') {
-                document.getElementById('docRecommendation').classList.add('hidden');
-                document.getElementById('docCertification').classList.remove('hidden');
-                elementToPrint = document.getElementById('docCertification');
-                filename = `Certification_${currentSelection.LTC_ID_NUMBER || currentSelection.ltc_no || id}.pdf`;
-            }
+            let sourceId = type === 'rec' ? 'docRecommendation' : 'docCertification';
+            let filename = type === 'rec' 
+                ? `Recommendation_${currentSelection.LTC_ID_NUMBER || currentSelection.ltc_no || id}.pdf` 
+                : `Certification_${currentSelection.LTC_ID_NUMBER || currentSelection.ltc_no || id}.pdf`;
 
             setTimeout(() => { 
-                const opt = {
-                    margin:       0,
-                    filename:     filename,
-                    image:        { type: 'jpeg', quality: 1.0 },
-                    html2canvas:  { scale: 4, useCORS: true },
-                    jsPDF:        { unit: 'in', format: [8.5, 13], orientation: 'portrait' },
-                    pagebreak:    { mode: ['css', 'legacy'] }
-                };
+                generateIntelligentPDF(sourceId, filename, type);
+            }, 100); 
+        }
 
-                html2pdf().set(opt).from(elementToPrint).toPdf().get('pdf').then(function(pdf) {
-                    var totalPages = pdf.internal.getNumberOfPages();
-                    for (var i = 1; i <= totalPages; i++) {
-                        pdf.setPage(i);
-                        pdf.setFontSize(10);
-                        pdf.setTextColor(80);
-                        pdf.text(currentSelection.LTC_ID_NUMBER || currentSelection.ltc_no || 'LTC-PENDING', 0.5, 11.5, { angle: 90 });
-                    }
-                }).save().then(async () => {
-                    if (type === 'cert' && currentSelection.status === 'REVIEWED') {
-                        await supabaseClient.from('land_records').update({ status: 'PRINTED LTC', updated_at: new Date() }).eq('id', id);
-                        fetchClearanceData();
-                    }
-                    closeReview(); 
-                    document.getElementById('modalMainTitle').parentElement.classList.remove('hidden');
+        function generateIntelligentPDF(sourceId, filename, type) {
+            window.scrollTo(0, 0); 
+            
+            const overlay = document.createElement('div');
+            overlay.id = 'pdf-loading-overlay';
+            overlay.style.cssText = 'position: absolute; top: 0; left: 0; width: 100%; min-height: 100vh; background: #1F2937; z-index: 999999; display: flex; align-items: center; justify-content: flex-start; flex-direction: column; color: white; font-family: sans-serif; padding: 2rem 0; overflow: auto;';
+            
+            overlay.innerHTML = '<div class="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-[#D4AF37] mb-4"></div><h2 class="text-2xl font-black tracking-widest uppercase mb-6">Rendering Pages...</h2>';
+            
+            const wrapper = document.createElement('div');
+            wrapper.id = 'aiPrintWrapper';
+            wrapper.style.cssText = 'width: 8.5in; display: flex; flex-direction: column; align-items: center; background: transparent;';
+            
+            overlay.appendChild(wrapper);
+            document.body.appendChild(overlay);
+
+            const sourceContent = document.querySelector(`#${sourceId} .doc-content`);
+            const childrenNodes = Array.from(sourceContent.children);
+            let blocks = [];
+
+            // Clone exact elements directly (no manual grid splitting that causes overlaps)
+            childrenNodes.forEach(child => {
+                blocks.push(child.cloneNode(true));
+            });
+
+            const pagesArray = [];
+
+            function createPage() {
+                const page = document.createElement('div');
+                // Strict 8.5 x 13 boundary
+                page.style.cssText = 'width: 8.5in; height: 13in; min-height: 13in; max-height: 13in; position: relative; background: white; margin-bottom: 20px; overflow: hidden; flex-shrink: 0;';
+                
+                const bg = document.createElement('img');
+                bg.src = backgroundImageUrl;
+                bg.crossOrigin = "anonymous";
+                bg.style.cssText = 'position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; object-fit: fill; display: block;';
+                page.appendChild(bg);
+                
+                const content = document.createElement('div');
+                // Top: 1.25in, Sides: 1in, Bottom 1.25in Safe Zone
+                content.style.cssText = 'position: absolute; top: 1.25in; left: 1in; right: 1in; bottom: 1.25in; z-index: 10; display: block; font-family: "Roboto", sans-serif; font-size: 9pt; color: black; line-height: 1.5;';
+                page.appendChild(content);
+                
+                wrapper.appendChild(page);
+                pagesArray.push(page);
+                return content;
+            }
+
+            let currentContent = createPage();
+
+            // Measure height exactly and throw block to next page if it overflows the 1.25 bottom margin
+            blocks.forEach(block => {
+                currentContent.appendChild(block);
+                if (currentContent.scrollHeight > currentContent.clientHeight) {
+                    currentContent.removeChild(block); 
+                    currentContent = createPage(); 
+                    currentContent.appendChild(block); 
+                }
+
+                // Make sure QR re-renders properly on the new cloned canvas
+                const qrDivs = block.querySelectorAll('[id^="qr-"]');
+                qrDivs.forEach(qrDiv => {
+                    qrDiv.innerHTML = '';
+                    const currentPath = window.location.href.substring(0, window.location.href.lastIndexOf('/'));
+                    const scanUrl = currentPath + "/verify.html?id=" + encodeURIComponent(currentSelection.LTC_ID_NUMBER || currentSelection.ltc_no || 'NO-ID');
+                    new QRCode(qrDiv, { text: scanUrl, width: 55, height: 55, correctLevel: QRCode.CorrectLevel.L });
                 });
-            }, 500);
+            });
+
+            // Fire PDF Generator directly at the perfectly spaced, visible DOM wrapper
+            const opt = {
+                margin:       0,
+                filename:     filename,
+                image:        { type: 'jpeg', quality: 1.0 },
+                html2canvas:  { scale: 3, useCORS: true }, 
+                jsPDF:        { unit: 'in', format: [8.5, 13], orientation: 'portrait' }
+            };
+
+            html2pdf().set(opt).from(wrapper).toPdf().get('pdf').then(function(pdf) {
+                var totalPages = pdf.internal.getNumberOfPages();
+                for (var i = 1; i <= totalPages; i++) {
+                    pdf.setPage(i);
+                    pdf.setFontSize(10);
+                    pdf.setTextColor(80);
+                    pdf.text(currentSelection.LTC_ID_NUMBER || currentSelection.ltc_no || 'LTC-PENDING', 0.5, 11.5, { angle: 90 });
+                }
+            }).save().then(async () => {
+                if (type === 'cert' && currentSelection.status === 'REVIEWED') {
+                    await supabaseClient.from('land_records').update({ status: 'PRINTED LTC', updated_at: new Date() }).eq('id', currentSelection.id);
+                    fetchClearanceData();
+                }
+                document.body.removeChild(overlay);
+                closeReview(); 
+                document.getElementById('modalMainTitle').parentElement.classList.remove('hidden');
+            }).catch(err => {
+                console.error(err);
+                alert("PDF Generation Error: " + err.message);
+                document.body.removeChild(overlay);
+            });
         }
 
         async function decideStatus(newSt) {
