@@ -82,7 +82,7 @@
         <header class="bg-white shadow-sm border-b px-6 py-4 flex justify-between items-center no-print">
             <h1 class="text-lg font-bold text-[#003811] uppercase tracking-tight">DAR Clearance Monitoring Dashboard</h1>
             <div class="flex gap-2">
-                <input type="text" id="searchInput" placeholder="Search Title/Owner..." class="border border-gray-300 rounded px-3 py-1.5 text-xs focus:outline-none focus:border-[#003811] w-64" onkeyup="refreshDashboard()">
+                <input type="text" id="searchInput" placeholder="Search any details..." class="border border-gray-300 rounded px-3 py-1.5 text-xs focus:outline-none focus:border-[#003811] w-64" onkeyup="refreshDashboard()">
                 <button onclick="fetchClearanceData()" class="bg-[#003811] text-white px-4 py-1.5 rounded text-xs font-bold uppercase shadow hover:bg-[#006400]">Refresh</button>
             </div>
         </header>
@@ -220,6 +220,7 @@
                 <div class="doc-content">
                     <div class="relative w-full mb-6 page-break-avoid">
                         <div class="absolute right-0 top-0 text-right font-bold flex flex-col items-end">
+                            <span class="font-bold text-[10pt]">LTC Form No. 5</span>
                             <span class="font-bold text-[10pt] mt-4 underline" id="rec-header-id-top">LTC-PENDING</span>
                         </div>
                         <div class="text-center text-[10pt] leading-snug font-bold uppercase">
@@ -296,7 +297,7 @@
                     </div>
 
                     <p class="mb-4 text-justify leading-relaxed page-break-avoid indent-10">
-                        The applicant submitted all the necessary requirements for the issuance of Land Transfer Clearance in compliance with DAR Administrative Order No. 4, series of 2021.
+                        based on the Attestation of the CARPO-LTS/FOD and from the report and recommendation of the Chief Legal Division/Authorized Legal Officer pursuant to Administrative Order (AO) No. 4 Series of 2021.
                     </p>
 
                     <div class="mt-4 mb-4 page-break-avoid indent-10">
@@ -487,22 +488,34 @@
         async function loadMenu() {
             const menuContainer = document.getElementById('dynamicMenu');
             const userRole = currentUser.role.toUpperCase();
-            const { data: menuItems, error } = await supabaseClient
-                .from('clearance_menu').select('*').eq('is_active', true).order('sort_order', { ascending: true });
+            
+            try {
+                const { data: menuItems, error } = await supabaseClient
+                    .from('clearance_menu')
+                    .select('*')
+                    .order('sort_order', { ascending: true });
 
-            if (error) return console.error("Menu Error:", error);
+                if (error) throw error;
 
-            menuContainer.innerHTML = '';
-            menuItems.forEach(item => {
-                if (item.required_roles.includes(userRole) || item.required_roles.length === 0) {
-                    const isCurrent = window.location.pathname.includes(item.url);
-                    const link = document.createElement('a');
-                    link.href = item.url;
-                    link.className = `block px-6 py-4 text-[11px] font-black uppercase border-l-4 transition-all ${isCurrent ? 'bg-[#006400] border-[#D4AF37]' : 'border-transparent hover:bg-[#006400]'}`;
-                    link.innerText = item.label;
-                    menuContainer.appendChild(link);
-                }
-            });
+                menuContainer.innerHTML = '';
+                menuItems.forEach(item => {
+                    if (!item.is_active) return;
+                    
+                    // Instruction 1: Load menu correctly processing the array
+                    const hasRole = !item.required_roles || item.required_roles.length === 0 || item.required_roles.some(r => userRole.includes(r.toUpperCase()));
+                    
+                    if (hasRole) {
+                        const isCurrent = window.location.pathname.includes(item.url);
+                        const link = document.createElement('a');
+                        link.href = item.url;
+                        link.className = `block px-6 py-4 text-[11px] font-black uppercase border-l-4 transition-all ${isCurrent ? 'bg-[#006400] border-[#D4AF37]' : 'border-transparent hover:bg-[#006400]'}`;
+                        link.innerText = item.label;
+                        menuContainer.appendChild(link);
+                    }
+                });
+            } catch (err) {
+                console.error("Menu Error:", err);
+            }
         }
 
         async function fetchDynamicSignatories() {
@@ -555,6 +568,7 @@
             let displayCount = 0;
 
             rawData.forEach(item => {
+                // Instruction 9: Highly dynamic search scanning ALL columns in the record
                 let matchesSearch = false;
                 if (query === '') {
                     matchesSearch = true;
@@ -620,10 +634,12 @@
                             if (st === 'FORWARDED TO RECORDS' && (isRecords || isChief)) {
                                 actions += `<button onclick='processToNext("${item.id}", "RELEASED TO CLIENT")' class="bg-cyan-600 text-white w-full py-1.5 rounded shadow text-[10px] font-bold hover:bg-cyan-700 uppercase transition-colors text-center mb-1">Release</button>`;
                             }
-                            if (isRecords || isChief || isLegal) {
+                            // Instruction 4: Correction and Re-issuance MUST ONLY appear on RELEASED TO CLIENT
+                            if (st === 'RELEASED TO CLIENT' && (isRecords || isChief || isLegal)) {
                                 actions += `<button onclick='showReview("${item.id}", "CORRECTION")' class="bg-yellow-500 text-white w-full py-1.5 rounded shadow text-[10px] font-bold hover:bg-yellow-600 uppercase transition-colors text-center mb-1">Correction</button>`;
                                 actions += `<button onclick='showReview("${item.id}", "RE-ISSUANCE")' class="bg-blue-500 text-white w-full py-1.5 rounded shadow text-[10px] font-bold hover:bg-blue-600 uppercase transition-colors text-center mb-1">Re-Issue</button>`;
                             }
+                            // Instruction 2: PARPO will only have View CERTIFICATION action
                             if (isParpo) {
                                 actions += `<button onclick='showReview("${item.id}", "VIEW_CERT")' class="bg-gray-500 text-white w-full py-1.5 rounded shadow text-[10px] font-bold hover:bg-gray-600 uppercase transition-colors text-center mb-1">View</button>`;
                             }
@@ -631,6 +647,7 @@
                     }
                     actions += `</div>`;
 
+                    // Instruction 11: Legal Officer column display
                     let legalOfficerName = item.legalOfficer || item.legalofficer || item.encoded_by || item.created_by || '---'; 
 
                     if (query !== '' || displayCount < 30) {
@@ -663,8 +680,10 @@
                 }
 
                 if (currentReviewMode === 'VIEW_CERT') {
+                    // Instruction 2: Only view allowed, no buttons.
                     actionDiv.innerHTML = '';
                 } else if (currentReviewMode === 'CORRECTION' || currentReviewMode === 'RE-ISSUANCE') {
+                    // Instruction 5: Saving Correction or Re-Issuance routes directly to PRINTED LTC
                     actionDiv.innerHTML = `
                         <div class="flex gap-2 w-full justify-end">
                             <button onclick="decideStatus('PRINTED LTC')" class="bg-yellow-600 text-white px-8 py-3 rounded text-sm font-black uppercase shadow-lg hover:bg-yellow-700 transition-colors">Save & Route to PARPO</button>
@@ -683,12 +702,6 @@
                             ${printButtons}
                             <button onclick="decideStatus('REVIEWED')" class="bg-green-700 text-white px-8 py-3 rounded text-sm font-black uppercase shadow-lg hover:bg-green-800 transition-colors">Approve</button>
                             <button onclick="decideStatus('DISAPPROVED')" class="bg-red-700 text-white px-8 py-3 rounded text-sm font-black uppercase shadow-lg hover:bg-red-800 transition-colors">Disapprove</button>
-                        </div>
-                    `;
-                } else if (currentSt === 'FORWARDED TO RECORDS' || currentSt === 'RELEASED TO CLIENT') {
-                    actionDiv.innerHTML = `
-                        <div class="flex gap-2 w-full justify-end">
-                            <button onclick="decideStatus('${currentSt}')" class="bg-yellow-600 text-white px-8 py-3 rounded text-sm font-black uppercase shadow-lg hover:bg-yellow-700 transition-colors">Save Corrections</button>
                         </div>
                     `;
                 } else {
@@ -744,26 +757,6 @@
             } else {
                 alert('Variant created successfully! You can now edit the "In favor of" details via the Review button.');
                 fetchClearanceData();
-            }
-        }
-
-        window.reIssueRecord = async function(id) {
-            const record = rawData.find(r => r.id === id);
-            if (!record) return;
-
-            const { id: oldId, created_at, updated_at, ...newRecordData } = record;
-            
-            if(newRecordData.ltc_no !== undefined) delete newRecordData.ltc_no;
-
-            newRecordData.LTC_ID_NUMBER = "";
-            newRecordData.status = 'RECEIVED'; 
-
-            const { data, error } = await supabaseClient.from('land_records').insert([newRecordData]).select();
-            if (error) {
-                alert('Error re-issuing record: ' + error.message);
-            } else {
-                await fetchClearanceData();
-                showReview(data[0].id, 'RE-ISSUANCE');
             }
         }
 
@@ -933,6 +926,7 @@
             document.getElementById('modalMainTitle').parentElement.classList.add('hidden');
             
             let sourceId = type === 'rec' ? 'docRecommendation' : 'docCertification';
+            // Instruction 8: File name matches LTC Number strictly
             let filename = `${currentSelection.LTC_ID_NUMBER || currentSelection.ltc_no || id}.pdf`;
 
             setTimeout(() => { 
@@ -985,7 +979,7 @@
                 page.appendChild(bg);
                 
                 const content = document.createElement('div');
-                content.style.cssText = 'position: absolute; top: 1.15in; left: 1in; right: 1in; height: 10.7in; max-height: 10.7in; z-index: 10; display: flex; flex-direction: column; font-family: "Roboto", sans-serif; font-size: 9pt; color: black; line-height: 1.5; overflow: hidden;';
+                content.style.cssText = 'position: absolute; top: 1.15in; left: 1in; right: 1in; bottom: 1.15in; z-index: 10; display: flex; flex-direction: column; font-family: "Roboto", sans-serif; font-size: 9pt; color: black; line-height: 1.5; overflow: hidden;';
                 page.appendChild(content);
                 
                 wrapper.appendChild(page);
@@ -1024,8 +1018,8 @@
             html2pdf().set(opt).from(wrapper).toPdf().get('pdf').then(function(pdf) {
                 var totalPages = pdf.internal.getNumberOfPages();
                 
-                // CRITICAL FIX: Loop strictly enforces that any page generated by html2pdf
-                // that exceeds the number of actual DOM pages we created gets deleted immediately.
+                // Instruction 3: Remove any completely blank page that gets generated after the QR
+                // This forces pdf generation to stop strictly at the DOM limit.
                 while(totalPages > pagesArray.length) {
                     pdf.deletePage(totalPages);
                     totalPages--;
