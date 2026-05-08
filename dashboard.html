@@ -111,7 +111,7 @@
 
     <main class="flex-1 flex flex-col overflow-hidden">
         <header class="bg-white shadow-sm border-b px-6 py-4 flex justify-between items-center no-print">
-            <h1 class="text-lg font-bold text-[#003811] uppercase tracking-tight">Clearance Monitor</h1>
+            <h1 class="text-lg font-bold text-[#003811] uppercase tracking-tight">DAR Clearance Monitoring Dashboard</h1>
             <div class="flex gap-2">
                 <input type="text" id="searchInput" placeholder="Search Title/Owner..." class="border border-gray-300 rounded px-3 py-1.5 text-xs focus:outline-none focus:border-[#003811] w-64" onkeyup="refreshDashboard()">
                 <button onclick="fetchClearanceData()" class="bg-[#003811] text-white px-4 py-1.5 rounded text-xs font-bold uppercase shadow hover:bg-[#006400]">Refresh</button>
@@ -292,20 +292,32 @@
                         Done this <span class="pdf-today-ordinal font-bold">---</span>. Naga City, Camarines Sur.
                     </div>
 
-                    <div class="page-break-avoid w-full ml-10 flex justify-between pr-10">
-                        <div>
-                            <p class="text-left">Prepared by:</p>
-                            <div class="text-center inline-block mt-12">
-                                <p class="preparedByName font-bold uppercase underline underline-offset-4">---</p>
-                                <p class="preparedByPosition text-[9pt] uppercase mt-1">---</p>
-                            </div>
-                        </div>
-                        <div>
-                            <p class="text-left">Reviewed and Noted by:</p>
-                            <div class="text-center inline-block mt-12">
+                    <div class="page-break-avoid w-full px-10 mt-12 flex justify-between items-start">
+                        <div class="flex flex-col">
+                            <p class="text-left mb-6">Reviewed and Noted by:</p>
+                            <div class="text-center inline-block">
                                 <p class="sys-chief-name font-bold uppercase underline underline-offset-4">---</p>
                                 <p class="text-[9pt] mt-1">Chief, Legal Division</p>
-                                <div id="qr-rec" class="mt-2 flex justify-center w-full"></div>
+                            </div>
+                            
+                            <div class="mt-10 flex items-start gap-3 text-[8pt] leading-tight text-left">
+                                <div id="qr-rec" class="w-[70px] h-[70px]"></div>
+                                <div>
+                                    <p>Copy distribution:</p>
+                                    <p>Original-Applicant</p>
+                                    <p>Duplicate-LTC Folder</p>
+                                    <p class="mt-2">O.R. No.: <span class="font-bold">___________</span></p>
+                                    <p>Date issued: <span class="pdf-today-ordinal font-bold">---</span></p>
+                                    <p class="font-bold underline underline-offset-2" id="rec-footer-id">LTC-PENDING</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="flex flex-col items-center mr-10">
+                            <p class="text-left w-full mb-6">Prepared by:</p>
+                            <div class="text-center inline-block">
+                                <p class="preparedByName font-bold uppercase underline underline-offset-4">---</p>
+                                <p class="preparedByPosition text-[9pt] uppercase mt-1">---</p>
                             </div>
                         </div>
                     </div>
@@ -387,9 +399,20 @@
                         Done and issued this <span class="pdf-today-ordinal font-bold">---</span> at the DAR Provincial Office.
                     </div>
 
-                    <div class="flex flex-col items-end mt-12 page-break-avoid mr-10">
-                        <div class="flex items-center gap-4">
-                            <div id="qr-cert"></div>
+                    <div class="page-break-avoid w-full px-10 mt-12 flex justify-between items-end">
+                        <div class="flex items-start gap-3 text-[8pt] leading-tight text-left">
+                            <div id="qr-cert" class="w-[70px] h-[70px]"></div>
+                            <div>
+                                <p>Copy distribution:</p>
+                                <p>Original-Applicant</p>
+                                <p>Duplicate-LTC Folder</p>
+                                <p class="mt-2">O.R. No.: <span class="font-bold">___________</span></p>
+                                <p>Date issued: <span class="pdf-today-ordinal font-bold">---</span></p>
+                                <p class="font-bold underline underline-offset-2" id="cert-footer-id">LTC-PENDING</p>
+                            </div>
+                        </div>
+
+                        <div class="flex flex-col items-center mr-10">
                             <div class="text-center w-60">
                                 <p class="sys-parpo-name font-bold uppercase underline underline-offset-4 inline-block">---</p>
                                 <p class="text-[9pt] uppercase mt-1">PARPO II</p>
@@ -546,6 +569,8 @@
                             }
                         } else if (st === 'RETURNED TO LEGAL') {
                             if (isChief || (isLegal && item.encoded_by === userFullName)) {
+                                actions += `<button onclick='openPrint("${item.id}", "rec")' class="bg-[#8b5cf6] text-white w-full py-1.5 rounded shadow text-[9px] font-black tracking-wide hover:bg-purple-800 uppercase transition-colors text-center mb-1">Recommendation</button>`;
+                                actions += `<button onclick='openPrint("${item.id}", "cert")' class="bg-[#d97706] text-white w-full py-1.5 rounded shadow text-[9px] font-black tracking-wide hover:bg-amber-700 uppercase transition-colors text-center mb-1">Certification</button>`;
                                 actions += `<button onclick='processToNext("${item.id}", "FORWARDED TO RECORDS")' class="bg-cyan-600 text-white w-full py-1.5 rounded shadow text-[10px] font-bold hover:bg-cyan-700 uppercase transition-colors text-center">FORWARD TO RECORDS</button>`;
                             }
                         } else if (st === 'FORWARDED TO RECORDS') {
@@ -587,7 +612,7 @@
                     }
                 }
 
-                if (currentSt === 'PRINTED LTC' && (uRole === 'PARPO II' || uRole === 'PARPO')) {
+                if (currentSt === 'PRINTED LTC' && (userRole === 'PARPO II' || userRole === 'PARPO')) {
                     actionDiv.innerHTML = `
                         <div class="flex gap-2 w-full justify-end">
                             ${printButtons}
@@ -744,9 +769,13 @@
 
             const recHeaderId = document.getElementById('rec-header-id');
             const certHeaderId = document.getElementById('cert-header-id');
+            const recFooterId = document.getElementById('rec-footer-id');
+            const certFooterId = document.getElementById('cert-footer-id');
             const headerVal = currentSelection.LTC_ID_NUMBER || currentSelection.ltc_no || 'LTC-PENDING';
             if(recHeaderId) recHeaderId.innerText = headerVal;
             if(certHeaderId) certHeaderId.innerText = headerVal;
+            if(recFooterId) recFooterId.innerText = headerVal;
+            if(certFooterId) certFooterId.innerText = headerVal;
 
             document.querySelectorAll('.sys-chief-name').forEach(el => el.innerText = chiefLegalName);
             document.querySelectorAll('.sys-parpo-name').forEach(el => el.innerText = parpoName);
