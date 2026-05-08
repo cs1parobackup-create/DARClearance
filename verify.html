@@ -92,7 +92,7 @@
             const { data, error } = await supabaseClient
                 .from('land_records')
                 .select('*')
-                .or(`LTC_ID_NUMBER.eq."${recordId}",ltc_no.eq."${recordId}"`)
+                .eq('LTC_ID_NUMBER', recordId)
                 .limit(1);
 
             loadingState.classList.add('hidden');
