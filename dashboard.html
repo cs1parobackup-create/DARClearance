@@ -15,7 +15,6 @@
         body { font-family: 'Segoe UI', sans-serif; background-color: #F3F4F6; font-size: 13px; color: #1F2937; }
         .compact-table td, .compact-table th { padding: 0.5rem 1rem !important; }
 
-        /* PRINT CONFIGURATION */
         @media print {
             @page { size: 8.5in 13in; margin: 0; }
             body { background: white !important; }
@@ -23,11 +22,21 @@
             #reviewModal { position: static; display: block; background: transparent; padding: 0; box-shadow: none; }
         }
 
-        /* Original Templates remain hidden, used purely as blueprints by the AI Pager */
+        /* The original blueprint containers are hidden from view */
         .doc-print-area { 
             display: none; 
         }
 
+        .absolute-footer {
+            position: absolute;
+            bottom: 1.25in; 
+            left: 0;
+            width: 100%;
+            padding: 0 1in;
+            box-sizing: border-box;
+            z-index: 20;
+        }
+        
         .data-value { 
             font-weight: bold; 
             border-bottom: 1.5px solid black; 
@@ -36,11 +45,6 @@
             text-transform: uppercase; 
             line-height: 1.1; 
             padding-bottom: 1px;
-        }
-        
-        .page-break-avoid { 
-            page-break-inside: avoid !important;
-            break-inside: avoid !important;
         }
         
         .scroll-area::-webkit-scrollbar { width: 4px; }
@@ -204,7 +208,7 @@
             <div id="actionButtons" class="flex justify-between items-center no-print">
             </div>
 
-            <div id="docRecommendation" class="hidden">
+            <div id="docRecommendation" class="doc-print-area mx-auto hidden pt-8">
                 <div class="doc-content">
                     <div class="text-right font-bold mb-4 mr-10 mt-[0.1in]" id="rec-header-id">LTC-PENDING</div>
                     
@@ -217,35 +221,35 @@
                         This is to recommend that the application/request for Issuance of Land Transfer Clearance (LTC) be <span class="font-bold">APPROVED</span> on the parcel of agricultural land with the following pertinent information, to wit;
                     </p>
 
-                    <div class="mb-4 ml-10 space-y-1.5">
-                        <div class="flex items-end page-break-avoid">
+                    <div class="mb-4 ml-10 space-y-1.5 grid-block">
+                        <div class="flex items-end mb-1.5">
                             <div class="italic w-[220px] shrink-0">Lot No/s</div> <div class="data-value flex-1" id="rec-lot">---</div>
                         </div>
-                        <div class="flex items-end page-break-avoid">
+                        <div class="flex items-end mb-1.5">
                             <div class="italic w-[220px] shrink-0">In the Name of</div> <div class="data-value flex-1" id="rec-owner">---</div>
                         </div>
-                        <div class="flex items-end page-break-avoid">
+                        <div class="flex items-end mb-1.5">
                             <div class="italic w-[220px] shrink-0">Registered under</div> <div class="data-value flex-1" id="rec-tct">---</div>
                         </div>
-                        <div class="flex items-end page-break-avoid">
+                        <div class="flex items-end mb-1.5">
                             <div class="italic w-[220px] shrink-0">With an area (in has.) of</div> <div class="data-value flex-1" id="rec-area">---</div>
                         </div>
-                        <div class="flex items-end page-break-avoid">
+                        <div class="flex items-end mb-1.5">
                             <div class="italic w-[220px] shrink-0">Declared under T.D. No.</div> <div class="data-value flex-1" id="rec-td">---</div>
                         </div>
-                        <div class="flex items-end page-break-avoid">
+                        <div class="flex items-end mb-1.5">
                             <div class="italic w-[220px] shrink-0">Located at</div> <div class="data-value flex-1" id="rec-location">---</div>
                         </div>
-                        <div class="flex items-end page-break-avoid">
+                        <div class="flex items-end mb-1.5">
                             <div class="italic w-[220px] shrink-0">Subjected of the Deed of</div> <div class="data-value flex-1" id="rec-deed">---</div>
                         </div>
-                        <div class="flex items-end page-break-avoid">
+                        <div class="flex items-end mb-1.5">
                             <div class="italic w-[220px] shrink-0">Executed by</div> <div class="data-value flex-1" id="rec-executed">---</div>
                         </div>
-                        <div class="flex items-end page-break-avoid">
+                        <div class="flex items-end mb-1.5">
                             <div class="italic w-[220px] shrink-0">In favor of</div> <div class="data-value flex-1" id="rec-favor">---</div>
                         </div>
-                        <div class="flex items-end page-break-avoid">
+                        <div class="flex items-end mb-1.5">
                             <div class="italic w-[220px] shrink-0">Under Doc. No.</div> 
                             <div class="flex items-end gap-2 flex-1">
                                 <span class="data-value text-center" id="rec-doc">---</span>
@@ -253,36 +257,36 @@
                                 <span class="italic ml-2">Book No.</span> <span class="data-value text-center" id="rec-book">---</span>
                             </div>
                         </div>
-                        <div class="flex items-end page-break-avoid">
+                        <div class="flex items-end mb-1.5">
                             <div class="italic w-[220px] shrink-0">Series of</div> 
                             <div class="flex items-end gap-2 flex-1">
                                 <span class="data-value text-center" id="rec-series">---</span>
                                 <span class="italic ml-4">Dated</span> <span class="data-value text-center flex-1" id="rec-dated">---</span>
                             </div>
                         </div>
-                        <div class="flex items-end page-break-avoid">
+                        <div class="flex items-end mb-1.5">
                             <div class="italic w-[220px] shrink-0">of Notary Public</div> <div class="data-value flex-1" id="rec-notary">---</div>
                         </div>
-                        <div class="flex items-end page-break-avoid">
+                        <div class="flex items-end mb-1.5">
                             <div class="italic w-[220px] shrink-0 text-[9pt]">of a retention area of vendor/transferor</div> <div class="data-value flex-1" id="rec-retention">---</div>
                         </div>
                     </div>
 
-                    <div class="flex items-end ml-10 mt-5 mb-4 page-break-avoid">
+                    <div class="flex items-end ml-10 mt-5 mb-4">
                         <div class="italic w-[220px] shrink-0">is hereby:</div>
                         <div class="flex-1"><span class="font-bold text-[11pt] border-b-[1.5px] border-black pb-0.5">APPROVED</span></div>
                     </div>
 
-                    <p class="mb-4 text-justify indent-10 page-break-avoid">
+                    <p class="mb-4 text-justify indent-10">
                         The applicant submitted all the necessary requirements for the issuance of Land Transfer Clearance in compliance with DAR Administrative Order No. 4, series of 2021.
                     </p>
 
-                    <div class="mt-4 mb-4 page-break-avoid indent-10">
+                    <div class="mt-4 mb-4 indent-10">
                         Done this <span class="pdf-today-ordinal font-bold">---</span>. Naga City, Camarines Sur.
                     </div>
 
-                    <div class="mt-auto w-full page-break-avoid">
-                        <div class="w-full px-10 mt-6 flex justify-end">
+                    <div class="absolute-footer">
+                        <div class="w-full flex justify-end mb-4">
                             <div class="flex flex-col items-center mr-10">
                                 <p class="text-left w-full mb-6">Prepared by:</p>
                                 <div class="text-center inline-block">
@@ -292,7 +296,7 @@
                             </div>
                         </div>
 
-                        <div class="w-full px-10 flex flex-col items-start mb-6 mt-4">
+                        <div class="w-full flex flex-col items-start mb-4">
                             <p class="text-left mb-6">Reviewed and Noted by:</p>
                             <div class="text-center inline-block">
                                 <p class="sys-chief-name font-bold uppercase underline underline-offset-4">---</p>
@@ -300,7 +304,7 @@
                             </div>
                         </div>
 
-                        <div class="w-full px-10 pb-4">
+                        <div class="w-full">
                             <div class="flex items-start gap-2 text-[7pt] leading-[1.2] text-left">
                                 <div id="qr-rec" class="w-[55px] h-[55px] shrink-0"></div>
                                 <div class="pt-0.5">
@@ -316,7 +320,7 @@
                 </div>
             </div>
 
-            <div id="docCertification" class="hidden">
+            <div id="docCertification" class="doc-print-area mx-auto hidden pt-8">
                 <div class="doc-content">
                     
                     <div class="relative w-full mb-6">
@@ -341,35 +345,35 @@
                         This is to certify that the application/request for Issuance of Land Transfer Clearance (LTC) filed to this Office with the following pertinent information, to wit:
                     </p>
 
-                    <div class="mb-4 ml-10 space-y-1.5">
-                        <div class="flex items-end page-break-avoid">
+                    <div class="mb-4 ml-10 space-y-1.5 grid-block">
+                        <div class="flex items-end mb-1.5">
                             <div class="italic w-[220px] shrink-0">Lot No/s</div> <div class="data-value flex-1" id="cert-lot">---</div>
                         </div>
-                        <div class="flex items-end page-break-avoid">
+                        <div class="flex items-end mb-1.5">
                             <div class="italic w-[220px] shrink-0">In the Name of</div> <div class="data-value flex-1" id="cert-owner">---</div>
                         </div>
-                        <div class="flex items-end page-break-avoid">
+                        <div class="flex items-end mb-1.5">
                             <div class="italic w-[220px] shrink-0">Registered under</div> <div class="data-value flex-1" id="cert-tct">---</div>
                         </div>
-                        <div class="flex items-end page-break-avoid">
+                        <div class="flex items-end mb-1.5">
                             <div class="italic w-[220px] shrink-0">With an area (in has.) of</div> <div class="data-value flex-1" id="cert-area">---</div>
                         </div>
-                        <div class="flex items-end page-break-avoid">
+                        <div class="flex items-end mb-1.5">
                             <div class="italic w-[220px] shrink-0">Declared under T.D. No.</div> <div class="data-value flex-1" id="cert-td">---</div>
                         </div>
-                        <div class="flex items-end page-break-avoid">
+                        <div class="flex items-end mb-1.5">
                             <div class="italic w-[220px] shrink-0">Located at</div> <div class="data-value flex-1" id="cert-location">---</div>
                         </div>
-                        <div class="flex items-end page-break-avoid">
+                        <div class="flex items-end mb-1.5">
                             <div class="italic w-[220px] shrink-0">Subjected of the Deed of</div> <div class="data-value flex-1" id="cert-deed">---</div>
                         </div>
-                        <div class="flex items-end page-break-avoid">
+                        <div class="flex items-end mb-1.5">
                             <div class="italic w-[220px] shrink-0">Executed by</div> <div class="data-value flex-1" id="cert-executed">---</div>
                         </div>
-                        <div class="flex items-end page-break-avoid">
+                        <div class="flex items-end mb-1.5">
                             <div class="italic w-[220px] shrink-0">In favor of</div> <div class="data-value flex-1" id="cert-favor">---</div>
                         </div>
-                        <div class="flex items-end page-break-avoid">
+                        <div class="flex items-end mb-1.5">
                             <div class="italic w-[220px] shrink-0">Under Doc. No.</div> 
                             <div class="flex items-end gap-2 flex-1">
                                 <span class="data-value text-center" id="cert-doc">---</span>
@@ -377,49 +381,49 @@
                                 <span class="italic ml-2">Book No.</span> <span class="data-value text-center" id="cert-book">---</span>
                             </div>
                         </div>
-                        <div class="flex items-end page-break-avoid">
+                        <div class="flex items-end mb-1.5">
                             <div class="italic w-[220px] shrink-0">Series of</div> 
                             <div class="flex items-end gap-2 flex-1">
                                 <span class="data-value text-center" id="cert-series">---</span>
                                 <span class="italic ml-4">Dated</span> <span class="data-value text-center flex-1" id="cert-dated">---</span>
                             </div>
                         </div>
-                        <div class="flex items-end page-break-avoid">
+                        <div class="flex items-end mb-1.5">
                             <div class="italic w-[220px] shrink-0">of Notary Public</div> <div class="data-value flex-1" id="cert-notary">---</div>
                         </div>
-                        <div class="flex items-end page-break-avoid">
+                        <div class="flex items-end mb-1.5">
                             <div class="italic w-[220px] shrink-0 text-[9pt]">of a retention area of vendor/transferor</div> <div class="data-value flex-1" id="cert-retention">---</div>
                         </div>
                     </div>
 
-                    <div class="flex items-end ml-10 mt-5 mb-4 page-break-avoid">
+                    <div class="flex items-end ml-10 mt-5 mb-4">
                         <div class="italic w-[220px] shrink-0">is hereby:</div>
                         <div class="flex-1"><span class="font-bold text-[11pt] border-b-[1.5px] border-black pb-0.5">APPROVED</span></div>
                     </div>
 
-                    <p class="mb-4 text-justify leading-relaxed page-break-avoid indent-10">
+                    <p class="mb-4 text-justify leading-relaxed indent-10">
                         based on the Attestation of the CARPO-LTS/FOD and from the report and recommendation of the Chief Legal Division/Authorized Legal Officer pursuant to Administrative Order (AO) No. 4 Series of 2021.
                     </p>
 
-                    <p class="mb-4 text-justify leading-relaxed page-break-avoid indent-10">
+                    <p class="mb-4 text-justify leading-relaxed indent-10">
                         Any actual change in the use of the land and/or development over the subject land, requires a prior Order of Conversion or Exemption/Exclusion from the Office of the DAR Regional Director.
                     </p>
 
-                    <p class="mb-4 text-justify leading-relaxed page-break-avoid indent-10">
+                    <p class="mb-4 text-justify leading-relaxed indent-10">
                         This Office reserves the right to revoke this Certification of LTC in case of findings of misrepresentation or submission of falsified documents by either or both parties to the Deed of Transfer and any third person who may be affected by the transfer.
                     </p>
 
-                    <p class="mb-6 text-justify leading-relaxed page-break-avoid indent-10">
+                    <p class="mb-6 text-justify leading-relaxed indent-10">
                         This Certification is hereby issued only for the purpose stated in the application/request for issuance of LTC.
                     </p>
 
-                    <div class="mt-4 mb-4 page-break-avoid indent-10">
+                    <div class="mt-4 mb-4 indent-10">
                         Done and issued this <span class="pdf-today-ordinal font-bold">---</span> at the DAR Provincial Office.
                     </div>
 
-                    <div class="mt-auto w-full page-break-avoid">
-                        <div class="w-full px-10 mt-6 flex justify-end">
-                            <div class="flex flex-col items-center mr-0 mt-1">
+                    <div class="absolute-footer">
+                        <div class="w-full flex justify-end mb-4">
+                            <div class="flex flex-col items-center">
                                 <div class="text-center w-60">
                                     <p class="sys-parpo-name font-bold uppercase underline underline-offset-4 inline-block text-[11pt]">---</p>
                                     <p class="text-[9pt] uppercase mt-1">PARPO II</p>
@@ -427,7 +431,7 @@
                             </div>
                         </div>
 
-                        <div class="w-full px-10 pb-4 mt-6">
+                        <div class="w-full">
                             <div class="flex items-start gap-2 text-[7pt] leading-[1.2] text-left">
                                 <div id="qr-cert" class="w-[55px] h-[55px] shrink-0"></div>
                                 <div class="pt-0.5">
@@ -839,7 +843,7 @@
             const dateStrOrdinal = `${now.getDate()}${getOrdinal(now.getDate())} day of ${monthNames[now.getMonth()]}, ${now.getFullYear()}`;
             document.querySelectorAll('.pdf-today-ordinal').forEach(el => el.innerText = dateStrOrdinal);
 
-            // Hide modal content while processing
+            // Hide the modal temporarily
             document.getElementById('reviewSection').classList.add('hidden');
             document.getElementById('actionButtons').classList.add('hidden');
             document.getElementById('editNotice').classList.add('hidden');
@@ -856,28 +860,44 @@
         }
 
         function generateIntelligentPDF(sourceId, filename, type) {
-            // 1. Show processing overlay to hide the magic from the user
+            // 1. Loading Overlay (Hides the raw generation process from user)
             const overlay = document.createElement('div');
             overlay.id = 'pdf-loading-overlay';
-            overlay.style.cssText = 'position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 99999; display: flex; align-items: center; justify-content: center; flex-direction: column; color: white; font-family: sans-serif;';
-            overlay.innerHTML = '<div class="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-[#D4AF37] mb-4"></div><h2 class="text-2xl font-black tracking-widest uppercase">AI Paging Engine Active</h2><p class="text-gray-300 mt-2">Formatting and calculating page breaks...</p>';
+            overlay.style.cssText = 'position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 999999; display: flex; align-items: center; justify-content: center; flex-direction: column; color: white; font-family: sans-serif;';
+            overlay.innerHTML = '<div class="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-[#D4AF37] mb-4"></div><h2 class="text-2xl font-black tracking-widest uppercase">Rendering Pages...</h2><p class="text-gray-300 mt-2">Calculating page breaks intelligently...</p>';
             document.body.appendChild(overlay);
 
-            // 2. Create visible wrapper for accurate DOM measurement (Crucial fix! html2canvas needs it visible)
+            // 2. Visible Wrapper. html2canvas MUST "see" it. We layer it perfectly behind the overlay.
             const wrapper = document.createElement('div');
             wrapper.id = 'aiPrintWrapper';
-            // Absolute positioned, z-index hides it beneath the overlay, width perfectly locked to 8.5in
-            wrapper.style.cssText = 'position: absolute; top: 0; left: 0; width: 8.5in; z-index: 99998; background: #e5e7eb; padding: 1in;'; 
+            wrapper.style.cssText = 'position: absolute; top: 0; left: 0; width: 8.5in; z-index: 999998; background: #e5e7eb; padding: 20px;';
             document.body.appendChild(wrapper);
 
+            // 3. Extract the Blocks
             const sourceContent = document.querySelector(`#${sourceId} .doc-content`);
-            const children = Array.from(sourceContent.children);
+            const childrenNodes = Array.from(sourceContent.children);
+            let blocks = [];
 
-            // Function to generate fresh, perfect 8.5x13 pages
+            childrenNodes.forEach(child => {
+                if (child.classList.contains('absolute-footer')) return; // Ignore original footer, we append it later
+                
+                // Break down the grid so it can wrap nicely across pages
+                if (child.classList.contains('grid-block')) {
+                    Array.from(child.children).forEach(subChild => {
+                        const clone = subChild.cloneNode(true);
+                        clone.style.marginBottom = '6px';
+                        blocks.push(clone);
+                    });
+                } else {
+                    blocks.push(child.cloneNode(true));
+                }
+            });
+
+            // 4. Page Creator Function
             function createPage() {
                 const page = document.createElement('div');
-                // margin-bottom adds visual separation for html2canvas
-                page.style.cssText = 'position: relative; width: 8.5in; height: 13in; overflow: hidden; background: white; margin-bottom: 20px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);';
+                // Strict 8.5 x 13 bounds. Margins separate it visibly for html2canvas
+                page.style.cssText = 'width: 8.5in; height: 13in; position: relative; background: white; margin-bottom: 20px; overflow: hidden; page-break-after: always;';
                 
                 const bg = document.createElement('img');
                 bg.src = backgroundImageUrl;
@@ -886,36 +906,45 @@
                 page.appendChild(bg);
                 
                 const content = document.createElement('div');
-                // STRICT SAFE ZONES: 1in top/sides, 1.4in bottom to avoid overlapping the black footer line
-                content.style.cssText = 'position: relative; z-index: 10; padding: 1in 1in 1.4in 1in; height: 100%; box-sizing: border-box; display: flex; flex-direction: column; font-family: "Roboto", sans-serif; font-size: 9pt; color: black; line-height: 1.5;';
+                // Safe Zone Padding: 1.4in Top, 1in Sides, 2.5in Bottom (Leaves massive room so it NEVER touches footer)
+                content.style.cssText = 'position: absolute; top: 1.4in; left: 1in; right: 1in; bottom: 2.5in; z-index: 10; display: block; font-family: "Roboto", sans-serif; font-size: 9pt; color: black; line-height: 1.5;';
                 page.appendChild(content);
                 
                 wrapper.appendChild(page);
-                return content;
+                return { page, content };
             }
 
-            let currentContent = createPage();
+            let currentPageObj = createPage();
 
-            // 3. AI Intelligent Chunking Loop
-            for (let i = 0; i < children.length; i++) {
-                const child = children[i].cloneNode(true);
-                currentContent.appendChild(child);
+            // 5. Intelligent Block Appender Loop
+            blocks.forEach(block => {
+                currentPageObj.content.appendChild(block);
                 
-                // MEASUREMENT: If adding this block causes the container to stretch beyond its 13in strict height...
-                if (currentContent.scrollHeight > currentContent.clientHeight) {
-                    currentContent.removeChild(child); // Yank it out of the current page
-                    currentContent = createPage(); // Create Page 2 (or 3, etc.)
-                    currentContent.appendChild(child); // Drop it safely onto the top of the new page
+                // DOM Measurement: Check if appending this block exceeded the physical bounds of the content container
+                if (currentPageObj.content.scrollHeight > currentPageObj.content.clientHeight) {
+                    currentPageObj.content.removeChild(block); // Overflow! Remove it.
+                    currentPageObj = createPage(); // Generate Next Page
+                    currentPageObj.content.appendChild(block); // Put it safely on top of Page 2
                 }
+            });
+
+            // 6. Anchor the Footer onto the LAST page
+            const originalFooter = document.querySelector(`#${sourceId} .absolute-footer`);
+            if (originalFooter) {
+                const footerClone = originalFooter.cloneNode(true);
+                // Force it strictly 1.25in from the physical bottom edge
+                footerClone.style.cssText = 'position: absolute; bottom: 1.25in; left: 0; width: 100%; padding: 0 1in; box-sizing: border-box; z-index: 20; display: block; font-family: "Roboto", sans-serif; color: black; font-size: 9pt; line-height: 1.5;';
+                currentPageObj.page.appendChild(footerClone);
             }
 
-            // 4. Render the perfectly measured pages to PDF
+            // 7. Fire PDF Engine
             const opt = {
                 margin:       0,
                 filename:     filename,
                 image:        { type: 'jpeg', quality: 1.0 },
-                html2canvas:  { scale: 4, useCORS: true, windowWidth: 816 }, // 816px locks html2canvas to exactly 8.5in regardless of user screen size
-                jsPDF:        { unit: 'in', format: [8.5, 13], orientation: 'portrait' }
+                html2canvas:  { scale: 4, useCORS: true },
+                jsPDF:        { unit: 'in', format: [8.5, 13], orientation: 'portrait' },
+                pagebreak:    { mode: ['css', 'legacy'] }
             };
 
             html2pdf().set(opt).from(wrapper).toPdf().get('pdf').then(function(pdf) {
@@ -927,12 +956,11 @@
                     pdf.text(currentSelection.LTC_ID_NUMBER || currentSelection.ltc_no || 'LTC-PENDING', 0.5, 11.5, { angle: 90 });
                 }
             }).save().then(async () => {
+                // Post-processing UI Cleanup
                 if (type === 'cert' && currentSelection.status === 'REVIEWED') {
                     await supabaseClient.from('land_records').update({ status: 'PRINTED LTC', updated_at: new Date() }).eq('id', currentSelection.id);
                     fetchClearanceData();
                 }
-                
-                // 5. Cleanup the hidden magic
                 document.body.removeChild(wrapper);
                 document.body.removeChild(overlay);
                 closeReview(); 
