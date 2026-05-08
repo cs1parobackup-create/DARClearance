@@ -31,43 +31,7 @@
             }
         }
 
-        .doc-print-area { 
-            position: relative;
-            z-index: 1; 
-            font-family: 'Roboto', sans-serif; 
-            font-size: 9pt; 
-            color: black; 
-            line-height: 1.5; 
-            width: 8.5in; 
-            min-height: 13in;
-            margin: 0 auto; 
-            padding: 0;
-            overflow: hidden;
-            background: transparent;
-            box-sizing: border-box;
-        }
-
-        .print-bg {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 1; 
-            object-fit: fill;
-        }
-
-        .doc-content {
-            position: relative;
-            z-index: 10; 
-            padding: 1in; 
-            width: 100%;
-            height: 100%;
-            box-sizing: border-box;
-            background: transparent;
-            display: flex;
-            flex-direction: column;
-        }
+        .doc-print-area { display: none; }
         
         .data-value { 
             font-weight: bold; 
@@ -251,14 +215,14 @@
 
             <div id="docRecommendation" class="doc-print-area mx-auto hidden pt-8">
                 <div class="doc-content">
-                    <div class="text-right font-bold mb-4 mr-10 mt-[0.1in]" id="rec-header-id">LTC-PENDING</div>
+                    <div class="text-right font-bold mb-4 mr-10 mt-[0.1in] page-break-avoid" id="rec-header-id">LTC-PENDING</div>
                     
-                    <div class="text-center mb-6">
+                    <div class="text-center mb-6 page-break-avoid">
                         <div class="font-black text-[16pt] tracking-wide">RECOMMENDATION</div>
                         <div class="text-[10pt]">(Land Transfer Clearance)</div>
                     </div>
                     
-                    <p class="mb-4 text-justify indent-10">
+                    <p class="mb-4 text-justify indent-10 page-break-avoid">
                         This is to recommend that the application/request for Issuance of Land Transfer Clearance (LTC) be <span class="font-bold">APPROVED</span> on the parcel of agricultural land with the following pertinent information, to wit;
                     </p>
 
@@ -313,16 +277,16 @@
                         </div>
                     </div>
 
-                    <div class="flex items-end ml-10 mt-5 mb-4">
+                    <div class="flex items-end ml-10 mt-5 mb-4 page-break-avoid">
                         <div class="italic w-[220px] shrink-0">is hereby:</div>
                         <div class="flex-1"><span class="font-bold text-[11pt] border-b-[1.5px] border-black pb-0.5">APPROVED</span></div>
                     </div>
 
-                    <p class="mb-4 text-justify indent-10">
+                    <p class="mb-4 text-justify indent-10 page-break-avoid">
                         The applicant submitted all the necessary requirements for the issuance of Land Transfer Clearance in compliance with DAR Administrative Order No. 4, series of 2021.
                     </p>
 
-                    <div class="mt-4 mb-4 indent-10">
+                    <div class="mt-4 mb-4 indent-10 page-break-avoid">
                         Done this <span class="pdf-today-ordinal font-bold">---</span>. Naga City, Camarines Sur.
                     </div>
 
@@ -344,7 +308,7 @@
                         </div>
                     </div>
 
-                    <div class="w-full mt-4 page-break-avoid">
+                    <div class="w-full mt-4 page-break-avoid qr-distribution-block">
                         <div class="flex items-start gap-2 text-[7pt] leading-[1.2] text-left">
                             <div id="qr-rec" class="w-[55px] h-[55px] shrink-0"></div>
                             <div class="pt-0.5">
@@ -363,7 +327,7 @@
             <div id="docCertification" class="doc-print-area mx-auto hidden pt-8">
                 <div class="doc-content">
                     
-                    <div class="relative w-full mb-6">
+                    <div class="relative w-full mb-6 page-break-avoid">
                         <div class="absolute right-0 top-0 text-right font-bold flex flex-col items-end">
                             <span class="font-bold text-[10pt]">LTC Form No. 5</span>
                             <span class="font-bold text-[10pt] mt-4 underline" id="cert-header-id">LTC-PENDING</span>
@@ -376,12 +340,12 @@
                         </div>
                     </div>
 
-                    <div class="text-center mb-6 mt-8">
+                    <div class="text-center mb-6 mt-8 page-break-avoid">
                         <div class="font-black text-[16pt] tracking-wide">CERTIFICATION</div>
                         <div class="text-[10pt]">(Land Transfer Clearance)</div>
                     </div>
                     
-                    <p class="mb-4 text-justify indent-10">
+                    <p class="mb-4 text-justify indent-10 page-break-avoid">
                         This is to certify that the application/request for Issuance of Land Transfer Clearance (LTC) filed to this Office with the following pertinent information, to wit:
                     </p>
 
@@ -436,28 +400,28 @@
                         </div>
                     </div>
 
-                    <div class="flex items-end ml-10 mt-5 mb-4">
+                    <div class="flex items-end ml-10 mt-5 mb-4 page-break-avoid">
                         <div class="italic w-[220px] shrink-0">is hereby:</div>
                         <div class="flex-1"><span class="font-bold text-[11pt] border-b-[1.5px] border-black pb-0.5">APPROVED</span></div>
                     </div>
 
-                    <p class="mb-4 text-justify leading-relaxed indent-10">
+                    <p class="mb-4 text-justify leading-relaxed indent-10 page-break-avoid">
                         based on the Attestation of the CARPO-LTS/FOD and from the report and recommendation of the Chief Legal Division/Authorized Legal Officer pursuant to Administrative Order (AO) No. 4 Series of 2021.
                     </p>
 
-                    <p class="mb-4 text-justify leading-relaxed indent-10">
+                    <p class="mb-4 text-justify leading-relaxed indent-10 page-break-avoid">
                         Any actual change in the use of the land and/or development over the subject land, requires a prior Order of Conversion or Exemption/Exclusion from the Office of the DAR Regional Director.
                     </p>
 
-                    <p class="mb-4 text-justify leading-relaxed indent-10">
+                    <p class="mb-4 text-justify leading-relaxed indent-10 page-break-avoid">
                         This Office reserves the right to revoke this Certification of LTC in case of findings of misrepresentation or submission of falsified documents by either or both parties to the Deed of Transfer and any third person who may be affected by the transfer.
                     </p>
 
-                    <p class="mb-6 text-justify leading-relaxed indent-10">
+                    <p class="mb-6 text-justify leading-relaxed indent-10 page-break-avoid">
                         This Certification is hereby issued only for the purpose stated in the application/request for issuance of LTC.
                     </p>
 
-                    <div class="mt-4 mb-4 indent-10">
+                    <div class="mt-4 mb-4 indent-10 page-break-avoid">
                         Done and issued this <span class="pdf-today-ordinal font-bold">---</span> at the DAR Provincial Office.
                     </div>
 
@@ -470,7 +434,7 @@
                         </div>
                     </div>
 
-                    <div class="w-full mt-4 page-break-avoid">
+                    <div class="w-full mt-4 page-break-avoid qr-distribution-block">
                         <div class="flex items-start gap-2 text-[7pt] leading-[1.2] text-left">
                             <div id="qr-cert" class="w-[55px] h-[55px] shrink-0"></div>
                             <div class="pt-0.5">
@@ -645,8 +609,8 @@
                     }
                     actions += `</div>`;
 
-                    // STRATEGY 8: Display legalOfficer variable
-                    let encodedBy = item.legalOfficer || item.legalofficer || item.encoded_by || item.created_by || '---'; 
+                    // STRATEGY 2: Update Encoded by to legalOfficer
+                    let encodedBy = item.legalOfficer || item.legalofficer || '---'; 
 
                     if (query !== '' || displayCount < 30) {
                         tbody.innerHTML += `
@@ -764,7 +728,7 @@
             
             if(newRecordData.ltc_no !== undefined) delete newRecordData.ltc_no;
 
-            // Clear LTC number so user can edit it manually in the Review form later.
+            // Strategy 1: Clear the LTC Number so it can be typed in the review modal
             newRecordData.LTC_ID_NUMBER = "";
             newRecordData.status = 'RECEIVED'; 
 
@@ -827,7 +791,7 @@
             document.getElementById('btnNext').className = currentNavIndex >= currentNavList.length - 1 ? 'bg-gray-100 text-gray-400 px-4 py-2 rounded text-xs font-black uppercase cursor-not-allowed' : 'bg-gray-200 hover:bg-gray-300 px-4 py-2 rounded text-xs font-black uppercase transition-colors text-gray-800';
 
             const dbToHtmlMap = {
-                'LTC_ID_NUMBER': 'LTC_ID_NUMBER', // Included per Instruction 7
+                'LTC_ID_NUMBER': 'LTC_ID_NUMBER',
                 'lot_no': 'lot',
                 'owner_name': 'owner',
                 'registered_under': 'tct',
@@ -889,7 +853,7 @@
 
             document.getElementById('reviewModal').classList.remove('hidden');
 
-            let encoderName = currentSelection.legalOfficer || currentSelection.legalofficer || currentSelection.encoded_by || currentSelection.created_by || '---';
+            let encoderName = currentSelection.legalOfficer || currentSelection.legalofficer || '---';
             document.querySelectorAll('.preparedByName').forEach(el => el.innerText = encoderName);
             document.querySelectorAll('.preparedByPosition').forEach(el => el.innerText = 'Fetching...');
             
@@ -964,10 +928,10 @@
 
             function createPage() {
                 const page = document.createElement('div');
-                // Strict 8.5 x 13 boundary
+                // Strict 8.5x13 pages
                 page.style.cssText = 'width: 8.5in; height: 13in; min-height: 13in; max-height: 13in; position: relative; background: white; margin-bottom: 20px; overflow: hidden; flex-shrink: 0;';
                 
-                // STRATEGY 4: Fixed background layer. Unaffected by the content inside.
+                // STRATEGY 8: Background image fixed to the page block.
                 const bg = document.createElement('img');
                 bg.src = backgroundImageUrl;
                 bg.crossOrigin = "anonymous";
@@ -975,8 +939,8 @@
                 page.appendChild(bg);
                 
                 const content = document.createElement('div');
-                // STRATEGY 1 & 2: 1.15" fixed margin bounding box. QR code will naturally render inside this box.
-                content.style.cssText = 'position: absolute; top: 1.15in; left: 1in; right: 1in; bottom: 1.15in; z-index: 10; display: block; font-family: "Roboto", sans-serif; font-size: 9pt; color: black; line-height: 1.5; overflow: hidden;';
+                // STRATEGY 3: 1.15in margins set top and bottom creating a 10.7in safe zone.
+                content.style.cssText = 'position: absolute; top: 1.15in; left: 1in; right: 1in; height: 10.7in; max-height: 10.7in; z-index: 10; display: flex; flex-direction: column; font-family: "Roboto", sans-serif; font-size: 9pt; color: black; line-height: 1.5; overflow: hidden;';
                 page.appendChild(content);
                 
                 wrapper.appendChild(page);
@@ -989,7 +953,7 @@
             blocks.forEach(block => {
                 currentContent.appendChild(block);
                 
-                // STRATEGY 3: Next page logic if height exceeds the physical bounding box.
+                // STRATEGY 6: Text hits the margin boundary -> automatic next page
                 if (currentContent.scrollHeight > currentContent.clientHeight) {
                     currentContent.removeChild(block); 
                     currentContent = createPage(); 
@@ -1005,7 +969,7 @@
                 });
             });
 
-            // STRATEGY 9: Automatically remove blank pages
+            // STRATEGY 7: Blank page removal
             const lastPage = pagesArray[pagesArray.length - 1];
             if (lastPage && lastPage.contentElement.children.length === 0) {
                 wrapper.removeChild(lastPage.pageElement);
