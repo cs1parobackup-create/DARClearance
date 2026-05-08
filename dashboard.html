@@ -63,7 +63,7 @@
 </head>
 <body class="flex h-screen overflow-hidden text-[#1F2937]">
 
-    <nav class="bg-[#003811] md:w-64 flex flex-col text-white flex-shrink-0 shadow-xl z-20">
+    <nav class="bg-[#003811] md:w-64 flex flex-col text-white flex-shrink-0 shadow-xl z-20 no-print">
         <div class="p-6 border-b border-[#006400]">
             <h2 class="text-xl font-bold text-[#D4AF37]">DARPO-CS</h2>
             <p id="userRoleBadge" class="text-[10px] text-gray-300 uppercase tracking-widest mt-1 font-bold">---</p>
@@ -239,54 +239,54 @@
                         This is to recommend that the application/request for Issuance of Land Transfer Clearance (LTC) be <span class="font-bold">APPROVED</span> on the parcel of agricultural land with the following pertinent information, to wit;
                     </p>
 
-                    <div class="mb-4 ml-10 space-y-1.5 grid-block">
-                        <div class="flex items-end mb-1.5">
-                            <div class="italic w-[220px] shrink-0">Lot No/s</div> <div class="data-value flex-1" id="rec-lot">---</div>
+                    <div class="mb-4 ml-16 space-y-1 grid-block">
+                        <div class="flex items-end mb-1">
+                            <div class="italic w-[220px] shrink-0">Lot No/s</div> <div class="flex-1 text-left"><span class="data-value" id="rec-lot">---</span></div>
                         </div>
-                        <div class="flex items-end mb-1.5">
-                            <div class="italic w-[220px] shrink-0">In the Name of</div> <div class="data-value flex-1" id="rec-owner">---</div>
+                        <div class="flex items-end mb-1">
+                            <div class="italic w-[220px] shrink-0">In the Name of</div> <div class="flex-1 text-left"><span class="data-value" id="rec-owner">---</span></div>
                         </div>
-                        <div class="flex items-end mb-1.5">
-                            <div class="italic w-[220px] shrink-0">Registered under</div> <div class="data-value flex-1" id="rec-tct">---</div>
+                        <div class="flex items-end mb-1">
+                            <div class="italic w-[220px] shrink-0">Registered under</div> <div class="flex-1 text-left"><span class="data-value" id="rec-tct">---</span></div>
                         </div>
-                        <div class="flex items-end mb-1.5">
-                            <div class="italic w-[220px] shrink-0">With an area (in has.) of</div> <div class="data-value flex-1" id="rec-area">---</div>
+                        <div class="flex items-end mb-1">
+                            <div class="italic w-[220px] shrink-0">With an area (in has.) of</div> <div class="flex-1 text-left"><span class="data-value" id="rec-area">---</span></div>
                         </div>
-                        <div class="flex items-end mb-1.5">
-                            <div class="italic w-[220px] shrink-0">Declared under T.D. No.</div> <div class="data-value flex-1" id="rec-td">---</div>
+                        <div class="flex items-end mb-1">
+                            <div class="italic w-[220px] shrink-0">Declared under T.D. No.</div> <div class="flex-1 text-left"><span class="data-value" id="rec-td">---</span></div>
                         </div>
-                        <div class="flex items-end mb-1.5">
-                            <div class="italic w-[220px] shrink-0">Located at</div> <div class="data-value flex-1" id="rec-location">---</div>
+                        <div class="flex items-end mb-1">
+                            <div class="italic w-[220px] shrink-0">Located at</div> <div class="flex-1 text-left"><span class="data-value" id="rec-location">---</span></div>
                         </div>
-                        <div class="flex items-end mb-1.5">
-                            <div class="italic w-[220px] shrink-0">Subjected of the Deed of</div> <div class="data-value flex-1" id="rec-deed">---</div>
+                        <div class="flex items-end mb-1">
+                            <div class="italic w-[220px] shrink-0">Subjected of the Deed of</div> <div class="flex-1 text-left"><span class="data-value" id="rec-deed">---</span></div>
                         </div>
-                        <div class="flex items-end mb-1.5">
-                            <div class="italic w-[220px] shrink-0">Executed by</div> <div class="data-value flex-1" id="rec-executed">---</div>
+                        <div class="flex items-end mb-1">
+                            <div class="italic w-[220px] shrink-0">Executed by</div> <div class="flex-1 text-left"><span class="data-value" id="rec-executed">---</span></div>
                         </div>
-                        <div class="flex items-end mb-1.5">
-                            <div class="italic w-[220px] shrink-0">In favor of</div> <div class="data-value flex-1" id="rec-favor">---</div>
+                        <div class="flex items-end mb-1">
+                            <div class="italic w-[220px] shrink-0">In favor of</div> <div class="flex-1 text-left"><span class="data-value" id="rec-favor">---</span></div>
                         </div>
-                        <div class="flex items-end mb-1.5">
+                        <div class="flex items-end mb-1">
                             <div class="italic w-[220px] shrink-0">Under Doc. No.</div> 
-                            <div class="flex items-end gap-2 flex-1">
+                            <div class="flex items-end gap-2 flex-1 text-left">
                                 <span class="data-value text-center" id="rec-doc">---</span>
                                 <span class="italic ml-2">Page No.</span> <span class="data-value text-center" id="rec-page">---</span>
                                 <span class="italic ml-2">Book No.</span> <span class="data-value text-center" id="rec-book">---</span>
                             </div>
                         </div>
-                        <div class="flex items-end mb-1.5">
+                        <div class="flex items-end mb-1">
                             <div class="italic w-[220px] shrink-0">Series of</div> 
-                            <div class="flex items-end gap-2 flex-1">
+                            <div class="flex items-end gap-2 flex-1 text-left">
                                 <span class="data-value text-center" id="rec-series">---</span>
-                                <span class="italic ml-4">Dated</span> <span class="data-value text-center flex-1" id="rec-dated">---</span>
+                                <span class="italic ml-4">Dated</span> <span class="data-value text-center" id="rec-dated">---</span>
                             </div>
                         </div>
-                        <div class="flex items-end mb-1.5">
-                            <div class="italic w-[220px] shrink-0">of Notary Public</div> <div class="data-value flex-1" id="rec-notary">---</div>
+                        <div class="flex items-end mb-1">
+                            <div class="italic w-[220px] shrink-0">of Notary Public</div> <div class="flex-1 text-left"><span class="data-value" id="rec-notary">---</span></div>
                         </div>
-                        <div class="flex items-end mb-1.5">
-                            <div class="italic w-[220px] shrink-0 text-[9pt]">of a retention area of vendor/transferor</div> <div class="data-value flex-1" id="rec-retention">---</div>
+                        <div class="flex items-end mb-1">
+                            <div class="italic w-[220px] shrink-0 text-[9pt]">of a retention area of vendor/transferor</div> <div class="flex-1 text-left"><span class="data-value" id="rec-retention">---</span></div>
                         </div>
                     </div>
 
@@ -295,11 +295,11 @@
                         <div class="flex-1"><span class="font-bold text-[11pt] border-b-[1.5px] border-black pb-0.5">APPROVED</span></div>
                     </div>
 
-                    <p class="mb-4 text-justify indent-10 page-break-avoid">
+                    <p class="mb-4 text-justify leading-relaxed page-break-avoid indent-10">
                         The applicant submitted all the necessary requirements for the issuance of Land Transfer Clearance in compliance with DAR Administrative Order No. 4, series of 2021.
                     </p>
 
-                    <div class="mt-4 mb-4 indent-10 page-break-avoid">
+                    <div class="mt-4 mb-4 page-break-avoid indent-10">
                         Done this <span class="pdf-today-ordinal font-bold">---</span>. Naga City, Camarines Sur.
                     </div>
 
@@ -353,7 +353,7 @@
                         </div>
                     </div>
 
-                    <div class="text-center mb-6 mt-2 page-break-avoid">
+                    <div class="text-center mb-4 mt-2 page-break-avoid">
                         <div class="font-black text-[16pt] tracking-wide">CERTIFICATION</div>
                         <div class="text-[10pt]">(Land Transfer Clearance)</div>
                     </div>
@@ -362,54 +362,54 @@
                         This is to certify that the application/request for Issuance of Land Transfer Clearance (LTC) filed to this Office with the following pertinent information, to wit:
                     </p>
 
-                    <div class="mb-4 ml-10 space-y-1.5 grid-block">
-                        <div class="flex items-end mb-1.5">
-                            <div class="italic w-[220px] shrink-0">Lot No/s</div> <div class="data-value flex-1" id="cert-lot">---</div>
+                    <div class="mb-4 ml-16 space-y-1 grid-block">
+                        <div class="flex items-end mb-1">
+                            <div class="italic w-[220px] shrink-0">Lot No/s</div> <div class="flex-1 text-left"><span class="data-value" id="cert-lot">---</span></div>
                         </div>
-                        <div class="flex items-end mb-1.5">
-                            <div class="italic w-[220px] shrink-0">In the Name of</div> <div class="data-value flex-1" id="cert-owner">---</div>
+                        <div class="flex items-end mb-1">
+                            <div class="italic w-[220px] shrink-0">In the Name of</div> <div class="flex-1 text-left"><span class="data-value" id="cert-owner">---</span></div>
                         </div>
-                        <div class="flex items-end mb-1.5">
-                            <div class="italic w-[220px] shrink-0">Registered under</div> <div class="data-value flex-1" id="cert-tct">---</div>
+                        <div class="flex items-end mb-1">
+                            <div class="italic w-[220px] shrink-0">Registered under</div> <div class="flex-1 text-left"><span class="data-value" id="cert-tct">---</span></div>
                         </div>
-                        <div class="flex items-end mb-1.5">
-                            <div class="italic w-[220px] shrink-0">With an area (in has.) of</div> <div class="data-value flex-1" id="cert-area">---</div>
+                        <div class="flex items-end mb-1">
+                            <div class="italic w-[220px] shrink-0">With an area (in has.) of</div> <div class="flex-1 text-left"><span class="data-value" id="cert-area">---</span></div>
                         </div>
-                        <div class="flex items-end mb-1.5">
-                            <div class="italic w-[220px] shrink-0">Declared under T.D. No.</div> <div class="data-value flex-1" id="cert-td">---</div>
+                        <div class="flex items-end mb-1">
+                            <div class="italic w-[220px] shrink-0">Declared under T.D. No.</div> <div class="flex-1 text-left"><span class="data-value" id="cert-td">---</span></div>
                         </div>
-                        <div class="flex items-end mb-1.5">
-                            <div class="italic w-[220px] shrink-0">Located at</div> <div class="data-value flex-1" id="cert-location">---</div>
+                        <div class="flex items-end mb-1">
+                            <div class="italic w-[220px] shrink-0">Located at</div> <div class="flex-1 text-left"><span class="data-value" id="cert-location">---</span></div>
                         </div>
-                        <div class="flex items-end mb-1.5">
-                            <div class="italic w-[220px] shrink-0">Subjected of the Deed of</div> <div class="data-value flex-1" id="cert-deed">---</div>
+                        <div class="flex items-end mb-1">
+                            <div class="italic w-[220px] shrink-0">Subjected of the Deed of</div> <div class="flex-1 text-left"><span class="data-value" id="cert-deed">---</span></div>
                         </div>
-                        <div class="flex items-end mb-1.5">
-                            <div class="italic w-[220px] shrink-0">Executed by</div> <div class="data-value flex-1" id="cert-executed">---</div>
+                        <div class="flex items-end mb-1">
+                            <div class="italic w-[220px] shrink-0">Executed by</div> <div class="flex-1 text-left"><span class="data-value" id="cert-executed">---</span></div>
                         </div>
-                        <div class="flex items-end mb-1.5">
-                            <div class="italic w-[220px] shrink-0">In favor of</div> <div class="data-value flex-1" id="cert-favor">---</div>
+                        <div class="flex items-end mb-1">
+                            <div class="italic w-[220px] shrink-0">In favor of</div> <div class="flex-1 text-left"><span class="data-value" id="cert-favor">---</span></div>
                         </div>
-                        <div class="flex items-end mb-1.5">
+                        <div class="flex items-end mb-1">
                             <div class="italic w-[220px] shrink-0">Under Doc. No.</div> 
-                            <div class="flex items-end gap-2 flex-1">
+                            <div class="flex items-end gap-2 flex-1 text-left">
                                 <span class="data-value text-center" id="cert-doc">---</span>
                                 <span class="italic ml-2">Page No.</span> <span class="data-value text-center" id="cert-page">---</span>
                                 <span class="italic ml-2">Book No.</span> <span class="data-value text-center" id="cert-book">---</span>
                             </div>
                         </div>
-                        <div class="flex items-end mb-1.5">
+                        <div class="flex items-end mb-1">
                             <div class="italic w-[220px] shrink-0">Series of</div> 
-                            <div class="flex items-end gap-2 flex-1">
+                            <div class="flex items-end gap-2 flex-1 text-left">
                                 <span class="data-value text-center" id="cert-series">---</span>
-                                <span class="italic ml-4">Dated</span> <span class="data-value text-center flex-1" id="cert-dated">---</span>
+                                <span class="italic ml-4">Dated</span> <span class="data-value text-center" id="cert-dated">---</span>
                             </div>
                         </div>
-                        <div class="flex items-end mb-1.5">
-                            <div class="italic w-[220px] shrink-0">of Notary Public</div> <div class="data-value flex-1" id="cert-notary">---</div>
+                        <div class="flex items-end mb-1">
+                            <div class="italic w-[220px] shrink-0">of Notary Public</div> <div class="flex-1 text-left"><span class="data-value" id="cert-notary">---</span></div>
                         </div>
-                        <div class="flex items-end mb-1.5">
-                            <div class="italic w-[220px] shrink-0 text-[9pt]">of a retention area of vendor/transferor</div> <div class="data-value flex-1" id="cert-retention">---</div>
+                        <div class="flex items-end mb-1">
+                            <div class="italic w-[220px] shrink-0 text-[9pt]">of a retention area of vendor/transferor</div> <div class="flex-1 text-left"><span class="data-value" id="cert-retention">---</span></div>
                         </div>
                     </div>
 
@@ -985,7 +985,7 @@
                 page.appendChild(bg);
                 
                 const content = document.createElement('div');
-                content.style.cssText = 'position: absolute; top: 1.15in; left: 1in; right: 1in; bottom: 1.15in; z-index: 10; display: flex; flex-direction: column; font-family: "Roboto", sans-serif; font-size: 9pt; color: black; line-height: 1.5; overflow: hidden;';
+                content.style.cssText = 'position: absolute; top: 1.15in; left: 1in; right: 1in; height: 10.7in; max-height: 10.7in; z-index: 10; display: flex; flex-direction: column; font-family: "Roboto", sans-serif; font-size: 9pt; color: black; line-height: 1.5; overflow: hidden;';
                 page.appendChild(content);
                 
                 wrapper.appendChild(page);
@@ -1013,12 +1013,6 @@
                 });
             });
 
-            const lastPage = pagesArray[pagesArray.length - 1];
-            if (lastPage && lastPage.contentElement.textContent.trim() === '') {
-                wrapper.removeChild(lastPage.pageElement);
-                pagesArray.pop();
-            }
-
             const opt = {
                 margin:       0,
                 filename:     filename,
@@ -1029,6 +1023,14 @@
 
             html2pdf().set(opt).from(wrapper).toPdf().get('pdf').then(function(pdf) {
                 var totalPages = pdf.internal.getNumberOfPages();
+                
+                // CRITICAL FIX: Loop strictly enforces that any page generated by html2pdf
+                // that exceeds the number of actual DOM pages we created gets deleted immediately.
+                while(totalPages > pagesArray.length) {
+                    pdf.deletePage(totalPages);
+                    totalPages--;
+                }
+
                 for (var i = 1; i <= totalPages; i++) {
                     pdf.setPage(i);
                     pdf.setFontSize(10);
