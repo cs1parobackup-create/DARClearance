@@ -220,6 +220,7 @@
                 <div class="doc-content">
                     <div class="relative w-full mb-6 page-break-avoid">
                         <div class="absolute right-0 top-0 text-right font-bold flex flex-col items-end">
+                            <span class="font-bold text-[10pt]">LTC Form No. 5</span>
                             <span class="font-bold text-[10pt] mt-4 underline" id="rec-header-id-top">LTC-PENDING</span>
                         </div>
                         <div class="text-center text-[10pt] leading-snug font-bold uppercase">
@@ -230,7 +231,7 @@
                         </div>
                     </div>
                     
-                    <div class="text-center mb-6 mt-4 page-break-avoid">
+                    <div class="text-center mb-4 mt-2 page-break-avoid">
                         <div class="font-black text-[16pt] tracking-wide">RECOMMENDATION</div>
                         <div class="text-[10pt]">(Land Transfer Clearance)</div>
                     </div>
@@ -605,9 +606,9 @@
                     
                     let st = (item.status || 'RECEIVED').trim().toUpperCase();
 
-                    // Apply exact instruction: RECORDS could only view DAR CLEARANCE FORWARDED TO THEM
-                    if (isRecords && st !== 'FORWARDED TO RECORDS') {
-                        return; // Skips this iteration entirely for the Records role
+                    // STRICT FILTER FOR RECORDS ROLE
+                    if (isRecords && st !== 'FORWARDED TO RECORDS' && st !== 'RELEASED TO CLIENT' && st !== 'RELEASED - CLIENT') {
+                        return; // Skips rendering this row entirely
                     }
                     
                     if (st === 'RECEIVED' || st === 'RECEIVED - LEGAL') { stats.rec++; st = 'RECEIVED'; }
@@ -625,15 +626,17 @@
 
                     let actions = '<div class="flex flex-col gap-1 w-full max-w-[120px] mx-auto">';
                     
+                    let isOwner = (item.legalOfficer === userFullName || item.legalofficer === userFullName || item.encoded_by === userFullName || item.created_by === userFullName);
+
                     if (!isEncoder) {
                         if (st === 'RECEIVED') {
-                            if (isChief || isLegal) {
+                            if (isChief || (isLegal && isOwner)) {
                                 actions += `<button onclick='showReview("${item.id}", "REVIEW")' class="bg-[#003811] text-white w-full py-1.5 rounded shadow text-[10px] font-bold tracking-wide hover:bg-black uppercase transition-colors text-center">Review</button>`;
                                 actions += `<button onclick='createVariant("${item.id}")' class="bg-white text-gray-800 border border-gray-300 w-full py-1 mt-1 rounded shadow text-[9px] font-bold hover:bg-gray-100 uppercase transition-colors text-center">+ Variant</button>`;
                                 actions += `<button onclick='deleteRecord("${item.id}")' class="bg-red-600 text-white w-full py-1 mt-1 rounded shadow text-[9px] font-bold hover:bg-red-800 uppercase transition-colors text-center">Delete</button>`;
                             }
                         } else if (st === 'REVIEWED') {
-                            if (isChief || isLegal) {
+                            if (isChief || (isLegal && isOwner)) {
                                 actions += `<button onclick='openPrint("${item.id}", "rec")' class="bg-[#8b5cf6] text-white w-full py-1.5 rounded shadow text-[9px] font-black tracking-wide hover:bg-purple-800 uppercase transition-colors text-center">Recommendation</button>`;
                                 actions += `<button onclick='openPrint("${item.id}", "cert")' class="bg-[#d97706] text-white w-full py-1.5 rounded shadow text-[9px] font-black tracking-wide hover:bg-amber-700 uppercase transition-colors text-center">Certification</button>`;
                                 actions += `<button onclick='createVariant("${item.id}")' class="bg-white text-gray-800 border border-gray-300 w-full py-1 rounded shadow text-[9px] font-bold hover:bg-gray-100 uppercase transition-colors text-center mt-1">+ Variant</button>`;
@@ -644,7 +647,7 @@
                                 actions += `<button onclick='openPrint("${item.id}", "rec")' class="bg-[#8b5cf6] text-white w-full py-1.5 rounded shadow text-[9px] font-black tracking-wide hover:bg-purple-800 uppercase transition-colors text-center">Recommendation</button>`;
                                 actions += `<button onclick='openPrint("${item.id}", "cert")' class="bg-[#d97706] text-white w-full py-1.5 rounded shadow text-[9px] font-black tracking-wide hover:bg-amber-700 uppercase transition-colors text-center">Certification</button>`;
                                 actions += `<button onclick='processToNext("${item.id}", "SIGNED BY PARPO", "${st}")' class="bg-cyan-600 text-white w-full py-1.5 rounded shadow text-[10px] font-bold hover:bg-cyan-700 uppercase transition-colors text-center mt-1">Sign</button>`;
-                            } else if (isChief || isLegal) {
+                            } else if (isChief || (isLegal && isOwner)) {
                                 actions += `<button onclick='openPrint("${item.id}", "rec")' class="bg-[#8b5cf6] text-white w-full py-1.5 rounded shadow text-[9px] font-black tracking-wide hover:bg-purple-800 uppercase transition-colors text-center">Recommendation</button>`;
                                 actions += `<button onclick='openPrint("${item.id}", "cert")' class="bg-[#d97706] text-white w-full py-1.5 rounded shadow text-[9px] font-black tracking-wide hover:bg-amber-700 uppercase transition-colors text-center">Certification</button>`;
                             }
@@ -653,24 +656,25 @@
                                 actions += `<button onclick='processToNext("${item.id}", "RETURNED TO LEGAL", "${st}")' class="bg-cyan-600 text-white w-full py-1.5 rounded shadow text-[10px] font-bold hover:bg-cyan-700 uppercase transition-colors text-center">Return to Legal</button>`;
                             }
                         } else if (st === 'RETURNED TO LEGAL') {
-                            if (isChief || isLegal) {
+                            if (isChief || (isLegal && isOwner)) {
                                 actions += `<button onclick='openPrint("${item.id}", "rec")' class="bg-[#8b5cf6] text-white w-full py-1.5 rounded shadow text-[9px] font-black tracking-wide hover:bg-purple-800 uppercase transition-colors text-center mb-1">Recommendation</button>`;
                                 actions += `<button onclick='openPrint("${item.id}", "cert")' class="bg-[#d97706] text-white w-full py-1.5 rounded shadow text-[9px] font-black tracking-wide hover:bg-amber-700 uppercase transition-colors text-center mb-1">Certification</button>`;
                                 actions += `<button onclick='processToNext("${item.id}", "FORWARDED TO RECORDS", "${st}")' class="bg-cyan-600 text-white w-full py-1.5 rounded shadow text-[10px] font-bold hover:bg-cyan-700 uppercase transition-colors text-center">TO RECORDS</button>`;
                             }
-                        } else if (st === 'FORWARDED TO RECORDS' || st === 'RELEASED TO CLIENT') {
-                            if (st === 'FORWARDED TO RECORDS' && (isRecords || isChief)) {
+                        } else if (st === 'FORWARDED TO RECORDS') {
+                            if (isRecords) {
                                 actions += `<button onclick='processToNext("${item.id}", "RELEASED TO CLIENT", "${st}")' class="bg-cyan-600 text-white w-full py-1.5 rounded shadow text-[10px] font-bold hover:bg-cyan-700 uppercase transition-colors text-center mb-1">Release</button>`;
                             }
-                            if (st === 'RELEASED TO CLIENT' && (isChief || isLegal)) {
+                        } else if (st === 'RELEASED TO CLIENT' || st === 'RELEASED - CLIENT') {
+                            if (isChief || (isLegal && isOwner)) {
                                 actions += `<button onclick='showReview("${item.id}", "CORRECTION")' class="bg-yellow-500 text-white w-full py-1.5 rounded shadow text-[10px] font-bold hover:bg-yellow-600 uppercase transition-colors text-center mb-1">Correction</button>`;
                                 actions += `<button onclick='showReview("${item.id}", "RE-ISSUANCE")' class="bg-blue-500 text-white w-full py-1.5 rounded shadow text-[10px] font-bold hover:bg-blue-600 uppercase transition-colors text-center mb-1">Re-Issue</button>`;
                             }
-                            if (isParpo) {
+                            if (isParpo || isRecords) {
                                 actions += `<button onclick='showReview("${item.id}", "VIEW_CERT")' class="bg-gray-500 text-white w-full py-1.5 rounded shadow text-[10px] font-bold hover:bg-gray-600 uppercase transition-colors text-center mb-1">View</button>`;
                             }
                         } else if (st === 'DISAPPROVED') {
-                            if (isChief || isLegal) {
+                            if (isChief || (isLegal && isOwner)) {
                                 actions += `<button onclick='showReview("${item.id}", "UPDATE")' class="bg-blue-600 text-white w-full py-1.5 rounded shadow text-[10px] font-bold hover:bg-blue-700 uppercase transition-colors text-center mb-1">Update</button>`;
                             }
                         }
@@ -851,6 +855,14 @@
                         val !== null && String(val).toLowerCase().includes(query)
                     );
                 }
+                
+                let userRole = currentUser.role.toUpperCase();
+                let isRecords = userRole.includes('RECORDS');
+                let st = (item.status || 'RECEIVED').trim().toUpperCase();
+                if (isRecords && st !== 'FORWARDED TO RECORDS' && st !== 'RELEASED TO CLIENT' && st !== 'RELEASED - CLIENT') {
+                    return false;
+                }
+
                 return matchesSearch;
             });
             currentNavIndex = currentNavList.findIndex(r => r.id === id);
