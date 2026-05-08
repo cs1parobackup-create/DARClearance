@@ -15,65 +15,19 @@
         body { font-family: 'Segoe UI', sans-serif; background-color: #F3F4F6; font-size: 13px; color: #1F2937; }
         .compact-table td, .compact-table th { padding: 0.5rem 1rem !important; }
 
-        /* PRINT CONFIGURATION: Legal/Folio (8.5 x 13) */
+        /* PRINT CONFIGURATION */
         @media print {
             @page { size: 8.5in 13in; margin: 0; }
             body { background: white !important; }
             nav, header, .no-print, #actionButtons, #remarksSection, .modal-header-actions { display: none !important; }
             #reviewModal { position: static; display: block; background: transparent; padding: 0; box-shadow: none; }
-            
-            .doc-print-area { 
-                visibility: visible !important;
-                display: block !important;
-                width: 8.5in !important; 
-                height: 13in !important;
-                max-height: 13in !important;
-                padding: 0 !important;
-                margin: 0 !important;
-                overflow: hidden !important;
-            }
         }
 
+        /* Original Templates remain hidden, used purely as blueprints by the AI Pager */
         .doc-print-area { 
-            position: relative;
-            z-index: 1;
-            font-family: 'Roboto', sans-serif; 
-            font-size: 9pt; 
-            color: black; 
-            line-height: 1.5; 
-            width: 8.5in; 
-            height: 13in;
-            max-height: 13in;
-            margin: 0 auto; 
-            padding: 0;
-            overflow: hidden;
-            background: transparent;
-            box-sizing: border-box;
+            display: none; 
         }
 
-        .print-bg {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 1;
-            object-fit: fill;
-        }
-
-        .doc-content {
-            position: relative;
-            z-index: 10;
-            /* 1.4in padding strictly enforces the safe area away from headers and footers */
-            padding: 1.4in 1in 1.4in 1in; 
-            width: 100%;
-            height: 100%;
-            box-sizing: border-box;
-            background: transparent;
-            display: flex;
-            flex-direction: column;
-        }
-        
         .data-value { 
             font-weight: bold; 
             border-bottom: 1.5px solid black; 
@@ -250,8 +204,7 @@
             <div id="actionButtons" class="flex justify-between items-center no-print">
             </div>
 
-            <div id="docRecommendation" class="doc-print-area mx-auto hidden pt-8">
-                <img class="print-bg" crossorigin="anonymous" src="">
+            <div id="docRecommendation" class="hidden">
                 <div class="doc-content">
                     <div class="text-right font-bold mb-4 mr-10 mt-[0.1in]" id="rec-header-id">LTC-PENDING</div>
                     
@@ -363,8 +316,7 @@
                 </div>
             </div>
 
-            <div id="docCertification" class="doc-print-area mx-auto hidden pt-8">
-                <img class="print-bg" crossorigin="anonymous" src="">
+            <div id="docCertification" class="hidden">
                 <div class="doc-content">
                     
                     <div class="relative w-full mb-6">
@@ -547,10 +499,6 @@
             const { data } = supabaseClient.storage.from('bg').getPublicUrl('ltc_bg.jpg');
             if (data && data.publicUrl) {
                 backgroundImageUrl = data.publicUrl;
-                document.querySelectorAll('.print-bg').forEach(img => {
-                    img.src = backgroundImageUrl;
-                    img.style.display = 'block';
-                });
             }
         }
 
@@ -880,6 +828,9 @@
             }
         }
 
+        // ==========================================
+        // TRUE AI INTELLIGENT DOM PAGING ENGINE
+        // ==========================================
         function openPrint(id, type) {
             showReview(id); 
             
@@ -888,95 +839,110 @@
             const dateStrOrdinal = `${now.getDate()}${getOrdinal(now.getDate())} day of ${monthNames[now.getMonth()]}, ${now.getFullYear()}`;
             document.querySelectorAll('.pdf-today-ordinal').forEach(el => el.innerText = dateStrOrdinal);
 
+            // Hide modal content while processing
             document.getElementById('reviewSection').classList.add('hidden');
             document.getElementById('actionButtons').classList.add('hidden');
             document.getElementById('editNotice').classList.add('hidden');
             document.getElementById('modalMainTitle').parentElement.classList.add('hidden');
             
+            let sourceId = type === 'rec' ? 'docRecommendation' : 'docCertification';
             let filename = type === 'rec' 
                 ? `Recommendation_${currentSelection.LTC_ID_NUMBER || currentSelection.ltc_no || id}.pdf` 
                 : `Certification_${currentSelection.LTC_ID_NUMBER || currentSelection.ltc_no || id}.pdf`;
 
             setTimeout(() => { 
-                let sourceId = type === 'rec' ? 'docRecommendation' : 'docCertification';
-                let sourceContent = document.querySelector(`#${sourceId} .doc-content`);
+                generateIntelligentPDF(sourceId, filename, type);
+            }, 100); 
+        }
+
+        function generateIntelligentPDF(sourceId, filename, type) {
+            // 1. Show processing overlay to hide the magic from the user
+            const overlay = document.createElement('div');
+            overlay.id = 'pdf-loading-overlay';
+            overlay.style.cssText = 'position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 99999; display: flex; align-items: center; justify-content: center; flex-direction: column; color: white; font-family: sans-serif;';
+            overlay.innerHTML = '<div class="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-[#D4AF37] mb-4"></div><h2 class="text-2xl font-black tracking-widest uppercase">AI Paging Engine Active</h2><p class="text-gray-300 mt-2">Formatting and calculating page breaks...</p>';
+            document.body.appendChild(overlay);
+
+            // 2. Create visible wrapper for accurate DOM measurement (Crucial fix! html2canvas needs it visible)
+            const wrapper = document.createElement('div');
+            wrapper.id = 'aiPrintWrapper';
+            // Absolute positioned, z-index hides it beneath the overlay, width perfectly locked to 8.5in
+            wrapper.style.cssText = 'position: absolute; top: 0; left: 0; width: 8.5in; z-index: 99998; background: #e5e7eb; padding: 1in;'; 
+            document.body.appendChild(wrapper);
+
+            const sourceContent = document.querySelector(`#${sourceId} .doc-content`);
+            const children = Array.from(sourceContent.children);
+
+            // Function to generate fresh, perfect 8.5x13 pages
+            function createPage() {
+                const page = document.createElement('div');
+                // margin-bottom adds visual separation for html2canvas
+                page.style.cssText = 'position: relative; width: 8.5in; height: 13in; overflow: hidden; background: white; margin-bottom: 20px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);';
                 
-                // --- AI INTELLIGENT DOM PAGING ENGINE ---
-                let wrapper = document.getElementById('aiPrintWrapper');
-                if (!wrapper) {
-                    wrapper = document.createElement('div');
-                    wrapper.id = 'aiPrintWrapper';
-                    // Render off-screen but explicitly sized so DOM measurement is 100% accurate
-                    wrapper.style.cssText = 'position: absolute; top: -10000px; left: 0; width: 8.5in; z-index: -1000; background: transparent;';
-                    document.body.appendChild(wrapper);
-                }
-                wrapper.innerHTML = ''; 
-
-                function createNewPage() {
-                    const page = document.createElement('div');
-                    page.className = 'doc-print-area';
-                    page.style.cssText = 'position: relative; width: 8.5in; height: 13in; overflow: hidden; page-break-after: always; background: white; margin: 0; padding: 0;';
-                    
-                    const bg = document.createElement('img');
-                    bg.src = backgroundImageUrl;
-                    bg.crossOrigin = "anonymous";
-                    bg.className = 'print-bg';
-                    bg.style.cssText = 'position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; object-fit: fill; display: block;';
-                    page.appendChild(bg);
-                    
-                    const content = document.createElement('div');
-                    content.className = 'doc-content';
-                    // We lock the padding logic to enforce the safe space for header/footer
-                    content.style.cssText = 'position: relative; z-index: 10; padding: 1.4in 1in 1.4in 1in; height: 100%; box-sizing: border-box; display: flex; flex-direction: column; font-family: "Roboto", sans-serif; font-size: 9pt; color: black; line-height: 1.5;';
-                    page.appendChild(content);
-                    
-                    wrapper.appendChild(page);
-                    return content;
-                }
-
-                let currentContent = createNewPage();
-                const children = Array.from(sourceContent.children);
+                const bg = document.createElement('img');
+                bg.src = backgroundImageUrl;
+                bg.crossOrigin = "anonymous";
+                bg.style.cssText = 'position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; object-fit: fill;';
+                page.appendChild(bg);
                 
-                for (let i = 0; i < children.length; i++) {
-                    const child = children[i].cloneNode(true);
-                    currentContent.appendChild(child);
-                    
-                    // The core logic: Check if appending this block causes the page content to exceed the padding-enforced area
-                    if (currentContent.scrollHeight > currentContent.clientHeight) {
-                        currentContent.removeChild(child);
-                        currentContent = createNewPage(); // Spills over!
-                        currentContent.appendChild(child);
-                    }
+                const content = document.createElement('div');
+                // STRICT SAFE ZONES: 1in top/sides, 1.4in bottom to avoid overlapping the black footer line
+                content.style.cssText = 'position: relative; z-index: 10; padding: 1in 1in 1.4in 1in; height: 100%; box-sizing: border-box; display: flex; flex-direction: column; font-family: "Roboto", sans-serif; font-size: 9pt; color: black; line-height: 1.5;';
+                page.appendChild(content);
+                
+                wrapper.appendChild(page);
+                return content;
+            }
+
+            let currentContent = createPage();
+
+            // 3. AI Intelligent Chunking Loop
+            for (let i = 0; i < children.length; i++) {
+                const child = children[i].cloneNode(true);
+                currentContent.appendChild(child);
+                
+                // MEASUREMENT: If adding this block causes the container to stretch beyond its 13in strict height...
+                if (currentContent.scrollHeight > currentContent.clientHeight) {
+                    currentContent.removeChild(child); // Yank it out of the current page
+                    currentContent = createPage(); // Create Page 2 (or 3, etc.)
+                    currentContent.appendChild(child); // Drop it safely onto the top of the new page
                 }
-                // ----------------------------------------
+            }
 
-                const opt = {
-                    margin:       0,
-                    filename:     filename,
-                    image:        { type: 'jpeg', quality: 1.0 },
-                    html2canvas:  { scale: 4, useCORS: true },
-                    jsPDF:        { unit: 'in', format: [8.5, 13], orientation: 'portrait' }
-                    // Notice we removed standard pagebreak logic because the DOM already explicitly built the pages!
-                };
+            // 4. Render the perfectly measured pages to PDF
+            const opt = {
+                margin:       0,
+                filename:     filename,
+                image:        { type: 'jpeg', quality: 1.0 },
+                html2canvas:  { scale: 4, useCORS: true, windowWidth: 816 }, // 816px locks html2canvas to exactly 8.5in regardless of user screen size
+                jsPDF:        { unit: 'in', format: [8.5, 13], orientation: 'portrait' }
+            };
 
-                html2pdf().set(opt).from(wrapper).toPdf().get('pdf').then(function(pdf) {
-                    var totalPages = pdf.internal.getNumberOfPages();
-                    for (var i = 1; i <= totalPages; i++) {
-                        pdf.setPage(i);
-                        pdf.setFontSize(10);
-                        pdf.setTextColor(80);
-                        pdf.text(currentSelection.LTC_ID_NUMBER || currentSelection.ltc_no || 'LTC-PENDING', 0.5, 11.5, { angle: 90 });
-                    }
-                }).save().then(async () => {
-                    if (type === 'cert' && currentSelection.status === 'REVIEWED') {
-                        await supabaseClient.from('land_records').update({ status: 'PRINTED LTC', updated_at: new Date() }).eq('id', id);
-                        fetchClearanceData();
-                    }
-                    closeReview(); 
-                    document.getElementById('modalMainTitle').parentElement.classList.remove('hidden');
-                    wrapper.innerHTML = ''; // Clean up off-screen memory
-                });
-            }, 500); 
+            html2pdf().set(opt).from(wrapper).toPdf().get('pdf').then(function(pdf) {
+                var totalPages = pdf.internal.getNumberOfPages();
+                for (var i = 1; i <= totalPages; i++) {
+                    pdf.setPage(i);
+                    pdf.setFontSize(10);
+                    pdf.setTextColor(80);
+                    pdf.text(currentSelection.LTC_ID_NUMBER || currentSelection.ltc_no || 'LTC-PENDING', 0.5, 11.5, { angle: 90 });
+                }
+            }).save().then(async () => {
+                if (type === 'cert' && currentSelection.status === 'REVIEWED') {
+                    await supabaseClient.from('land_records').update({ status: 'PRINTED LTC', updated_at: new Date() }).eq('id', currentSelection.id);
+                    fetchClearanceData();
+                }
+                
+                // 5. Cleanup the hidden magic
+                document.body.removeChild(wrapper);
+                document.body.removeChild(overlay);
+                closeReview(); 
+                document.getElementById('modalMainTitle').parentElement.classList.remove('hidden');
+            }).catch(err => {
+                console.error(err);
+                alert("PDF Generation Error: " + err.message);
+                document.body.removeChild(wrapper);
+                document.body.removeChild(overlay);
+            });
         }
 
         async function decideStatus(newSt) {
