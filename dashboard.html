@@ -564,7 +564,7 @@
                         if (st === 'RECEIVED') {
                             if (isChief || isLegal) {
                                 actions += `<button onclick='showReview("${item.id}")' class="bg-[#003811] text-white w-full py-1.5 rounded shadow text-[10px] font-bold tracking-wide hover:bg-black uppercase transition-colors text-center">Review</button>`;
-                                actions += `<button onclick='createVariant("${item.id}")' class="bg-gray-500 text-white w-full py-1 mt-1 rounded shadow text-[9px] font-bold hover:bg-gray-700 uppercase transition-colors text-center">+ Variant</button>`;
+                                actions += `<button onclick='createVariant("${item.id}")' class="bg-gray-50 text-white w-full py-1 mt-1 rounded shadow text-[9px] font-bold hover:bg-gray-700 uppercase transition-colors text-center">+ Variant</button>`;
                                 actions += `<button onclick='deleteRecord("${item.id}")' class="bg-red-600 text-white w-full py-1 mt-1 rounded shadow text-[9px] font-bold hover:bg-red-800 uppercase transition-colors text-center">Delete</button>`;
                             }
                         } else if (st === 'REVIEWED') {
@@ -841,7 +841,6 @@
             const dateStrOrdinal = `${now.getDate()}${getOrdinal(now.getDate())} day of ${monthNames[now.getMonth()]}, ${now.getFullYear()}`;
             document.querySelectorAll('.pdf-today-ordinal').forEach(el => el.innerText = dateStrOrdinal);
 
-            // Hide the modal temporarily
             document.getElementById('reviewSection').classList.add('hidden');
             document.getElementById('actionButtons').classList.add('hidden');
             document.getElementById('editNotice').classList.add('hidden');
@@ -858,45 +857,58 @@
         }
 
         function generateIntelligentPDF(sourceId, filename, type) {
-            // 1. Loading Overlay (Hides the process from user, but lets browser render properly)
+            // 1. Loading Overlay (Nakikita mo sa screen habang binubuo para maiwasan ang blank capture bug)
+            window.scrollTo(0, 0); // Reset scroll to guarantee html2canvas sees everything
+            
             const overlay = document.createElement('div');
             overlay.id = 'pdf-loading-overlay';
-            overlay.style.cssText = 'position: fixed; inset: 0; background: #1F2937; z-index: 999999; display: flex; align-items: center; justify-content: center; flex-direction: column; color: white; font-family: sans-serif;';
-            overlay.innerHTML = '<div class="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-[#D4AF37] mb-4"></div><h2 class="text-2xl font-black tracking-widest uppercase">Rendering Pages...</h2><p class="text-gray-300 mt-2">Calculating page breaks intelligently...</p>';
-            document.body.appendChild(overlay);
-
-            // 2. Visible Wrapper. Layered safely beneath the overlay.
-            // DO NOT use display: none or negative positions here. html2canvas NEEDS to see it physically.
+            // Scrollable overlay para safe. Ang canvas ay lalabas talaga sa screen!
+            overlay.style.cssText = 'position: absolute; top: 0; left: 0; width: 100%; min-height: 100vh; background: #1F2937; z-index: 999999; display: flex; align-items: center; justify-content: flex-start; flex-direction: column; color: white; font-family: sans-serif; padding: 2rem 0; overflow: auto;';
+            
+            overlay.innerHTML = '<div class="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-[#D4AF37] mb-4"></div><h2 class="text-2xl font-black tracking-widest uppercase mb-6">Rendering Pages...</h2>';
+            
             const wrapper = document.createElement('div');
             wrapper.id = 'aiPrintWrapper';
-            wrapper.style.cssText = 'position: absolute; top: 0; left: 0; width: 8.5in; z-index: 999998; background: #e5e7eb; padding: 20px;';
-            document.body.appendChild(wrapper);
+            // Ang wrapper ay mismong nakikita pero tinatakpan ang original body.
+            wrapper.style.cssText = 'width: 8.5in; display: flex; flex-direction: column; align-items: center; background: transparent;';
+            
+            overlay.appendChild(wrapper);
+            document.body.appendChild(overlay);
 
             const sourceContent = document.querySelector(`#${sourceId} .doc-content`);
             const childrenNodes = Array.from(sourceContent.children);
             let blocks = [];
 
-            // Extract blocks but KEEP the grid intact so Tailwind layout doesn't break
+            // Extract blocks without ruining the grid formatting
             childrenNodes.forEach(child => {
-                if (child.classList.contains('absolute-footer')) return; // Ignore original footer
-                blocks.push(child.cloneNode(true));
+                if (child.classList.contains('absolute-footer')) return; 
+                
+                if (child.classList.contains('grid-block')) {
+                    Array.from(child.children).forEach(subChild => {
+                        const clone = subChild.cloneNode(true);
+                        clone.style.marginBottom = '6px';
+                        blocks.push(clone);
+                    });
+                } else {
+                    blocks.push(child.cloneNode(true));
+                }
             });
 
             const pagesArray = [];
 
             function createPage() {
                 const page = document.createElement('div');
-                // Strict bounds. Overflow hidden prevents stretching. margin-bottom separates pages.
-                page.style.cssText = 'width: 8.5in; height: 13in; position: relative; background: white; margin-bottom: 20px; overflow: hidden;';
+                // Absolute 8.5x13 pages
+                page.style.cssText = 'width: 8.5in; height: 13in; min-height: 13in; position: relative; background: white; margin-bottom: 20px; overflow: hidden; flex-shrink: 0;';
                 
                 const bg = document.createElement('img');
                 bg.src = backgroundImageUrl;
                 bg.crossOrigin = "anonymous";
-                bg.style.cssText = 'position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; object-fit: fill;';
+                bg.style.cssText = 'position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; object-fit: fill; display: block;';
                 page.appendChild(bg);
                 
                 const content = document.createElement('div');
-                // Safe Zone: 1.25in top, 1in sides, 2.5in bottom (massive room so it NEVER hits the footer)
+                // Strict Safe Bounds: 1.25in top, 1in sides, 2.5in bottom (Para di na umabot sa footer)
                 content.style.cssText = 'position: absolute; top: 1.25in; left: 1in; right: 1in; bottom: 2.5in; z-index: 10; display: block; font-family: "Roboto", sans-serif; font-size: 9pt; color: black; line-height: 1.5;';
                 page.appendChild(content);
                 
@@ -907,26 +919,24 @@
 
             let currentContent = createPage();
 
-            // 3. Intelligent Block Appender Loop
+            // Intelligent loop for accurate DOM measurement
             blocks.forEach(block => {
                 currentContent.appendChild(block);
-                
-                // DOM Measurement: Check if this block pushed height beyond our strict safe zone
+                // Kung nag-overflow na sa 13in, bawiin at gawa ng panibagong Page 2
                 if (currentContent.scrollHeight > currentContent.clientHeight) {
-                    currentContent.removeChild(block); // Overflow! Remove it from this page
-                    currentContent = createPage(); // Generate Next Page
-                    currentContent.appendChild(block); // Safely drop it on the new page
+                    currentContent.removeChild(block); 
+                    currentContent = createPage(); 
+                    currentContent.appendChild(block); 
                 }
             });
 
-            // 4. Anchor the Footer onto the LAST page only
+            // Idikit ang Footer sa huling pahina
             const originalFooter = document.querySelector(`#${sourceId} .absolute-footer`);
             if (originalFooter) {
                 const footerClone = originalFooter.cloneNode(true);
-                // Force it strictly 1.25in from the physical bottom edge
                 footerClone.style.cssText = 'position: absolute; bottom: 1.25in; left: 0; width: 100%; padding: 0 1in; box-sizing: border-box; z-index: 20; display: block; font-family: "Roboto", sans-serif; color: black; font-size: 9pt; line-height: 1.5;';
                 
-                // Re-render QR Code inside the clone to prevent blank canvas issues
+                // Re-render QR Code inside the clone
                 const qrDiv = footerClone.querySelector('[id^="qr-"]');
                 if (qrDiv) {
                     qrDiv.innerHTML = '';
@@ -938,14 +948,13 @@
                 pagesArray[pagesArray.length - 1].appendChild(footerClone);
             }
 
-            // 5. Fire PDF Engine
+            // 5. Fire PDF Engine directly from the fully visible wrapper
             const opt = {
                 margin:       0,
                 filename:     filename,
                 image:        { type: 'jpeg', quality: 1.0 },
-                html2canvas:  { scale: 4, useCORS: true }, 
+                html2canvas:  { scale: 3, useCORS: true }, 
                 jsPDF:        { unit: 'in', format: [8.5, 13], orientation: 'portrait' }
-                // Notice we removed standard pagebreak logic because the DOM already explicitly built the pages!
             };
 
             html2pdf().set(opt).from(wrapper).toPdf().get('pdf').then(function(pdf) {
@@ -957,19 +966,17 @@
                     pdf.text(currentSelection.LTC_ID_NUMBER || currentSelection.ltc_no || 'LTC-PENDING', 0.5, 11.5, { angle: 90 });
                 }
             }).save().then(async () => {
-                // Cleanup
+                // Post-generation cleanup
                 if (type === 'cert' && currentSelection.status === 'REVIEWED') {
                     await supabaseClient.from('land_records').update({ status: 'PRINTED LTC', updated_at: new Date() }).eq('id', currentSelection.id);
                     fetchClearanceData();
                 }
-                document.body.removeChild(wrapper);
                 document.body.removeChild(overlay);
                 closeReview(); 
                 document.getElementById('modalMainTitle').parentElement.classList.remove('hidden');
             }).catch(err => {
                 console.error(err);
                 alert("PDF Generation Error: " + err.message);
-                document.body.removeChild(wrapper);
                 document.body.removeChild(overlay);
             });
         }
