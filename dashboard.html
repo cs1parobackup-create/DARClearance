@@ -53,13 +53,13 @@
             left: 0;
             width: 100%;
             height: 100%;
-            z-index: -1; /* Strictly behind content */
+            z-index: 1; /* Layer 1: Strictly behind content */
             object-fit: cover;
         }
 
         .doc-content {
             position: relative;
-            z-index: 2; /* Strictly above background */
+            z-index: 10; /* Layer 10: Strictly above background */
             padding: 1in;
             width: 100%;
             height: 100%;
@@ -125,23 +125,23 @@
                     <h3 id="stat-received" class="text-lg font-black text-blue-600">0</h3>
                 </div>
                 <div class="bg-white p-3 rounded border-l-4 border-purple-500 text-center shadow-sm">
-                    <p class="text-[8px] font-bold text-gray-400 uppercase">Recommended</p>
+                    <p class="text-[8px] font-bold text-gray-400 uppercase">Reviewed</p>
                     <h3 id="stat-recommended" class="text-lg font-black text-purple-600">0</h3>
                 </div>
                 <div class="bg-white p-3 rounded border-l-4 border-cyan-500 text-center shadow-sm">
-                    <p class="text-[8px] font-bold text-gray-400 uppercase">Certified</p>
+                    <p class="text-[8px] font-bold text-gray-400 uppercase">Printed LTC</p>
                     <h3 id="stat-certified" class="text-lg font-black text-cyan-600">0</h3>
                 </div>
                 <div class="bg-white p-3 rounded border-l-4 border-orange-500 text-center shadow-sm">
-                    <p class="text-[8px] font-bold text-gray-400 uppercase">Signed</p>
+                    <p class="text-[8px] font-bold text-gray-400 uppercase">Signed by PARPO</p>
                     <h3 id="stat-signed" class="text-lg font-black text-orange-600">0</h3>
                 </div>
                 <div class="bg-white p-3 rounded border-l-4 border-red-500 text-center shadow-sm">
-                    <p class="text-[8px] font-bold text-gray-400 uppercase">To Legal</p>
+                    <p class="text-[8px] font-bold text-gray-400 uppercase">Returned to Legal</p>
                     <h3 id="stat-legal" class="text-lg font-black text-red-600">0</h3>
                 </div>
                 <div class="bg-white p-3 rounded border-l-4 border-green-500 text-center shadow-sm">
-                    <p class="text-[8px] font-bold text-gray-400 uppercase">To Records</p>
+                    <p class="text-[8px] font-bold text-gray-400 uppercase">Forwarded to Records</p>
                     <h3 id="stat-records" class="text-lg font-black text-green-600">0</h3>
                 </div>
                 <div class="bg-white p-3 rounded border-l-4 border-teal-500 text-center shadow-sm">
@@ -159,11 +159,11 @@
                     <thead class="bg-gray-50 border-b uppercase font-bold text-[#003811] tracking-wider">
                         <tr>
                             <th class="w-[15%]">LTC Number</th>
-                            <th class="w-[15%]">Title</th>
-                            <th class="w-[25%]">Land Owner</th>
+                            <th class="w-[20%]">Land Owner</th>
+                            <th class="w-[15%]">Encoded By</th>
                             <th class="w-[15%]">Status</th>
                             <th class="w-[20%] text-center">Action</th>
-                            <th class="w-[10%] text-right">Date Updated</th>
+                            <th class="w-[15%] text-right">Date Updated</th>
                         </tr>
                     </thead>
                     <tbody id="clearanceTableBody" class="divide-y divide-gray-100"></tbody>
@@ -239,7 +239,7 @@
             <div id="actionButtons" class="flex justify-between items-center no-print">
             </div>
 
-            <div id="docRecommendation" class="doc-print-area mx-auto hidden">
+            <div id="docRecommendation" class="doc-print-area mx-auto hidden pt-8">
                 <img class="print-bg" crossorigin="anonymous" src="">
                 <div class="doc-content">
                     <div class="text-right font-bold mb-4 mr-10 mt-[0.1in]" id="rec-header-id">LTC-PENDING</div>
@@ -311,7 +311,7 @@
                 </div>
             </div>
 
-            <div id="docCertification" class="doc-print-area mx-auto hidden">
+            <div id="docCertification" class="doc-print-area mx-auto hidden pt-8">
                 <img class="print-bg" crossorigin="anonymous" src="">
                 <div class="doc-content">
                     
@@ -410,7 +410,7 @@
         let rawData = [];
         let currentNavList = [];
         let currentNavIndex = -1;
-        const statusFlow = ['RECEIVED', 'RECOMMENDED', 'CERTIFIED', 'SIGNED', 'TO LEGAL', 'TO RECORDS', 'RELEASE TO CLIENT'];
+        const statusFlow = ['RECEIVED', 'REVIEWED', 'PRINTED LTC', 'SIGNED BY PARPO', 'RETURNED TO LEGAL', 'FORWARDED TO RECORDS', 'RELEASED TO CLIENT', 'DISAPPROVED'];
 
         let chiefLegalName = "---";
         let parpoName = "---";
@@ -817,14 +817,6 @@
                     var totalPages = pdf.internal.getNumberOfPages();
                     for (var i = 1; i <= totalPages; i++) {
                         pdf.setPage(i);
-                        
-                        if (backgroundImageUrl) {
-                            var img = new Image();
-                            img.crossOrigin = "Anonymous";
-                            img.src = backgroundImageUrl;
-                            pdf.addImage(img, 'JPEG', 0, 0, 8.5, 13);
-                        }
-
                         pdf.setFontSize(10);
                         pdf.setTextColor(80);
                         pdf.text(currentSelection.LTC_ID_NUMBER || currentSelection.ltc_no || 'LTC-PENDING', 0.5, 11.5, { angle: 90 });
