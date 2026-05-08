@@ -228,6 +228,10 @@
                         <div id="edit-notary" class="edit-big">---</div>
                         <div class="font-bold text-gray-600 uppercase text-sm">Retention area of vendor:</div>
                         <div id="edit-retention" class="edit-big">---</div>
+                        <div class="font-bold text-gray-600 uppercase text-sm">O.R. No:</div>
+                        <div id="edit-or_number" class="edit-big">---</div>
+                        <div class="font-bold text-gray-600 uppercase text-sm">O.R. Date:</div>
+                        <div id="edit-or_date" class="edit-big">---</div>
                     </div>
                 </div>
                 <div id="remarksSection" class="bg-gray-50 p-4 rounded border border-gray-300">
@@ -306,7 +310,8 @@
                                     <p>Copy distribution:</p>
                                     <p>Original-Applicant</p>
                                     <p>Duplicate-LTC Folder</p>
-                                    <p class="mt-2">O.R. No.: <span class="font-bold">___________</span></p>
+                                    <p class="mt-2">O.R. No.: <span class="font-bold" id="rec-or_number">___________</span></p>
+                                    <p>O.R. Date: <span class="font-bold" id="rec-or_date">___________</span></p>
                                     <p>Date issued: <span class="pdf-today-ordinal font-bold">---</span></p>
                                     <p class="font-bold underline underline-offset-2" id="rec-footer-id">LTC-PENDING</p>
                                 </div>
@@ -406,7 +411,8 @@
                                 <p>Copy distribution:</p>
                                 <p>Original-Applicant</p>
                                 <p>Duplicate-LTC Folder</p>
-                                <p class="mt-2">O.R. No.: <span class="font-bold">___________</span></p>
+                                <p class="mt-2">O.R. No.: <span class="font-bold" id="cert-or_number">___________</span></p>
+                                <p>O.R. Date: <span class="font-bold" id="cert-or_date">___________</span></p>
                                 <p>Date issued: <span class="pdf-today-ordinal font-bold">---</span></p>
                                 <p class="font-bold underline underline-offset-2" id="cert-footer-id">LTC-PENDING</p>
                             </div>
@@ -748,7 +754,9 @@
                 'series_of': 'series',
                 'dated': 'dated',
                 'notary_public': 'notary',
-                'retention_area_names': 'retention'
+                'retention_area_names': 'retention',
+                'or_number': 'or_number',
+                'or_date': 'or_date'
             };
 
             for (let dbCol in dbToHtmlMap) {
@@ -878,7 +886,7 @@
                     'deed_type': 'edit-deed', 'executed_by': 'edit-executed', 'in_favor_of': 'edit-favor', 
                     'doc_no': 'edit-doc', 'page_no': 'edit-page', 'book_no': 'edit-book', 
                     'series_of': 'edit-series', 'dated': 'edit-dated', 'notary_public': 'edit-notary', 
-                    'retention_area_names': 'edit-retention'
+                    'retention_area_names': 'edit-retention', 'or_number': 'edit-or_number', 'or_date': 'edit-or_date'
                 };
 
                 for (let dbCol in dbToHtmlMap) {
