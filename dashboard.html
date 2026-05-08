@@ -43,7 +43,7 @@
             margin: 0 auto; 
             padding: 0;
             overflow: hidden;
-            background: white;
+            background: transparent;
         }
 
         .print-bg {
@@ -52,13 +52,13 @@
             left: 0;
             width: 100%;
             height: 100%;
-            z-index: 0; /* Placed precisely behind text layer */
+            z-index: -1;
             object-fit: cover;
         }
 
         .doc-content {
             position: relative;
-            z-index: 10; /* Ensures text renders on top of the image */
+            z-index: 10;
             padding: 1in;
             width: 100%;
             height: 100%;
@@ -77,7 +77,7 @@
         }
         
         .page-break-avoid { 
-            page-break-inside: avoid; 
+            page-break-inside: avoid;
             break-inside: avoid;
         }
         
@@ -569,7 +569,6 @@
                 }
             });
             
-            // Add fallback print buttons exactly into the modal if it is in an allowed status
             const actionDiv = document.getElementById('actionButtons');
             if (currentSelection) {
                 let currentSt = (currentSelection.status || 'RECEIVED').trim().toUpperCase();
@@ -663,7 +662,7 @@
                 'SIGNED BY PARPO': 'bg-orange-100 text-orange-800 border border-orange-200', 
                 'RETURNED TO LEGAL': 'bg-red-100 text-red-800 border border-red-200', 
                 'FORWARDED TO RECORDS': 'bg-green-100 text-green-800 border border-green-200', 
-                'RELEASED TO CLIENT': 'bg-teal-100 text-teal-800 border border-teal-200',
+                'RELEASE TO CLIENT': 'bg-teal-100 text-teal-800 border border-teal-200',
                 'DISAPPROVED': 'bg-gray-200 text-gray-800 border border-gray-300'
             };
             return colors[s] || 'bg-gray-100 text-gray-800';
@@ -756,7 +755,7 @@
             document.getElementById('editNotice').classList.remove('hidden');
             document.getElementById('reviewRemarks').value = currentSelection.Remarks || currentSelection.remarks || '';
             
-            refreshDashboard(); // Trigger this to correctly populate action buttons dynamically
+            refreshDashboard(); 
 
             document.getElementById('reviewModal').classList.remove('hidden');
 
@@ -810,7 +809,8 @@
                     filename:     filename,
                     image:        { type: 'jpeg', quality: 1.0 },
                     html2canvas:  { scale: 5, useCORS: true },
-                    jsPDF:        { unit: 'in', format: [8.5, 13], orientation: 'portrait' }
+                    jsPDF:        { unit: 'in', format: [8.5, 13], orientation: 'portrait' },
+                    pagebreak:    { mode: ['css', 'legacy'] }
                 };
 
                 html2pdf().set(opt).from(elementToPrint).toPdf().get('pdf').then(function(pdf) {
@@ -827,7 +827,7 @@
 
                         pdf.setFontSize(10);
                         pdf.setTextColor(80);
-                        pdf.text(currentSelection.LTC_ID_NUMBER || currentSelection.ltc_no || 'LTC-PENDING', 0.5, 12.0, { angle: 90 });
+                        pdf.text(currentSelection.LTC_ID_NUMBER || currentSelection.ltc_no || 'LTC-PENDING', 0.5, 11.5, { angle: 90 });
                     }
                 }).save().then(async () => {
                     if (type === 'cert' && currentSelection.status === 'REVIEWED') {
