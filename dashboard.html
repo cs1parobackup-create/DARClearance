@@ -63,12 +63,15 @@
 </head>
 <body class="flex h-screen overflow-hidden text-[#1F2937]">
 
-    <nav class="bg-[#003811] md:w-64 flex flex-col text-white flex-shrink-0 shadow-xl z-20 no-print">
+    <nav class="bg-[#003811] md:w-64 flex flex-col text-white flex-shrink-0 shadow-xl z-20">
         <div class="p-6 border-b border-[#006400]">
             <h2 class="text-xl font-bold text-[#D4AF37]">DARPO-CS</h2>
             <p id="userRoleBadge" class="text-[10px] text-gray-300 uppercase tracking-widest mt-1 font-bold">---</p>
         </div>
-        <div id="dynamicMenu" class="flex-1 overflow-y-auto py-2"></div>
+        
+        <div id="dynamicMenu" class="flex-1 overflow-y-auto py-2">
+            </div>
+
         <div class="p-4 bg-black/20">
             <p id="activeUser" class="text-xs text-gray-300 truncate mb-2 font-bold"></p>
             <button onclick="logout()" class="w-full bg-red-800 py-2 text-xs font-bold rounded shadow hover:bg-red-700 transition-colors uppercase">Logout</button>
@@ -215,9 +218,19 @@
 
             <div id="docRecommendation" class="doc-print-area mx-auto hidden pt-8">
                 <div class="doc-content">
-                    <div class="text-right font-bold mb-4 mr-10 mt-[0.1in] page-break-avoid" id="rec-header-id">LTC-PENDING</div>
+                    <div class="relative w-full mb-6 page-break-avoid">
+                        <div class="absolute right-0 top-0 text-right font-bold flex flex-col items-end">
+                            <span class="font-bold text-[10pt] mt-4 underline" id="rec-header-id-top">LTC-PENDING</span>
+                        </div>
+                        <div class="text-center text-[10pt] leading-snug font-bold uppercase">
+                            <p>Republic of the Philippines</p>
+                            <p>DEPARTMENT OF AGRARIAN REFORM</p>
+                            <p>Region V</p>
+                            <p>Province of Camarines Sur I</p>
+                        </div>
+                    </div>
                     
-                    <div class="text-center mb-6 page-break-avoid">
+                    <div class="text-center mb-6 mt-4 page-break-avoid">
                         <div class="font-black text-[16pt] tracking-wide">RECOMMENDATION</div>
                         <div class="text-[10pt]">(Land Transfer Clearance)</div>
                     </div>
@@ -308,7 +321,7 @@
                         </div>
                     </div>
 
-                    <div class="w-full mt-4 page-break-avoid">
+                    <div class="w-full mt-4 page-break-avoid qr-distribution-block">
                         <div class="flex items-start gap-2 text-[7pt] leading-[1.2] text-left">
                             <div id="qr-rec" class="w-[55px] h-[55px] shrink-0"></div>
                             <div class="pt-0.5">
@@ -340,7 +353,7 @@
                         </div>
                     </div>
 
-                    <div class="text-center mb-6 mt-8 page-break-avoid">
+                    <div class="text-center mb-6 mt-2 page-break-avoid">
                         <div class="font-black text-[16pt] tracking-wide">CERTIFICATION</div>
                         <div class="text-[10pt]">(Land Transfer Clearance)</div>
                     </div>
@@ -434,7 +447,7 @@
                         </div>
                     </div>
 
-                    <div class="w-full mt-4 page-break-avoid">
+                    <div class="w-full mt-4 page-break-avoid qr-distribution-block">
                         <div class="flex items-start gap-2 text-[7pt] leading-[1.2] text-left">
                             <div id="qr-cert" class="w-[55px] h-[55px] shrink-0"></div>
                             <div class="pt-0.5">
@@ -547,7 +560,7 @@
                     matchesSearch = true;
                 } else {
                     matchesSearch = Object.values(item).some(val => 
-                        val !== null && val.toString().toLowerCase().includes(query)
+                        val !== null && String(val).toLowerCase().includes(query)
                     );
                 }
 
@@ -609,7 +622,7 @@
                             }
                             if (isRecords || isChief || isLegal) {
                                 actions += `<button onclick='showReview("${item.id}", "CORRECTION")' class="bg-yellow-500 text-white w-full py-1.5 rounded shadow text-[10px] font-bold hover:bg-yellow-600 uppercase transition-colors text-center mb-1">Correction</button>`;
-                                actions += `<button onclick='reIssueRecord("${item.id}")' class="bg-blue-500 text-white w-full py-1.5 rounded shadow text-[10px] font-bold hover:bg-blue-600 uppercase transition-colors text-center mb-1">Re-Issue</button>`;
+                                actions += `<button onclick='showReview("${item.id}", "RE-ISSUANCE")' class="bg-blue-500 text-white w-full py-1.5 rounded shadow text-[10px] font-bold hover:bg-blue-600 uppercase transition-colors text-center mb-1">Re-Issue</button>`;
                             }
                             if (isParpo) {
                                 actions += `<button onclick='showReview("${item.id}", "VIEW_CERT")' class="bg-gray-500 text-white w-full py-1.5 rounded shadow text-[10px] font-bold hover:bg-gray-600 uppercase transition-colors text-center mb-1">View</button>`;
@@ -672,6 +685,12 @@
                             <button onclick="decideStatus('DISAPPROVED')" class="bg-red-700 text-white px-8 py-3 rounded text-sm font-black uppercase shadow-lg hover:bg-red-800 transition-colors">Disapprove</button>
                         </div>
                     `;
+                } else if (currentSt === 'FORWARDED TO RECORDS' || currentSt === 'RELEASED TO CLIENT') {
+                    actionDiv.innerHTML = `
+                        <div class="flex gap-2 w-full justify-end">
+                            <button onclick="decideStatus('${currentSt}')" class="bg-yellow-600 text-white px-8 py-3 rounded text-sm font-black uppercase shadow-lg hover:bg-yellow-700 transition-colors">Save Corrections</button>
+                        </div>
+                    `;
                 } else {
                      actionDiv.innerHTML = `
                         <div class="flex gap-2 w-full justify-end">
@@ -732,8 +751,6 @@
             const record = rawData.find(r => r.id === id);
             if (!record) return;
 
-            if (!confirm(`Are you sure you want to duplicate this record for RE-ISSUE?`)) return;
-
             const { id: oldId, created_at, updated_at, ...newRecordData } = record;
             
             if(newRecordData.ltc_no !== undefined) delete newRecordData.ltc_no;
@@ -791,7 +808,7 @@
                     matchesSearch = true;
                 } else {
                     matchesSearch = Object.values(item).some(val => 
-                        val !== null && val.toString().toLowerCase().includes(query)
+                        val !== null && String(val).toLowerCase().includes(query)
                     );
                 }
                 return matchesSearch;
@@ -848,7 +865,7 @@
                 if(certEl) certEl.innerText = val;
             }
 
-            const recHeaderId = document.getElementById('rec-header-id');
+            const recHeaderId = document.getElementById('rec-header-id-top');
             const certHeaderId = document.getElementById('cert-header-id');
             const recFooterId = document.getElementById('rec-footer-id');
             const certFooterId = document.getElementById('cert-footer-id');
@@ -878,6 +895,7 @@
                 document.getElementById('modalMainTitle').innerText = currentReviewMode.replace('-', ' ').toUpperCase();
                 document.getElementById('docRecommendation').classList.add('hidden');
                 document.getElementById('docCertification').classList.add('hidden');
+                document.getElementById('docCertification').style.display = 'none';
                 document.getElementById('reviewSection').classList.remove('hidden');
                 document.getElementById('actionButtons').classList.remove('hidden');
                 document.getElementById('editNotice').classList.remove('hidden');
@@ -915,9 +933,7 @@
             document.getElementById('modalMainTitle').parentElement.classList.add('hidden');
             
             let sourceId = type === 'rec' ? 'docRecommendation' : 'docCertification';
-            let filename = type === 'rec' 
-                ? `Recommendation_${currentSelection.LTC_ID_NUMBER || currentSelection.ltc_no || id}.pdf` 
-                : `Certification_${currentSelection.LTC_ID_NUMBER || currentSelection.ltc_no || id}.pdf`;
+            let filename = `${currentSelection.LTC_ID_NUMBER || currentSelection.ltc_no || id}.pdf`;
 
             setTimeout(() => { 
                 generateIntelligentPDF(sourceId, filename, type);
@@ -960,7 +976,7 @@
 
             function createPage() {
                 const page = document.createElement('div');
-                page.style.cssText = 'width: 8.5in; height: 12.98in; min-height: 12.98in; max-height: 12.98in; position: relative; background: white; margin-bottom: 0px; overflow: hidden; flex-shrink: 0;';
+                page.style.cssText = 'width: 8.5in; height: 13in; min-height: 13in; max-height: 13in; position: relative; background: white; margin-bottom: 0px; overflow: hidden; flex-shrink: 0;';
                 
                 const bg = document.createElement('img');
                 bg.src = backgroundImageUrl;
@@ -997,9 +1013,8 @@
                 });
             });
 
-            // Prevent generation of blank final pages
             const lastPage = pagesArray[pagesArray.length - 1];
-            if (lastPage && lastPage.contentElement.innerHTML.trim() === '') {
+            if (lastPage && lastPage.contentElement.textContent.trim() === '') {
                 wrapper.removeChild(lastPage.pageElement);
                 pagesArray.pop();
             }
@@ -1044,7 +1059,7 @@
 
             if (newSt === 'REVIEWED' || newSt === 'PRINTED LTC' || newSt === 'FORWARDED TO RECORDS' || newSt === 'RELEASED TO CLIENT') {
                 const dbToHtmlMap = {
-                    'LTC_ID_NUMBER': 'edit-LTC_ID_NUMBER',
+                    'LTC_ID_NUMBER': 'edit-LTC_ID_NUMBER', 
                     'lot_no': 'edit-lot', 'owner_name': 'edit-owner', 'registered_under': 'edit-tct', 
                     'area': 'edit-area', 'td_no': 'edit-td', 'location': 'edit-location', 
                     'deed_type': 'edit-deed', 'executed_by': 'edit-executed', 'in_favor_of': 'edit-favor', 
@@ -1054,7 +1069,8 @@
                 };
 
                 for (let dbCol in dbToHtmlMap) {
-                    let el = document.getElementById(dbToHtmlMap[dbCol]);
+                    let htmlSuffix = dbToHtmlMap[dbCol];
+                    let el = document.getElementById(`edit-${htmlSuffix}`);
                     if (el && el.innerText.trim() !== '---') { updateData[dbCol] = el.innerText.trim(); }
                 }
             }
