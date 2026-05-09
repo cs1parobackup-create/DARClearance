@@ -795,13 +795,25 @@
             const record = rawData.find(r => r.id === id);
             if (!record) return;
 
-            if (!confirm(`Are you sure you want to process a ${mode} for this record? A new entry will be created requiring a new LTC Number.`)) return;
+            let newLtc = `NEW (${mode})`;
+
+            if (mode === 'CORRECTION') {
+                const proceed = confirm(`Process a CORRECTION for this record?\nClick OK to continue.`);
+                if (!proceed) return;
+                
+                const keep = confirm(`Do you want to RETAIN the current LTC Number?\n\nClick OK to keep: ${record.LTC_ID_NUMBER || record.ltc_no || 'None'}\nClick Cancel to require a NEW number.`);
+                if (keep) {
+                    newLtc = record.LTC_ID_NUMBER || record.ltc_no || '';
+                }
+            } else {
+                if (!confirm(`Are you sure you want to process a ${mode} for this record? A new entry will be created requiring a new LTC Number.`)) return;
+            }
 
             const { id: oldId, created_at, updated_at, ...newRecordData } = record;
             
             if(newRecordData.ltc_no !== undefined) delete newRecordData.ltc_no;
 
-            newRecordData.LTC_ID_NUMBER = `NEW (${mode})`; 
+            newRecordData.LTC_ID_NUMBER = newLtc; 
             newRecordData.status = 'RECEIVED'; 
 
             const { data, error } = await supabaseClient.from('land_records').insert([newRecordData]).select();
@@ -980,7 +992,7 @@
             
             let sourceId = type === 'rec' ? 'docRecommendation' : 'docCertification';
             let formattedId = currentSelection.LTC_ID_NUMBER || currentSelection.ltc_no || id;
-            let filename = type === 'rec' ? `recommendation_${formattedId}.pdf` : `certification_${formattedId}.pdf`;
+            let filename = type === 'rec' ? `reco_${formattedId}.pdf` : `cert_${formattedId}.pdf`;
 
             setTimeout(() => { 
                 generateIntelligentPDF(sourceId, filename, type);
@@ -1107,22 +1119,21 @@
             const updateData = { status: newSt, updated_at: new Date() };
             if (remarks.trim()) updateData.Remarks = remarks; 
 
-            if (newSt === 'REVIEWED' || newSt === 'PRINTED LTC' || newSt === 'FORWARDED TO RECORDS' || newSt === 'RELEASED TO CLIENT') {
-                const dbToHtmlMap = {
-                    'LTC_ID_NUMBER': 'edit-LTC_ID_NUMBER', 
-                    'lot_no': 'edit-lot', 'owner_name': 'edit-owner', 'registered_under': 'edit-tct', 
-                    'area': 'edit-area', 'td_no': 'edit-td', 'location': 'edit-location', 
-                    'deed_type': 'edit-deed', 'executed_by': 'edit-executed', 'in_favor_of': 'edit-favor', 
-                    'doc_no': 'edit-doc', 'page_no': 'edit-page', 'book_no': 'edit-book', 
-                    'series_of': 'edit-series', 'dated': 'edit-dated', 'notary_public': 'edit-notary', 
-                    'retention_area_names': 'edit-retention', 'or_number': 'edit-or_number', 'or_date': 'edit-or_date'
-                };
+            // ALWAYS save editable fields on any modal action
+            const dbToHtmlMap = {
+                'LTC_ID_NUMBER': 'edit-LTC_ID_NUMBER', 
+                'lot_no': 'edit-lot', 'owner_name': 'edit-owner', 'registered_under': 'edit-tct', 
+                'area': 'edit-area', 'td_no': 'edit-td', 'location': 'edit-location', 
+                'deed_type': 'edit-deed', 'executed_by': 'edit-executed', 'in_favor_of': 'edit-favor', 
+                'doc_no': 'edit-doc', 'page_no': 'edit-page', 'book_no': 'edit-book', 
+                'series_of': 'edit-series', 'dated': 'edit-dated', 'notary_public': 'edit-notary', 
+                'retention_area_names': 'edit-retention', 'or_number': 'edit-or_number', 'or_date': 'edit-or_date'
+            };
 
-                for (let dbCol in dbToHtmlMap) {
-                    let htmlSuffix = dbToHtmlMap[dbCol];
-                    let el = document.getElementById(`edit-${htmlSuffix}`);
-                    if (el && el.innerText.trim() !== '---') { updateData[dbCol] = el.innerText.trim(); }
-                }
+            for (let dbCol in dbToHtmlMap) {
+                let htmlSuffix = dbToHtmlMap[dbCol];
+                let el = document.getElementById(`edit-${htmlSuffix}`);
+                if (el && el.innerText.trim() !== '---') { updateData[dbCol] = el.innerText.trim(); }
             }
 
             const oldStatus = currentSelection.status;
@@ -1131,6 +1142,8 @@
                 await logStatusChange(currentSelection.id, oldStatus, newSt);
                 await fetchClearanceData(); 
                 closeReview(); 
+            } else {
+                alert('Database Error: ' + error.message);
             }
         }
 
@@ -1167,3 +1180,4 @@
     </script>
 </body>
 </html>
+```</LTC></LTC>
