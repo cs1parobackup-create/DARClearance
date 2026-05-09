@@ -152,6 +152,7 @@
                     </div>
                 </div>
                 <div class="flex gap-2 items-center">
+                    <button onclick="manualSave(event)" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded text-xs font-black uppercase transition-colors mr-4 shadow">💾 Save Details</button>
                     <button id="btnPrev" onclick="navigateReview(-1)" class="bg-gray-200 hover:bg-gray-300 px-4 py-2 rounded text-xs font-black uppercase transition-colors text-gray-800">&larr; Prev</button>
                     <button id="btnNext" onclick="navigateReview(1)" class="bg-gray-200 hover:bg-gray-300 px-4 py-2 rounded text-xs font-black uppercase transition-colors text-gray-800">Next &rarr;</button>
                     <button onclick="closeReview()" class="text-gray-400 hover:text-black text-3xl ml-4 font-normal leading-none">&times;</button>
@@ -484,6 +485,7 @@
         let chiefLegalName = "---";
         let parpoName = "---";
         let backgroundImageUrl = "";
+        let userRolesMap = {};
 
         async function loadMenu() {
             const menuContainer = document.getElementById('dynamicMenu');
@@ -534,10 +536,11 @@
         async function fetchDynamicSignatories() {
             const { data, error } = await supabaseClient.from('users').select('full_name, role');
             if (data && !error) {
-                const chief = data.find(u => u.role && u.role.toUpperCase().includes('CHIEF'));
-                const parpo = data.find(u => u.role && u.role.toUpperCase().includes('PARPO'));
-                if (chief) chiefLegalName = chief.full_name;
-                if (parpo) parpoName = parpo.full_name;
+                data.forEach(u => {
+                    userRolesMap[u.full_name] = u.role;
+                    if (u.role && u.role.toUpperCase().includes('CHIEF')) chiefLegalName = u.full_name;
+                    if (u.role && u.role.toUpperCase().includes('PARPO')) parpoName = u.full_name;
+                });
             } else if (error) {
                 console.error("Signatories Error:", error);
             }
@@ -574,20 +577,39 @@
                     previous_status: oldStatus,
                     new_status: newStatus,
                     changed_by: currentUser.full_name,
-                    changed_at: new Date()
+                    changed_at: new Date().toISOString()
                 }]);
                 if (error) console.error("Status Log Error:", error);
             } catch (err) { console.error("Status Log Catch:", err); }
         }
 
+        window.manualSave = async function(event) {
+            const btn = event.currentTarget;
+            const originalText = btn.innerText;
+            btn.innerText = 'SAVING...';
+            btn.disabled = true;
+
+            await autoSaveEdits();
+            await fetchClearanceData();
+
+            btn.innerText = '✅ SAVED';
+            setTimeout(() => {
+                btn.innerText = originalText;
+                btn.disabled = false;
+            }, 2000);
+        }
+
         async function autoSaveEdits() {
-            if (!currentSelection || currentReviewMode === 'VIEW_CERT') return;
+            if (!currentSelection || currentReviewMode === 'VIEW_CERT') return false;
 
             const updateData = {};
             let hasChanges = false;
             
+            let colLtc = currentSelection.hasOwnProperty('LTC_ID_NUMBER') ? 'LTC_ID_NUMBER' : 'ltc_no';
+            let colRemarks = currentSelection.hasOwnProperty('Remarks') ? 'Remarks' : 'remarks';
+
             const dbToHtmlMap = {
-                'LTC_ID_NUMBER': 'edit-LTC_ID_NUMBER', 
+                [colLtc]: 'edit-LTC_ID_NUMBER', 
                 'lot_no': 'edit-lot', 'owner_name': 'edit-owner', 'registered_under': 'edit-tct', 
                 'area': 'edit-area', 'td_no': 'edit-td', 'location': 'edit-location', 
                 'deed_type': 'edit-deed', 'executed_by': 'edit-executed', 'in_favor_of': 'edit-favor', 
@@ -599,10 +621,10 @@
             for (let dbCol in dbToHtmlMap) {
                 let htmlSuffix = dbToHtmlMap[dbCol];
                 let el = document.getElementById(`edit-${htmlSuffix}`);
-                if (el && el.innerText.trim() !== '---') { 
-                    let newVal = el.innerText.trim();
+                if (el && el.innerText !== '---') { 
+                    let newVal = el.innerText.replace(/\u00A0/g, ' ').trim();
                     let oldVal = currentSelection[dbCol] ? String(currentSelection[dbCol]).trim() : '';
-                    if (newVal !== oldVal) {
+                    if (newVal !== oldVal && newVal !== '') {
                         updateData[dbCol] = newVal;
                         currentSelection[dbCol] = newVal;
                         hasChanges = true;
@@ -618,31 +640,35 @@
             const remarksEl = document.getElementById('reviewRemarks');
             if (remarksEl && !remarksEl.disabled) {
                 let newRemarks = remarksEl.value.trim();
-                let oldRemarks = currentSelection.Remarks || currentSelection.remarks || '';
+                let oldRemarks = currentSelection[colRemarks] ? String(currentSelection[colRemarks]).trim() : '';
                 if (newRemarks !== oldRemarks) {
-                    updateData.Remarks = newRemarks;
-                    currentSelection.Remarks = newRemarks;
+                    updateData[colRemarks] = newRemarks;
+                    currentSelection[colRemarks] = newRemarks;
                     hasChanges = true;
                 }
             }
 
             if (hasChanges) {
-                updateData.updated_at = new Date();
+                updateData.updated_at = new Date().toISOString();
                 const { error } = await supabaseClient.from('land_records').update(updateData).eq('id', currentSelection.id);
-                if(error) console.error('Auto-save error:', error);
-
-                if (updateData.LTC_ID_NUMBER !== undefined) {
-                    const newLtc = updateData.LTC_ID_NUMBER;
-                    const recHeaderId = document.getElementById('rec-header-id-top');
-                    const certHeaderId = document.getElementById('cert-header-id');
-                    const recFooterId = document.getElementById('rec-footer-id');
-                    const certFooterId = document.getElementById('cert-footer-id');
-                    if(recHeaderId) recHeaderId.innerText = newLtc;
-                    if(certHeaderId) certHeaderId.innerText = newLtc;
-                    if(recFooterId) recFooterId.innerText = newLtc;
-                    if(certFooterId) certFooterId.innerText = newLtc;
+                if(error) {
+                    console.error('Auto-save error:', error);
+                    alert("Save Error: " + error.message);
+                } else {
+                    const newLtc = updateData[colLtc] || currentSelection[colLtc];
+                    if (newLtc) {
+                        const recHeaderId = document.getElementById('rec-header-id-top');
+                        const certHeaderId = document.getElementById('cert-header-id');
+                        const recFooterId = document.getElementById('rec-footer-id');
+                        const certFooterId = document.getElementById('cert-footer-id');
+                        if(recHeaderId) recHeaderId.innerText = newLtc;
+                        if(certHeaderId) certHeaderId.innerText = newLtc;
+                        if(recFooterId) recFooterId.innerText = newLtc;
+                        if(certFooterId) certFooterId.innerText = newLtc;
+                    }
                 }
             }
+            return hasChanges;
         }
 
         function refreshDashboard() {
@@ -684,7 +710,6 @@
                     else if (st === 'RELEASED TO CLIENT' || st === 'RELEASED - CLIENT' || st === 'RELEASE TO CLIENT') { stats.rel++; st = 'RELEASED TO CLIENT'; }
                     else if (st === 'DISAPPROVED') { stats.dis++; st = 'DISAPPROVED'; }
 
-                    let currentIndex = statusFlow.indexOf(st);
                     let daysPassed = item.updated_at ? getWorkingDays(new Date(item.updated_at), new Date()) : 0;
                     let warningHTML = daysPassed > 5 ? `<span class="text-red-600 font-black ml-2 text-[12px]" title="Exceeded 5 working days!">⚠️</span>` : '';
 
@@ -878,7 +903,8 @@
             
             if(newRecordData.ltc_no !== undefined) delete newRecordData.ltc_no;
 
-            newRecordData.LTC_ID_NUMBER = newLtc; 
+            let colLtc = record.hasOwnProperty('LTC_ID_NUMBER') ? 'LTC_ID_NUMBER' : 'ltc_no';
+            newRecordData[colLtc] = newLtc; 
             newRecordData.status = 'RECEIVED'; 
 
             const { data, error } = await supabaseClient.from('land_records').insert([newRecordData]).select();
@@ -949,10 +975,12 @@
             document.getElementById('btnNext').disabled = currentNavIndex >= currentNavList.length - 1;
             document.getElementById('btnNext').className = currentNavIndex >= currentNavList.length - 1 ? 'bg-gray-100 text-gray-400 px-4 py-2 rounded text-xs font-black uppercase cursor-not-allowed' : 'bg-gray-200 hover:bg-gray-300 px-4 py-2 rounded text-xs font-black uppercase transition-colors text-gray-800';
 
+            let colLtc = currentSelection.hasOwnProperty('LTC_ID_NUMBER') ? 'LTC_ID_NUMBER' : 'ltc_no';
+
             const dbToHtmlMap = {
-                'LTC_ID_NUMBER': 'LTC_ID_NUMBER',
-                'lot_no': 'lot',
-                'owner_name': 'owner',
+                [colLtc]: 'edit-LTC_ID_NUMBER',
+                'lot_no': 'edit-lot',
+                'owner_name': 'edit-owner',
                 'registered_under': 'tct',
                 'area': 'area',
                 'td_no': 'td',
@@ -976,16 +1004,15 @@
             for (let dbCol in dbToHtmlMap) {
                 let htmlSuffix = dbToHtmlMap[dbCol];
                 
-                let editEl = document.getElementById(`edit-${htmlSuffix}`);
+                let editEl = document.getElementById(`edit-${htmlSuffix.replace('edit-', '')}`);
                 if(editEl) {
                     editEl.innerText = currentSelection[dbCol] || '---';
                     editEl.contentEditable = isEditable ? "true" : "false";
-                    editEl.onblur = () => { if(isEditable) autoSaveEdits(); }; 
                 }
 
                 let val = currentSelection[dbCol] || ' ';
-                let recEl = document.getElementById(`rec-${htmlSuffix}`);
-                let certEl = document.getElementById(`cert-${htmlSuffix}`);
+                let recEl = document.getElementById(`rec-${htmlSuffix.replace('edit-', '')}`);
+                let certEl = document.getElementById(`cert-${htmlSuffix.replace('edit-', '')}`);
                 if(recEl) recEl.innerText = val;
                 if(certEl) certEl.innerText = val;
             }
@@ -994,7 +1021,7 @@
             const certHeaderId = document.getElementById('cert-header-id');
             const recFooterId = document.getElementById('rec-footer-id');
             const certFooterId = document.getElementById('cert-footer-id');
-            const headerVal = currentSelection.LTC_ID_NUMBER || currentSelection.ltc_no || 'LTC-PENDING';
+            const headerVal = currentSelection[colLtc] || 'LTC-PENDING';
             if(recHeaderId) recHeaderId.innerText = headerVal;
             if(certHeaderId) certHeaderId.innerText = headerVal;
             if(recFooterId) recFooterId.innerText = headerVal;
@@ -1026,9 +1053,9 @@
                 document.getElementById('editNotice').classList.remove('hidden');
             }
             
-            document.getElementById('reviewRemarks').value = currentSelection.Remarks || currentSelection.remarks || '';
+            let colRemarks = currentSelection.hasOwnProperty('Remarks') ? 'Remarks' : 'remarks';
+            document.getElementById('reviewRemarks').value = currentSelection[colRemarks] || '';
             document.getElementById('reviewRemarks').disabled = !isEditable;
-            document.getElementById('reviewRemarks').onblur = () => { if(isEditable) autoSaveEdits(); };
             
             refreshDashboard(); 
 
@@ -1036,18 +1063,9 @@
 
             let encoderName = currentSelection.legalOfficer || currentSelection.legalofficer || currentSelection.encoded_by || currentSelection.created_by || '---';
             document.querySelectorAll('.preparedByName').forEach(el => el.innerText = encoderName);
-            document.querySelectorAll('.preparedByPosition').forEach(el => el.innerText = 'Fetching...');
             
-            if (encoderName !== '---') {
-                const { data: encData } = await supabaseClient.from('users').select('role').eq('full_name', encoderName).single();
-                if (encData && encData.role) {
-                    document.querySelectorAll('.preparedByPosition').forEach(el => el.innerText = encData.role);
-                } else {
-                    document.querySelectorAll('.preparedByPosition').forEach(el => el.innerText = 'Personnel');
-                }
-            } else {
-                document.querySelectorAll('.preparedByPosition').forEach(el => el.innerText = 'Personnel');
-            }
+            let encoderRole = userRolesMap[encoderName] || 'Personnel';
+            document.querySelectorAll('.preparedByPosition').forEach(el => el.innerText = encoderRole);
         }
 
         async function openPrint(id, type) {
@@ -1059,12 +1077,13 @@
             document.getElementById('modalMainTitle').parentElement.classList.add('hidden');
             
             let sourceId = type === 'rec' ? 'docRecommendation' : 'docCertification';
-            let formattedId = currentSelection.LTC_ID_NUMBER || currentSelection.ltc_no || id;
-            let filename = type === 'rec' ? `reco_${formattedId}.pdf` : `cert_${formattedId}.pdf`;
+            let ltcNum = currentSelection.LTC_ID_NUMBER || currentSelection.ltc_no || id;
+            ltcNum = ltcNum.replace(/[^a-z0-9]/gi, '_').toLowerCase(); 
+            let filename = type === 'rec' ? `reco_${ltcNum}.pdf` : `cert_${ltcNum}.pdf`;
 
             setTimeout(() => { 
                 generateIntelligentPDF(sourceId, filename, type);
-            }, 500); 
+            }, 800); 
         }
 
         function generateIntelligentPDF(sourceId, filename, type) {
@@ -1165,7 +1184,7 @@
             }).save().then(async () => {
                 if (type === 'cert' && currentSelection.status === 'REVIEWED') {
                     const oldStatus = currentSelection.status;
-                    await supabaseClient.from('land_records').update({ status: 'PRINTED LTC', updated_at: new Date() }).eq('id', currentSelection.id);
+                    await supabaseClient.from('land_records').update({ status: 'PRINTED LTC', updated_at: new Date().toISOString() }).eq('id', currentSelection.id);
                     await logStatusChange(currentSelection.id, oldStatus, 'PRINTED LTC');
                     fetchClearanceData();
                 }
@@ -1186,7 +1205,7 @@
             
             await autoSaveEdits(); 
 
-            const updateData = { status: newSt, updated_at: new Date() };
+            const updateData = { status: newSt, updated_at: new Date().toISOString() };
             const oldStatus = currentSelection.status;
             
             const { error } = await supabaseClient.from('land_records').update(updateData).eq('id', currentSelection.id);
@@ -1200,7 +1219,7 @@
         }
 
         window.processToNext = async function(id, nextStatus, oldStatus) {
-            const { error } = await supabaseClient.from('land_records').update({ status: nextStatus, updated_at: new Date() }).eq('id', id);
+            const { error } = await supabaseClient.from('land_records').update({ status: nextStatus, updated_at: new Date().toISOString() }).eq('id', id);
             if (!error) { 
                 await logStatusChange(id, oldStatus, nextStatus);
                 await fetchClearanceData(); 
