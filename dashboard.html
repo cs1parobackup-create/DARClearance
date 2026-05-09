@@ -95,8 +95,7 @@
             <div id="reviewSection" class="mb-8 space-y-6 no-print">
                 <div class="bg-blue-50 p-6 rounded-lg border border-blue-200 space-y-6">
                     <div class="grid grid-cols-[200px_1fr] items-center gap-y-8">
-                        <div class="font-bold text-red-700 uppercase text-sm">LTC Number:</div>
-                        <div id="edit-LTC_ID_NUMBER" class="edit-big border-red-400 bg-red-50 text-red-800">---</div>
+                        <div class="font-bold text-red-700 uppercase text-sm">LTC Number:</div><div id="edit-LTC_ID_NUMBER" class="edit-big border-red-400 bg-red-50 text-red-800">---</div>
                         <div class="font-bold text-gray-600 uppercase text-sm">Lot No/s:</div><div id="edit-lot" class="edit-big">---</div>
                         <div class="font-bold text-gray-600 uppercase text-sm">In the Name of:</div><div id="edit-owner" class="edit-big">---</div>
                         <div class="font-bold text-gray-600 uppercase text-sm">Registered under:</div><div id="edit-tct" class="edit-big">---</div>
@@ -387,6 +386,9 @@
         let backgroundImageUrl = "";
         const statusFlow = ['RECEIVED', 'REVIEWED', 'PRINTED LTC', 'SIGNED BY PARPO', 'RETURNED TO LEGAL', 'FORWARDED TO RECORDS', 'RELEASED TO CLIENT', 'DISAPPROVED'];
 
+        let chiefLegalName = "---";
+        let parpoName = "---";
+
         async function loadMenu() {
             const menuContainer = document.getElementById('dynamicMenu');
             if (!currentUser || !currentUser.role) return;
@@ -404,11 +406,9 @@
                 menuItems.forEach(item => {
                     if (item.is_active === false || item.is_active === 'FALSE') return;
                     
-                    const lbl = item.label.toUpperCase();
-                    const url = item.url.toLowerCase();
-                    const isNewClearanceMenu = lbl.includes('NEW') || url.includes('new_clearance');
-                    
-                    if (isNewClearanceMenu && (userRole.includes('PARPO') || userRole.includes('RECORDS'))) {
+                    const lbl = (item.label || "").toUpperCase();
+                    const url = (item.url || "").toLowerCase();
+                    if ((lbl.includes('NEW') || lbl.includes('CREATE') || url.includes('new')) && (userRole.includes('PARPO') || userRole.includes('RECORDS'))) {
                         return; 
                     }
                     
@@ -492,10 +492,12 @@
             const isRecords = userRole.includes('RECORDS');
             const isLegal = (userRole.includes('LEGAL') || userRole.includes('SARPO') || userRole.includes('ARPT') || userRole.includes('ARPO')) && !isParpo;
 
+            let displayCount = 0;
+
             rawData.forEach(item => {
                 const st = (item.status || 'RECEIVED').trim().toUpperCase();
                 
-                if (isRecords && st !== 'FORWARDED TO RECORDS' && st !== 'RELEASED TO CLIENT' && st !== 'RELEASED - CLIENT') return;
+                if (isRecords && st !== 'FORWARDED TO RECORDS') return;
 
                 let matchesSearch = Object.values(item).some(val => val !== null && String(val).toLowerCase().includes(query));
                 if (!matchesSearch) return;
@@ -540,7 +542,7 @@
                     } else if (st === 'DISAPPROVED') {
                         actions += `<button onclick='showReview("${item.id}", "UPDATE")' class="bg-blue-600 text-white w-full py-1.5 rounded shadow text-[10px] font-bold uppercase">Update</button>`;
                     } else {
-                        actions += `<button onclick='showReview("${item.id}", "VIEW_CERT")' class="bg-gray-500 text-white w-full py-1.5 rounded shadow text-[10px] font-bold uppercase">View Only</button>`;
+                        actions += `<button onclick='showReview("${item.id}", "VIEW")' class="bg-gray-500 text-white w-full py-1.5 rounded shadow text-[10px] font-bold uppercase">View Only</button>`;
                     }
                 } 
                 else if (isParpo) {
@@ -552,14 +554,13 @@
                     } else if (st === 'SIGNED BY PARPO' || st === 'SIGNED' || st === 'FOR SIGNATURE - PARPO II') {
                         actions += `<button onclick='processToNext("${item.id}", "RETURNED TO LEGAL", "${st}")' class="bg-orange-600 text-white w-full py-1.5 rounded shadow text-[10px] font-bold uppercase">Return to Legal</button>`;
                     } else {
-                        actions += `<button onclick='showReview("${item.id}", "VIEW_CERT")' class="bg-gray-500 text-white w-full py-1.5 rounded shadow text-[10px] font-bold uppercase">View</button>`;
+                        actions += `<button onclick='showReview("${item.id}", "VIEW")' class="bg-gray-500 text-white w-full py-1.5 rounded shadow text-[10px] font-bold uppercase">View</button>`;
                     }
                 }
                 else if (isRecords) {
                     if (st === 'FORWARDED TO RECORDS') {
                         actions += `<button onclick='processToNext("${item.id}", "RELEASED TO CLIENT", "${st}")' class="bg-cyan-600 text-white w-full py-1.5 rounded shadow text-[10px] font-bold uppercase mb-1">Release</button>`;
                     }
-                    actions += `<button onclick='showReview("${item.id}", "VIEW_CERT")' class="bg-gray-500 text-white w-full py-1.5 rounded shadow text-[10px] font-bold uppercase">View</button>`;
                 }
                 else {
                     if (isOwner) {
@@ -581,10 +582,10 @@
                         } else if (st === 'DISAPPROVED') {
                             actions += `<button onclick='showReview("${item.id}", "UPDATE")' class="bg-blue-600 text-white w-full py-1.5 rounded shadow text-[10px] font-bold uppercase">Update</button>`;
                         } else {
-                            actions += `<button onclick='showReview("${item.id}", "VIEW_CERT")' class="bg-gray-500 text-white w-full py-1.5 rounded shadow text-[10px] font-bold uppercase">View Only</button>`;
+                            actions += `<button onclick='showReview("${item.id}", "VIEW")' class="bg-gray-500 text-white w-full py-1.5 rounded shadow text-[10px] font-bold uppercase">View Only</button>`;
                         }
                     } else {
-                        actions += `<button onclick='showReview("${item.id}", "VIEW_CERT")' class="bg-gray-500 text-white w-full py-1.5 rounded shadow text-[10px] font-bold uppercase">View Only</button>`;
+                        actions += `<button onclick='showReview("${item.id}", "VIEW")' class="bg-gray-500 text-white w-full py-1.5 rounded shadow text-[10px] font-bold uppercase">View Only</button>`;
                     }
                 }
                 actions += '</div>';
@@ -696,19 +697,22 @@
                 while (pdf.internal.getNumberOfPages() > 1) { 
                     pdf.deletePage(pdf.internal.getNumberOfPages()); 
                 }
-                pdf.save();
-            }).then(async () => {
+                pdf.save(filename);
+                
                 if (type === 'cert' && currentSelection.status === 'REVIEWED') {
                     const oldStatus = currentSelection.status;
-                    await supabaseClient.from('land_records').update({ status: 'PRINTED LTC', updated_at: new Date() }).eq('id', currentSelection.id);
-                    logStatusChange(currentSelection.id, oldStatus, 'PRINTED LTC');
-                    fetchClearanceData();
+                    supabaseClient.from('land_records').update({ status: 'PRINTED LTC', updated_at: new Date() }).eq('id', currentSelection.id).then(() => {
+                        logStatusChange(currentSelection.id, oldStatus, 'PRINTED LTC');
+                        fetchClearanceData();
+                    });
                 }
-                document.body.removeChild(overlay);
+                const existingOverlay = document.getElementById('pdf-loading-overlay');
+                if (existingOverlay) document.body.removeChild(existingOverlay);
                 closeReview(); 
             }).catch(err => {
                 console.error(err);
-                document.body.removeChild(overlay);
+                const existingOverlay = document.getElementById('pdf-loading-overlay');
+                if (existingOverlay) document.body.removeChild(existingOverlay);
             });
         }
 
@@ -808,7 +812,7 @@
                 let userRole = currentUser.role.toUpperCase();
                 let isRecords = userRole.includes('RECORDS');
                 let st = (item.status || 'RECEIVED').trim().toUpperCase();
-                if (isRecords && st !== 'FORWARDED TO RECORDS' && st !== 'RELEASED TO CLIENT' && st !== 'RELEASED - CLIENT') {
+                if (isRecords && st !== 'FORWARDED TO RECORDS') {
                     return false;
                 }
                 return matchesSearch;
@@ -847,7 +851,7 @@
                 'or_date': 'or_date'
             };
 
-            const isEditable = (currentReviewMode !== 'VIEW_CERT');
+            const isEditable = (currentReviewMode !== 'VIEW');
 
             for (let dbCol in dbToHtmlMap) {
                 let htmlSuffix = dbToHtmlMap[dbCol];
@@ -881,7 +885,7 @@
             const dateStrOrdinal = `${now.getDate()}${getOrdinal(now.getDate())} day of ${monthNames[now.getMonth()]}, ${now.getFullYear()}`;
             document.querySelectorAll('.pdf-today-ordinal').forEach(el => el.innerText = dateStrOrdinal);
 
-            if (currentReviewMode === 'VIEW_CERT') {
+            if (currentReviewMode === 'VIEW') {
                 document.getElementById('modalMainTitle').innerText = "VIEW CLEARANCE";
                 document.getElementById('reviewSection').classList.remove('hidden'); 
                 document.getElementById('docRecommendation').classList.add('hidden'); 
