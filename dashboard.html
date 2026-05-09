@@ -580,6 +580,71 @@
             } catch (err) { console.error("Status Log Catch:", err); }
         }
 
+        async function autoSaveEdits() {
+            if (!currentSelection || currentReviewMode === 'VIEW_CERT') return;
+
+            const updateData = {};
+            let hasChanges = false;
+            
+            const dbToHtmlMap = {
+                'LTC_ID_NUMBER': 'edit-LTC_ID_NUMBER', 
+                'lot_no': 'edit-lot', 'owner_name': 'edit-owner', 'registered_under': 'edit-tct', 
+                'area': 'edit-area', 'td_no': 'edit-td', 'location': 'edit-location', 
+                'deed_type': 'edit-deed', 'executed_by': 'edit-executed', 'in_favor_of': 'edit-favor', 
+                'doc_no': 'edit-doc', 'page_no': 'edit-page', 'book_no': 'edit-book', 
+                'series_of': 'edit-series', 'dated': 'edit-dated', 'notary_public': 'edit-notary', 
+                'retention_area_names': 'edit-retention', 'or_number': 'edit-or_number', 'or_date': 'edit-or_date'
+            };
+
+            for (let dbCol in dbToHtmlMap) {
+                let htmlSuffix = dbToHtmlMap[dbCol];
+                let el = document.getElementById(`edit-${htmlSuffix}`);
+                if (el && el.innerText.trim() !== '---') { 
+                    let newVal = el.innerText.trim();
+                    let oldVal = currentSelection[dbCol] ? String(currentSelection[dbCol]).trim() : '';
+                    if (newVal !== oldVal) {
+                        updateData[dbCol] = newVal;
+                        currentSelection[dbCol] = newVal;
+                        hasChanges = true;
+                        
+                        let recEl = document.getElementById(`rec-${htmlSuffix}`);
+                        let certEl = document.getElementById(`cert-${htmlSuffix}`);
+                        if(recEl) recEl.innerText = newVal;
+                        if(certEl) certEl.innerText = newVal;
+                    }
+                }
+            }
+
+            const remarksEl = document.getElementById('reviewRemarks');
+            if (remarksEl && !remarksEl.disabled) {
+                let newRemarks = remarksEl.value.trim();
+                let oldRemarks = currentSelection.Remarks || currentSelection.remarks || '';
+                if (newRemarks !== oldRemarks) {
+                    updateData.Remarks = newRemarks;
+                    currentSelection.Remarks = newRemarks;
+                    hasChanges = true;
+                }
+            }
+
+            if (hasChanges) {
+                updateData.updated_at = new Date();
+                const { error } = await supabaseClient.from('land_records').update(updateData).eq('id', currentSelection.id);
+                if(error) console.error('Auto-save error:', error);
+
+                if (updateData.LTC_ID_NUMBER !== undefined) {
+                    const newLtc = updateData.LTC_ID_NUMBER;
+                    const recHeaderId = document.getElementById('rec-header-id-top');
+                    const certHeaderId = document.getElementById('cert-header-id');
+                    const recFooterId = document.getElementById('rec-footer-id');
+                    const certFooterId = document.getElementById('cert-footer-id');
+                    if(recHeaderId) recHeaderId.innerText = newLtc;
+                    if(certHeaderId) certHeaderId.innerText = newLtc;
+                    if(recFooterId) recFooterId.innerText = newLtc;
+                    if(certFooterId) certFooterId.innerText = newLtc;
+                }
+            }
+        }
+
         function refreshDashboard() {
             const query = document.getElementById('searchInput').value.toLowerCase();
             const tbody = document.getElementById('clearanceTableBody');
@@ -839,7 +904,8 @@
             return colors[s] || 'bg-gray-100 text-gray-800';
         }
 
-        function navigateReview(dir) {
+        async function navigateReview(dir) {
+            if (currentReviewMode !== 'VIEW_CERT') await autoSaveEdits();
             let newIndex = currentNavIndex + dir;
             if(newIndex >= 0 && newIndex < currentNavList.length) { showReview(currentNavList[newIndex].id, currentReviewMode); }
         }
@@ -914,6 +980,7 @@
                 if(editEl) {
                     editEl.innerText = currentSelection[dbCol] || '---';
                     editEl.contentEditable = isEditable ? "true" : "false";
+                    editEl.onblur = () => { if(isEditable) autoSaveEdits(); }; 
                 }
 
                 let val = currentSelection[dbCol] || ' ';
@@ -961,6 +1028,7 @@
             
             document.getElementById('reviewRemarks').value = currentSelection.Remarks || currentSelection.remarks || '';
             document.getElementById('reviewRemarks').disabled = !isEditable;
+            document.getElementById('reviewRemarks').onblur = () => { if(isEditable) autoSaveEdits(); };
             
             refreshDashboard(); 
 
@@ -1102,7 +1170,7 @@
                     fetchClearanceData();
                 }
                 document.body.removeChild(overlay);
-                closeReview(); 
+                closeReviewModalOnly(); 
                 document.getElementById('modalMainTitle').parentElement.classList.remove('hidden');
             }).catch(err => {
                 console.error(err);
@@ -1116,32 +1184,16 @@
             const remarks = document.getElementById('reviewRemarks').value;
             if (newSt === 'DISAPPROVED' && !remarks.trim()) { alert('Please provide remarks for disapproval.'); return; }
             
+            await autoSaveEdits(); 
+
             const updateData = { status: newSt, updated_at: new Date() };
-            if (remarks.trim()) updateData.Remarks = remarks; 
-
-            // ALWAYS save editable fields on any modal action
-            const dbToHtmlMap = {
-                'LTC_ID_NUMBER': 'edit-LTC_ID_NUMBER', 
-                'lot_no': 'edit-lot', 'owner_name': 'edit-owner', 'registered_under': 'edit-tct', 
-                'area': 'edit-area', 'td_no': 'edit-td', 'location': 'edit-location', 
-                'deed_type': 'edit-deed', 'executed_by': 'edit-executed', 'in_favor_of': 'edit-favor', 
-                'doc_no': 'edit-doc', 'page_no': 'edit-page', 'book_no': 'edit-book', 
-                'series_of': 'edit-series', 'dated': 'edit-dated', 'notary_public': 'edit-notary', 
-                'retention_area_names': 'edit-retention', 'or_number': 'edit-or_number', 'or_date': 'edit-or_date'
-            };
-
-            for (let dbCol in dbToHtmlMap) {
-                let htmlSuffix = dbToHtmlMap[dbCol];
-                let el = document.getElementById(`edit-${htmlSuffix}`);
-                if (el && el.innerText.trim() !== '---') { updateData[dbCol] = el.innerText.trim(); }
-            }
-
             const oldStatus = currentSelection.status;
+            
             const { error } = await supabaseClient.from('land_records').update(updateData).eq('id', currentSelection.id);
             if (!error) { 
                 await logStatusChange(currentSelection.id, oldStatus, newSt);
                 await fetchClearanceData(); 
-                closeReview(); 
+                closeReviewModalOnly(); 
             } else {
                 alert('Database Error: ' + error.message);
             }
@@ -1155,7 +1207,15 @@
             }
         }
 
-        function closeReview() { 
+        async function closeReview() { 
+            if (currentReviewMode !== 'VIEW_CERT') {
+                await autoSaveEdits();
+                await fetchClearanceData(); 
+            }
+            closeReviewModalOnly();
+        }
+
+        function closeReviewModalOnly() {
             document.getElementById('reviewModal').classList.add('hidden'); 
             document.getElementById('docCertification').style.display = 'none';
         }
@@ -1180,4 +1240,3 @@
     </script>
 </body>
 </html>
-```</LTC></LTC>
