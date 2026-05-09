@@ -60,6 +60,11 @@
             <div class="max-w-4xl mx-auto card p-8">
                 <form id="documentForm" class="space-y-6">
                     
+                    <div>
+                        <label class="form-label">LTC Number</label>
+                        <input type="text" name="LTC_ID_NUMBER" class="form-input text-lg font-black text-red-800 bg-red-50 border-red-200" placeholder="e.g. 2026-LTC-001" required>
+                    </div>
+
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
                             <label class="form-label">Lot No/s</label>
@@ -144,6 +149,17 @@
                         <textarea name="retention_area_names" class="form-input" placeholder="List names..."></textarea>
                     </div>
 
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 border-t pt-4">
+                        <div>
+                            <label class="form-label">O.R. No.</label>
+                            <input type="text" name="or_number" class="form-input" placeholder="Enter OR Number">
+                        </div>
+                        <div>
+                            <label class="form-label">O.R. Date</label>
+                            <input type="text" name="or_date" class="form-input" placeholder="e.g. JANUARY 1, 2026">
+                        </div>
+                    </div>
+
                     <div class="flex justify-end gap-4 border-t pt-6">
                         <button type="reset" class="px-6 py-2 border border-gray-300 rounded text-sm font-bold hover:bg-gray-50 transition-colors uppercase">Clear Form</button>
                         <button type="submit" id="btnSubmit" class="px-8 py-2 bg-[#003811] text-white rounded text-sm font-bold shadow hover:bg-[#006400] transition-colors uppercase">Save Application</button>
@@ -164,27 +180,47 @@
         // --- DYNAMIC MENU RENDER ---
         async function renderMenu() {
             const menuContainer = document.getElementById('dynamicMenu');
-            const userRole = currentUser.role.toUpperCase();
+            const userRole = currentUser.role.toUpperCase().trim();
 
-            const { data: menuItems, error } = await supabaseClient
-                .from('clearance_menu')
-                .select('*')
-                .eq('is_active', true)
-                .order('sort_order', { ascending: true });
+            try {
+                const { data: menuItems, error } = await supabaseClient
+                    .from('clearance_menu')
+                    .select('*')
+                    .order('sort_order', { ascending: true });
 
-            if (error) return console.error("Menu Error:", error);
+                if (error) throw error;
 
-            menuContainer.innerHTML = '';
-            menuItems.forEach(item => {
-                if (item.required_roles.includes(userRole) || item.required_roles.length === 0) {
-                    const isCurrent = window.location.pathname.includes(item.url);
-                    const link = document.createElement('a');
-                    link.href = item.url;
-                    link.className = `block px-6 py-4 text-[11px] font-black uppercase border-l-4 transition-all ${isCurrent ? 'bg-[#006400] border-[#D4AF37]' : 'border-transparent hover:bg-[#006400]'}`;
-                    link.innerText = item.label;
-                    menuContainer.appendChild(link);
-                }
-            });
+                menuContainer.innerHTML = '';
+                menuItems.forEach(item => {
+                    if (item.is_active === false || item.is_active === 'FALSE') return;
+                    
+                    let roles = [];
+                    if (item.required_roles) {
+                        if (Array.isArray(item.required_roles)) {
+                            roles = item.required_roles;
+                        } else {
+                            try {
+                                roles = JSON.parse(item.required_roles);
+                            } catch(e) {
+                                roles = item.required_roles.replace(/[\[\]"'{}()]/g, '').split(',').map(r => r.trim());
+                            }
+                        }
+                    }
+
+                    const hasRole = roles.length === 0 || roles.some(r => userRole.includes(String(r).toUpperCase().trim()));
+                    
+                    if (hasRole) {
+                        const isCurrent = window.location.pathname.includes(item.url);
+                        const link = document.createElement('a');
+                        link.href = item.url;
+                        link.className = `block px-6 py-4 text-[11px] font-black uppercase border-l-4 transition-all ${isCurrent ? 'bg-[#006400] border-[#D4AF37]' : 'border-transparent hover:bg-[#006400]'}`;
+                        link.innerText = item.label;
+                        menuContainer.appendChild(link);
+                    }
+                });
+            } catch (err) {
+                console.error("Menu Error:", err);
+            }
         }
 
         // --- FORM SUBMISSION ---
@@ -196,11 +232,11 @@
             const formData = new FormData(this);
             const payload = Object.fromEntries(formData.entries());
             
-            // Set initial status to match the first monitoring stage
+            // Assign legalOfficer from current session
+            payload.legalOfficer = currentUser.full_name;
             payload.status = 'RECEIVED - Legal';
 
             try {
-                // Ensure table name 'land_records' matches your schema
                 const { error } = await supabaseClient.from('land_records').insert([payload]);
                 if (error) throw error;
                 
