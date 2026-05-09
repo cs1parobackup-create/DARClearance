@@ -981,6 +981,13 @@
                 actionDiv.innerHTML = '';
             } else if (['CORRECTION', 'RE-ISSUANCE', 'UPDATE'].includes(currentReviewMode)) {
                 actionDiv.innerHTML = `<button onclick="decideStatus('PRINTED LTC')" class="bg-yellow-600 text-white px-8 py-3 rounded text-sm font-black uppercase ml-auto">Save & Route to PARPO</button>`;
+            } else if (currentReviewMode === 'REVIEW') {
+                actionDiv.innerHTML = `
+                    <div class="flex gap-2 ml-auto">
+                        <button onclick="decideStatus('REVIEWED')" class="bg-green-700 text-white px-8 py-3 rounded text-sm font-black uppercase">Approve</button>
+                        <button onclick="decideStatus('DISAPPROVED')" class="bg-red-700 text-white px-8 py-3 rounded text-sm font-black uppercase">Disapprove</button>
+                    </div>
+                `;
             } else {
                 actionDiv.innerHTML = `<button onclick="decideStatus('REVIEWED')" class="bg-green-700 text-white px-8 py-3 rounded text-sm font-black uppercase ml-auto">Approve</button>`;
             }
