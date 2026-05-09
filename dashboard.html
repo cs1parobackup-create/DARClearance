@@ -532,12 +532,14 @@
         }
 
         async function fetchDynamicSignatories() {
-            const { data, error } = await supabaseClient.from('users').select('full_name, role').in('role', ['Chief, Legal Division', 'DIVISION CHIEF', 'PARPO II', 'PARPO']);
+            const { data, error } = await supabaseClient.from('users').select('full_name, role');
             if (data && !error) {
-                const chief = data.find(u => u.role.toUpperCase().includes('CHIEF'));
-                const parpo = data.find(u => u.role.toUpperCase().includes('PARPO'));
+                const chief = data.find(u => u.role && u.role.toUpperCase().includes('CHIEF'));
+                const parpo = data.find(u => u.role && u.role.toUpperCase().includes('PARPO'));
                 if (chief) chiefLegalName = chief.full_name;
                 if (parpo) parpoName = parpo.full_name;
+            } else if (error) {
+                console.error("Signatories Error:", error);
             }
         }
 
@@ -567,13 +569,15 @@
         async function logStatusChange(recordId, oldStatus, newStatus) {
             if (!recordId || !newStatus || oldStatus === newStatus) return;
             try {
-                await supabaseClient.from('status_logs').insert([{
+                const { error } = await supabaseClient.from('status_logs').insert([{
                     record_id: recordId,
                     previous_status: oldStatus,
                     new_status: newStatus,
-                    changed_by: currentUser.full_name
+                    changed_by: currentUser.full_name,
+                    changed_at: new Date()
                 }]);
-            } catch (err) {}
+                if (error) console.error("Status Log Error:", error);
+            } catch (err) { console.error("Status Log Catch:", err); }
         }
 
         function refreshDashboard() {
@@ -661,7 +665,7 @@
                             if (isParpo || isLegal || isRecords || isChief) {
                                 actions += `<button onclick='showReview("${item.id}", "VIEW_CERT")' class="bg-gray-500 text-white w-full py-1.5 rounded shadow text-[10px] font-bold hover:bg-gray-600 uppercase transition-colors text-center mb-1">View</button>`;
                             }
-                        } else if (st === 'RELEASED TO CLIENT') {
+                        } else if (st === 'RELEASED TO CLIENT' || st === 'RELEASED - CLIENT' || st === 'RELEASE TO CLIENT') {
                             if (isChief || isLegal) {
                                 actions += `<button onclick='handleDuplicate("${item.id}", "CORRECTION")' class="bg-yellow-500 text-white w-full py-1.5 rounded shadow text-[10px] font-bold hover:bg-yellow-600 uppercase transition-colors text-center mb-1">Correction</button>`;
                                 actions += `<button onclick='handleDuplicate("${item.id}", "RE-ISSUANCE")' class="bg-blue-500 text-white w-full py-1.5 rounded shadow text-[10px] font-bold hover:bg-blue-600 uppercase transition-colors text-center mb-1">Re-Issue</button>`;
@@ -797,7 +801,7 @@
             
             if(newRecordData.ltc_no !== undefined) delete newRecordData.ltc_no;
 
-            newRecordData.LTC_ID_NUMBER = ""; 
+            newRecordData.LTC_ID_NUMBER = `NEW (${mode})`; 
             newRecordData.status = 'RECEIVED'; 
 
             const { data, error } = await supabaseClient.from('land_records').insert([newRecordData]).select();
@@ -980,7 +984,7 @@
 
             setTimeout(() => { 
                 generateIntelligentPDF(sourceId, filename, type);
-            }, 100); 
+            }, 500); 
         }
 
         function generateIntelligentPDF(sourceId, filename, type) {
@@ -1082,7 +1086,7 @@
                 if (type === 'cert' && currentSelection.status === 'REVIEWED') {
                     const oldStatus = currentSelection.status;
                     await supabaseClient.from('land_records').update({ status: 'PRINTED LTC', updated_at: new Date() }).eq('id', currentSelection.id);
-                    logStatusChange(currentSelection.id, oldStatus, 'PRINTED LTC');
+                    await logStatusChange(currentSelection.id, oldStatus, 'PRINTED LTC');
                     fetchClearanceData();
                 }
                 document.body.removeChild(overlay);
@@ -1124,7 +1128,7 @@
             const oldStatus = currentSelection.status;
             const { error } = await supabaseClient.from('land_records').update(updateData).eq('id', currentSelection.id);
             if (!error) { 
-                logStatusChange(currentSelection.id, oldStatus, newSt);
+                await logStatusChange(currentSelection.id, oldStatus, newSt);
                 await fetchClearanceData(); 
                 closeReview(); 
             }
@@ -1133,7 +1137,7 @@
         window.processToNext = async function(id, nextStatus, oldStatus) {
             const { error } = await supabaseClient.from('land_records').update({ status: nextStatus, updated_at: new Date() }).eq('id', id);
             if (!error) { 
-                logStatusChange(id, oldStatus, nextStatus);
+                await logStatusChange(id, oldStatus, nextStatus);
                 await fetchClearanceData(); 
             }
         }
