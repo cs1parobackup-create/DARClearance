@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Management - DAR Clearance Monitor</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-config.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root { --dar-green: #003811; --dar-gold: #D4AF37; }
+        body { font-family: 'Segoe UI', sans-serif; background-color: #F3F4F6; font-size: 13px; color: #1F2937; }
+        .compact-table td, .compact-table th { padding: 0.75rem 1rem !important; }
+        .scroll-area::-webkit-scrollbar { width: 4px; }
+        .scroll-area::-webkit-scrollbar-track { background: #f1f1f1; }
+        .scroll-area::-webkit-scrollbar-thumb { background: #c1c1c1; border-radius: 4px; }
+    </style>
+</head>
+<body class="flex h-screen overflow-hidden text-[#1F2937]">
+
+    <nav class="bg-[#003811] md:w-64 flex flex-col text-white flex-shrink-0 shadow-xl z-20">
+        <div class="p-6 border-b border-[#006400]">
+            <h2 class="text-xl font-bold text-[#D4AF37]">DARPO-CS</h2>
+            <p id="userRoleBadge" class="text-[10px] text-gray-300 uppercase tracking-widest mt-1 font-bold">---</p>
+        </div>
+        
+        <div id="dynamicMenu" class="flex-1 overflow-y-auto py-2">
+            <!-- Menu items injected here -->
+        </div>
+
+        <div class="p-4 bg-black/20">
+            <p id="activeUser" class="text-xs text-gray-300 truncate mb-2 font-bold"></p>
+            <button onclick="logout()" class="w-full bg-red-800 py-2 text-xs font-bold rounded shadow hover:bg-red-700 transition-colors uppercase">Logout</button>
+        </div>
+    </nav>
+
+    <main class="flex-1 flex flex-col overflow-hidden">
+        <header class="bg-white shadow-sm border-b px-6 py-4 flex justify-between items-center">
+            <div>
+                <h1 class="text-lg font-bold text-[#003811] uppercase tracking-tight">System Users</h1>
+                <p class="text-[10px] text-gray-500 font-bold uppercase tracking-widest mt-0.5">Account & Access Management</p>
+            </div>
+            <div class="flex gap-2 items-center">
+                <input type="text" id="searchInput" placeholder="Search users..." class="border border-gray-300 rounded px-3 py-1.5 text-xs focus:outline-none focus:border-[#003811] w-64" onkeyup="renderUsers()">
+                <button onclick="fetchUsers()" class="bg-gray-200 text-gray-800 px-4 py-1.5 rounded text-xs font-bold uppercase shadow-sm hover:bg-gray-300 transition-colors">Refresh</button>
+                <button id="btnAddUser" onclick="openUserModal()" class="bg-[#D4AF37] text-[#003811] px-4 py-1.5 rounded text-xs font-black uppercase shadow hover:brightness-105 border border-yellow-600 hidden">+ Add New User</button>
+            </div>
+        </header>
+
+        <div class="flex-1 overflow-y-auto p-6 scroll-area">
+            <div class="bg-white rounded-lg shadow-sm overflow-hidden border border-gray-200">
+                <table class="w-full text-left border-collapse text-[12px] compact-table">
+                    <thead class="bg-[#003811] border-b uppercase font-bold text-white tracking-wider">
+                        <tr>
+                            <th class="w-[25%] py-3">Full Name</th>
+                            <th class="w-[15%] py-3">Username</th>
+                            <th class="w-[15%] py-3">Password</th>
+                            <th class="w-[20%] py-3">Role</th>
+                            <th class="w-[10%] text-center py-3">Status</th>
+                            <th class="w-[15%] text-center py-3">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="usersTableBody" class="divide-y divide-gray-200">
+                        <tr><td colspan="6" class="text-center py-8 text-gray-400 italic">Loading users...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <!-- User Add/Edit Modal -->
+    <div id="userModal" class="fixed inset-0 bg-black/60 z-50 hidden flex items-center justify-center p-4 backdrop-blur-sm">
+        <div class="bg-white max-w-md w-full p-6 rounded-lg shadow-2xl relative border-t-4 border-[#003811]">
+            
+            <div class="flex justify-between items-center mb-5 border-b border-gray-200 pb-3">
+                <h2 id="modalTitle" class="text-xl font-black text-[#003811] uppercase tracking-widest">Add New User</h2>
+                <button onclick="closeUserModal()" class="text-gray-400 hover:text-black text-2xl font-normal leading-none">&times;</button>
+            </div>
+
+            <form id="userForm" onsubmit="saveUser(event)" class="space-y-4">
+                <input type="hidden" id="userId">
+                
+                <div>
+                    <label class="block text-[10px] font-bold text-gray-700 uppercase mb-1">Full Name</label>
+                    <input type="text" id="userFullName" required class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-[#003811] focus:ring-1 focus:ring-[#003811]">
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-[10px] font-bold text-gray-700 uppercase mb-1">Username</label>
+                        <input type="text" id="userUsername" required class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-[#003811] focus:ring-1 focus:ring-[#003811]">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-gray-700 uppercase mb-1">Password</label>
+                        <input type="text" id="userPassword" required class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-[#003811] focus:ring-1 focus:ring-[#003811]">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-[10px] font-bold text-gray-700 uppercase mb-1">System Role</label>
+                    <select id="userRole" required class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-[#003811] focus:ring-1 focus:ring-[#003811] bg-white">
+                        <option value="" disabled selected>Select Role</option>
+                        <option value="CHIEF, LEGAL DIVISION">CHIEF, LEGAL DIVISION</option>
+                        <option value="PARPO II">PARPO II</option>
+                        <option value="RECORDS">RECORDS</option>
+                        <option value="LEGAL OFFICER">LEGAL OFFICER</option>
+                        <option value="ODTS ENCODER">ODTS ENCODER</option>
+                    </select>
+                </div>
+
+                <div class="flex items-center gap-2 pt-2" id="statusToggleContainer">
+                    <input type="checkbox" id="userIsActive" class="w-4 h-4 text-[#003811] focus:ring-[#003811] border-gray-300 rounded">
+                    <label for="userIsActive" class="text-[11px] font-bold text-gray-700 uppercase tracking-widest cursor-pointer">Active Account</label>
+                </div>
+
+                <div class="flex justify-end gap-2 pt-4 border-t border-gray-100 mt-2">
+                    <button type="button" onclick="closeUserModal()" class="bg-gray-200 text-gray-800 px-4 py-2 rounded text-xs font-bold uppercase shadow-sm hover:bg-gray-300 transition-colors">Cancel</button>
+                    <button type="submit" id="btnSaveUser" class="bg-[#003811] text-white px-6 py-2 rounded text-xs font-black uppercase shadow hover:bg-black transition-colors">Save User</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const userData = sessionStorage.getItem('currentUser');
+        if (!userData) { window.location.href = 'index.html'; }
+        const currentUser = JSON.parse(userData);
+        document.getElementById('activeUser').innerText = currentUser.full_name;
+        document.getElementById('userRoleBadge').innerText = currentUser.role;
+
+        const isChief = currentUser.role.toUpperCase().includes('CHIEF');
+        let usersData = [];
+
+        async function loadMenu() {
+            const menuContainer = document.getElementById('dynamicMenu');
+            const userRole = currentUser.role.toUpperCase().trim();
+            
+            try {
+                const { data: menuItems, error } = await supabaseClient
+                    .from('clearance_menu')
+                    .select('*')
+                    .order('sort_order', { ascending: true });
+
+                if (error) throw error;
+
+                menuContainer.innerHTML = '';
+                menuItems.forEach(item => {
+                    if (item.is_active === false || item.is_active === 'FALSE') return;
+                    
+                    let roles = [];
+                    if (item.required_roles) {
+                        if (Array.isArray(item.required_roles)) {
+                            roles = item.required_roles;
+                        } else {
+                            try {
+                                roles = JSON.parse(item.required_roles);
+                            } catch(e) {
+                                roles = item.required_roles.replace(/[\[\]"']/g, '').split(',').map(r => r.trim());
+                            }
+                        }
+                    }
+
+                    const hasRole = roles.length === 0 || roles.some(r => userRole.includes(String(r).toUpperCase().trim()));
+                    
+                    if (hasRole) {
+                        const isCurrent = window.location.pathname.includes(item.url);
+                        const link = document.createElement('a');
+                        link.href = item.url;
+                        link.className = `block px-6 py-4 text-[11px] font-black uppercase border-l-4 transition-all ${isCurrent ? 'bg-[#006400] border-[#D4AF37]' : 'border-transparent hover:bg-[#006400]'}`;
+                        link.innerText = item.label;
+                        menuContainer.appendChild(link);
+                    }
+                });
+                
+                // Add static User Management link if not naturally in menu
+                const isCurrentUsers = window.location.pathname.includes('users.html');
+                const usersLink = document.createElement('a');
+                usersLink.href = 'users.html';
+                usersLink.className = `block px-6 py-4 text-[11px] font-black uppercase border-l-4 transition-all ${isCurrentUsers ? 'bg-[#006400] border-[#D4AF37]' : 'border-transparent hover:bg-[#006400]'}`;
+                usersLink.innerHTML = '👤 My Account / Users';
+                menuContainer.appendChild(usersLink);
+
+            } catch (err) {
+                console.error("Menu Error:", err);
+            }
+        }
+
+        async function fetchUsers() {
+            const tbody = document.getElementById('usersTableBody');
+            tbody.innerHTML = '<tr><td colspan="6" class="text-center py-8 text-gray-400 font-bold uppercase tracking-widest animate-pulse">Syncing Users...</td></tr>';
+            
+            try {
+                let query = supabaseClient.from('users').select('*').order('full_name', { ascending: true });
+                
+                // If not chief, strictly limit to their own account only
+                if (!isChief) {
+                    query = query.eq('id', currentUser.id);
+                } else {
+                    document.getElementById('btnAddUser').classList.remove('hidden');
+                }
+
+                const { data, error } = await query;
+                
+                if (error) throw error;
+                usersData = data || [];
+                renderUsers();
+            } catch (error) {
+                tbody.innerHTML = `<tr><td colspan="6" class="text-center py-8 text-red-500 font-bold uppercase">Error: ${error.message}</td></tr>`;
+            }
+        }
+
+        function renderUsers() {
+            const query = document.getElementById('searchInput').value.toLowerCase();
+            const tbody = document.getElementById('usersTableBody');
+            tbody.innerHTML = '';
+
+            let hasResults = false;
+
+            usersData.forEach(user => {
+                let matchesSearch = query === '' || 
+                    (user.full_name && user.full_name.toLowerCase().includes(query)) ||
+                    (user.username && user.username.toLowerCase().includes(query)) ||
+                    (user.role && user.role.toLowerCase().includes(query));
+
+                if (matchesSearch) {
+                    hasResults = true;
+                    
+                    const statusBadge = user.is_active 
+                        ? `<span class="bg-green-100 text-green-800 border border-green-200 px-2 py-1 rounded text-[9px] font-black uppercase">ACTIVE</span>`
+                        : `<span class="bg-red-100 text-red-800 border border-red-200 px-2 py-1 rounded text-[9px] font-black uppercase">DISABLED</span>`;
+
+                    // Only Chief can see plain text passwords of others. Mask it otherwise.
+                    let displayPassword = (isChief || user.id === currentUser.id) ? user.password : '••••••••';
+
+                    tbody.innerHTML += `
+                        <tr class="hover:bg-gray-50 transition-colors border-b border-gray-100">
+                            <td class="font-bold text-gray-900">${user.full_name || '---'}</td>
+                            <td class="font-mono text-gray-700">${user.username || '---'}</td>
+                            <td class="font-mono text-gray-500">${displayPassword}</td>
+                            <td class="text-xs text-gray-600 font-bold uppercase tracking-wider">${user.role || '---'}</td>
+                            <td class="text-center">${statusBadge}</td>
+                            <td class="text-center">
+                                <button onclick='openUserModal("${user.id}")' class="bg-[#003811] text-white px-3 py-1.5 rounded text-[10px] font-bold uppercase shadow hover:bg-black transition-colors w-full max-w-[100px]">Edit Profile</button>
+                            </td>
+                        </tr>
+                    `;
+                }
+            });
+
+            if (!hasResults) {
+                tbody.innerHTML = '<tr><td colspan="6" class="text-center py-8 text-gray-400 font-bold uppercase tracking-widest">No users found.</td></tr>';
+            }
+        }
+
+        function openUserModal(userId = null) {
+            const form = document.getElementById('userForm');
+            const title = document.getElementById('modalTitle');
+            const roleSelect = document.getElementById('userRole');
+            const statusContainer = document.getElementById('statusToggleContainer');
+
+            form.reset();
+            document.getElementById('userId').value = '';
+
+            if (userId) {
+                const user = usersData.find(u => u.id === userId);
+                if (user) {
+                    title.innerText = "Edit User Profile";
+                    document.getElementById('userId').value = user.id;
+                    document.getElementById('userFullName').value = user.full_name || '';
+                    document.getElementById('userUsername').value = user.username || '';
+                    document.getElementById('userPassword').value = user.password || '';
+                    
+                    // Add existing role to options if not present
+                    if (![...roleSelect.options].some(opt => opt.value === user.role)) {
+                        roleSelect.add(new Option(user.role, user.role));
+                    }
+                    roleSelect.value = user.role || '';
+                    document.getElementById('userIsActive').checked = user.is_active;
+                }
+            } else {
+                title.innerText = "Create New User";
+                document.getElementById('userIsActive').checked = true; // Default to active
+            }
+
+            // Security Lock: Non-chiefs cannot change their role or active status
+            if (!isChief) {
+                roleSelect.disabled = true;
+                statusContainer.style.display = 'none';
+                roleSelect.classList.add('bg-gray-100');
+            } else {
+                roleSelect.disabled = false;
+                statusContainer.style.display = 'flex';
+                roleSelect.classList.remove('bg-gray-100');
+            }
+
+            document.getElementById('userModal').classList.remove('hidden');
+        }
+
+        function closeUserModal() {
+            document.getElementById('userModal').classList.add('hidden');
+        }
+
+        async function saveUser(e) {
+            e.preventDefault();
+            const btn = document.getElementById('btnSaveUser');
+            const originalText = btn.innerText;
+            btn.innerText = 'SAVING...';
+            btn.disabled = true;
+
+            const userId = document.getElementById('userId').value;
+            
+            const payload = {
+                full_name: document.getElementById('userFullName').value.trim(),
+                username: document.getElementById('userUsername').value.trim(),
+                password: document.getElementById('userPassword').value.trim(),
+                updated_at: new Date().toISOString()
+            };
+
+            // Only update restricted fields if user is Chief
+            if (isChief) {
+                payload.role = document.getElementById('userRole').value;
+                payload.is_active = document.getElementById('userIsActive').checked;
+            }
+
+            try {
+                let error;
+                if (userId) {
+                    // Update existing
+                    const res = await supabaseClient.from('users').update(payload).eq('id', userId);
+                    error = res.error;
+                    
+                    // Update session storage if editing self
+                    if (!error && userId === currentUser.id) {
+                        const updatedUser = { ...currentUser, ...payload };
+                        sessionStorage.setItem('currentUser', JSON.stringify(updatedUser));
+                        document.getElementById('activeUser').innerText = updatedUser.full_name;
+                        document.getElementById('userRoleBadge').innerText = updatedUser.role;
+                    }
+                } else {
+                    // Insert new (Chief only)
+                    payload.created_at = new Date().toISOString();
+                    const res = await supabaseClient.from('users').insert([payload]);
+                    error = res.error;
+                }
+
+                if (error) throw error;
+
+                closeUserModal();
+                fetchUsers();
+            } catch (error) {
+                console.error("Save Error:", error);
+                alert("Failed to save user: " + error.message);
+            } finally {
+                btn.innerText = originalText;
+                btn.disabled = false;
+            }
+        }
+
+        function logout() { sessionStorage.removeItem('currentUser'); window.location.href = 'index.html'; }
+        
+        window.onload = () => {
+            loadMenu();
+            fetchUsers();
+        };
+    </script>
+</body>
+</html>
