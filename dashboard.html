@@ -20,16 +20,44 @@
             body { background: white !important; }
             nav, header, .no-print, #actionButtons, #remarksSection, .modal-header-actions { display: none !important; }
             #reviewModal { position: static; display: block; background: transparent; padding: 0; box-shadow: none; }
-            .doc-print-area { visibility: visible !important; display: block !important; width: 8.5in !important; height: 13in !important; padding: 0 !important; margin: 0 !important; }
+            
+            .doc-print-area { 
+                visibility: visible !important;
+                display: block !important;
+                width: 8.5in !important; 
+                height: 13in !important;
+                padding: 0 !important;
+                margin: 0 !important;
+            }
         }
 
         .doc-print-area { display: none; }
-        .data-value { font-weight: bold; border-bottom: 1.5px solid black; display: inline-block; min-width: 40px; text-transform: uppercase; line-height: 1.1; padding-bottom: 1px; }
-        .page-break-avoid { page-break-inside: avoid !important; break-inside: avoid !important; }
+        
+        .data-value { 
+            font-weight: bold; 
+            border-bottom: 1.5px solid black; 
+            display: inline-block; 
+            min-width: 40px; 
+            text-transform: uppercase; 
+            line-height: 1.1; 
+            padding-bottom: 1px;
+        }
+        
+        .page-break-avoid { 
+            page-break-inside: avoid !important;
+            break-inside: avoid !important;
+        }
+        
         .scroll-area::-webkit-scrollbar { width: 4px; }
         .scroll-area::-webkit-scrollbar-track { background: #f1f1f1; }
         .scroll-area::-webkit-scrollbar-thumb { background: #c1c1c1; border-radius: 4px; }
-        .edit-big { font-size: 1.25rem !important; line-height: 1.75rem !important; font-weight: 900 !important; color: #1e3a8a !important; background-color: #fefce8 !important; border-bottom: 3px solid #fde047 !important; padding: 6px 12px !important; border-radius: 4px; display: inline-block; min-width: 200px; text-transform: uppercase; outline: none; transition: all 0.2s; }
+
+        .edit-big {
+            font-size: 1.25rem !important; line-height: 1.75rem !important; font-weight: 900 !important;
+            color: #1e3a8a !important; background-color: #fefce8 !important; border-bottom: 3px solid #fde047 !important;
+            padding: 6px 12px !important; border-radius: 4px; display: inline-block; min-width: 200px;
+            text-transform: uppercase; outline: none; transition: all 0.2s;
+        }
         .edit-big:focus { background-color: #fef08a !important; border-bottom: 3px solid #eab308 !important; }
     </style>
 </head>
@@ -40,7 +68,10 @@
             <h2 class="text-xl font-bold text-[#D4AF37]">DARPO-CS</h2>
             <p id="userRoleBadge" class="text-[10px] text-gray-300 uppercase tracking-widest mt-1 font-bold">---</p>
         </div>
-        <div id="dynamicMenu" class="flex-1 overflow-y-auto py-2"></div>
+        
+        <div id="dynamicMenu" class="flex-1 overflow-y-auto py-2">
+            </div>
+
         <div class="p-4 bg-black/20">
             <p id="activeUser" class="text-xs text-gray-300 truncate mb-2 font-bold"></p>
             <button onclick="logout()" class="w-full bg-red-800 py-2 text-xs font-bold rounded shadow hover:bg-red-700 transition-colors uppercase">Logout</button>
@@ -51,14 +82,46 @@
         <header class="bg-white shadow-sm border-b px-6 py-4 flex justify-between items-center no-print">
             <h1 class="text-lg font-bold text-[#003811] uppercase tracking-tight">DAR Clearance Monitoring Dashboard</h1>
             <div class="flex gap-2">
-                <input type="text" id="searchInput" placeholder="Search details..." class="border border-gray-300 rounded px-3 py-1.5 text-xs focus:outline-none focus:border-[#003811] w-64" onkeyup="refreshDashboard()">
+                <input type="text" id="searchInput" placeholder="Search any details..." class="border border-gray-300 rounded px-3 py-1.5 text-xs focus:outline-none focus:border-[#003811] w-64" onkeyup="refreshDashboard()">
                 <button onclick="fetchClearanceData()" class="bg-[#003811] text-white px-4 py-1.5 rounded text-xs font-bold uppercase shadow hover:bg-[#006400]">Refresh</button>
             </div>
         </header>
 
         <div class="flex-1 overflow-y-auto p-6 space-y-4 no-print scroll-area">
-            <div class="grid grid-cols-4 lg:grid-cols-8 gap-3" id="statsGrid">
+            <div class="grid grid-cols-4 lg:grid-cols-8 gap-3">
+                <div class="bg-white p-3 rounded border-l-4 border-blue-500 text-center shadow-sm">
+                    <p class="text-[8px] font-bold text-gray-400 uppercase">Received</p>
+                    <h3 id="stat-received" class="text-lg font-black text-blue-600">0</h3>
                 </div>
+                <div class="bg-white p-3 rounded border-l-4 border-purple-500 text-center shadow-sm">
+                    <p class="text-[8px] font-bold text-gray-400 uppercase">Reviewed</p>
+                    <h3 id="stat-recommended" class="text-lg font-black text-purple-600">0</h3>
+                </div>
+                <div class="bg-white p-3 rounded border-l-4 border-cyan-500 text-center shadow-sm">
+                    <p class="text-[8px] font-bold text-gray-400 uppercase">Printed LTC</p>
+                    <h3 id="stat-certified" class="text-lg font-black text-cyan-600">0</h3>
+                </div>
+                <div class="bg-white p-3 rounded border-l-4 border-orange-500 text-center shadow-sm">
+                    <p class="text-[8px] font-bold text-gray-400 uppercase">Signed by PARPO</p>
+                    <h3 id="stat-signed" class="text-lg font-black text-orange-600">0</h3>
+                </div>
+                <div class="bg-white p-3 rounded border-l-4 border-red-500 text-center shadow-sm">
+                    <p class="text-[8px] font-bold text-gray-400 uppercase">Returned to Legal</p>
+                    <h3 id="stat-legal" class="text-lg font-black text-red-600">0</h3>
+                </div>
+                <div class="bg-white p-3 rounded border-l-4 border-green-500 text-center shadow-sm">
+                    <p class="text-[8px] font-bold text-gray-400 uppercase">Forwarded to Records</p>
+                    <h3 id="stat-records" class="text-lg font-black text-green-600">0</h3>
+                </div>
+                <div class="bg-white p-3 rounded border-l-4 border-teal-500 text-center shadow-sm">
+                    <p class="text-[8px] font-bold text-gray-400 uppercase">Released</p>
+                    <h3 id="stat-released" class="text-lg font-black text-teal-600">0</h3>
+                </div>
+                <div class="bg-white p-3 rounded border-l-4 border-gray-400 text-center shadow-sm">
+                    <p class="text-[8px] font-bold text-gray-400 uppercase">Disapproved</p>
+                    <h3 id="stat-disapproved" class="text-lg font-black text-gray-600">0</h3>
+                </div>
+            </div>
 
             <div class="bg-white rounded-lg shadow-sm overflow-hidden border border-gray-200">
                 <table class="w-full text-left border-collapse text-[11px] compact-table">
@@ -80,10 +143,13 @@
 
     <div id="reviewModal" class="fixed inset-0 bg-black/60 z-50 hidden flex items-start justify-center p-4 overflow-y-auto no-print">
         <div class="bg-white max-w-5xl w-full p-8 rounded-lg shadow-2xl relative my-4 no-print" id="modalContainer">
-            <div class="flex justify-between items-center mb-6 border-b border-gray-200 pb-4">
+            
+            <div class="flex justify-between items-center mb-6 border-b border-gray-200 pb-4 modal-header-actions">
                 <div class="flex items-center gap-4">
                     <h2 id="modalMainTitle" class="text-4xl font-black text-[#003811] uppercase tracking-widest">REVIEW</h2>
-                    <div id="editNotice" class="bg-yellow-100 text-yellow-800 text-[10px] px-3 py-1 rounded hidden font-bold uppercase tracking-wide border border-yellow-300">EDIT MODE ACTIVE</div>
+                    <div id="editNotice" class="bg-yellow-100 text-yellow-800 text-[10px] px-3 py-1 rounded hidden font-bold uppercase tracking-wide border border-yellow-300">
+                        EDIT MODE ACTIVE (VALUES ENLARGED FOR REVIEW)
+                    </div>
                 </div>
                 <div class="flex gap-2 items-center">
                     <button id="btnPrev" onclick="navigateReview(-1)" class="bg-gray-200 hover:bg-gray-300 px-4 py-2 rounded text-xs font-black uppercase transition-colors text-gray-800">&larr; Prev</button>
@@ -94,40 +160,64 @@
 
             <div id="reviewSection" class="mb-8 space-y-6 no-print">
                 <div class="bg-blue-50 p-6 rounded-lg border border-blue-200 space-y-6">
+                    <p class="text-xs font-bold text-gray-500 uppercase tracking-widest mb-4">Document Details (Editable - Click to Edit)</p>
+                    
                     <div class="grid grid-cols-[200px_1fr] items-center gap-y-8">
-                        <div class="font-bold text-red-700 uppercase text-sm">LTC Number:</div><div id="edit-LTC_ID_NUMBER" class="edit-big border-red-400 bg-red-50 text-red-800">---</div>
-                        <div class="font-bold text-gray-600 uppercase text-sm">Lot No/s:</div><div id="edit-lot" class="edit-big">---</div>
-                        <div class="font-bold text-gray-600 uppercase text-sm">In the Name of:</div><div id="edit-owner" class="edit-big">---</div>
-                        <div class="font-bold text-gray-600 uppercase text-sm">Registered under:</div><div id="edit-tct" class="edit-big">---</div>
-                        <div class="font-bold text-gray-600 uppercase text-sm">Area (in has.):</div><div id="edit-area" class="edit-big">---</div>
-                        <div class="font-bold text-gray-600 uppercase text-sm">Declared under T.D. No:</div><div id="edit-td" class="edit-big">---</div>
-                        <div class="font-bold text-gray-600 uppercase text-sm">Located at:</div><div id="edit-location" class="edit-big">---</div>
-                        <div class="font-bold text-gray-600 uppercase text-sm">Subjected of the Deed of:</div><div id="edit-deed" class="edit-big">---</div>
-                        <div class="font-bold text-gray-600 uppercase text-sm">Executed by:</div><div id="edit-executed" class="edit-big">---</div>
-                        <div class="font-bold text-gray-600 uppercase text-sm">In favor of:</div><div id="edit-favor" class="edit-big">---</div>
+                        <div class="font-bold text-red-700 uppercase text-sm">LTC Number:</div>
+                        <div id="edit-LTC_ID_NUMBER" class="edit-big border-red-400 bg-red-50 text-red-800">---</div>
+                        
+                        <div class="font-bold text-gray-600 uppercase text-sm">Lot No/s:</div>
+                        <div id="edit-lot" class="edit-big">---</div>
+                        <div class="font-bold text-gray-600 uppercase text-sm">In the Name of:</div>
+                        <div id="edit-owner" class="edit-big">---</div>
+                        <div class="font-bold text-gray-600 uppercase text-sm">Registered under:</div>
+                        <div id="edit-tct" class="edit-big">---</div>
+                        <div class="font-bold text-gray-600 uppercase text-sm">Area (in has.):</div>
+                        <div id="edit-area" class="edit-big">---</div>
+                        <div class="font-bold text-gray-600 uppercase text-sm">Declared under T.D. No:</div>
+                        <div id="edit-td" class="edit-big">---</div>
+                        <div class="font-bold text-gray-600 uppercase text-sm">Located at:</div>
+                        <div id="edit-location" class="edit-big">---</div>
+                        <div class="font-bold text-gray-600 uppercase text-sm">Subjected of the Deed of:</div>
+                        <div id="edit-deed" class="edit-big">---</div>
+                        <div class="font-bold text-gray-600 uppercase text-sm">Executed by:</div>
+                        <div id="edit-executed" class="edit-big">---</div>
+                        <div class="font-bold text-gray-600 uppercase text-sm">In favor of:</div>
+                        <div id="edit-favor" class="edit-big">---</div>
                     </div>
                     <div class="pt-4 border-t border-blue-200"></div>
                     <div class="grid grid-cols-[200px_1fr] items-center gap-y-8">
-                        <div class="font-bold text-gray-600 uppercase text-sm">Doc. No:</div><div id="edit-doc" class="edit-big">---</div>
-                        <div class="font-bold text-gray-600 uppercase text-sm">Page No:</div><div id="edit-page" class="edit-big">---</div>
-                        <div class="font-bold text-gray-600 uppercase text-sm">Book No:</div><div id="edit-book" class="edit-big">---</div>
-                        <div class="font-bold text-gray-600 uppercase text-sm">Series of:</div><div id="edit-series" class="edit-big">---</div>
-                        <div class="font-bold text-gray-600 uppercase text-sm">Dated:</div><div id="edit-dated" class="edit-big">---</div>
-                        <div class="font-bold text-gray-600 uppercase text-sm">Notary Public:</div><div id="edit-notary" class="edit-big">---</div>
-                        <div class="font-bold text-gray-600 uppercase text-sm">Retention area:</div><div id="edit-retention" class="edit-big">---</div>
-                        <div class="font-bold text-gray-600 uppercase text-sm">O.R. No:</div><div id="edit-or_number" class="edit-big">---</div>
-                        <div class="font-bold text-gray-600 uppercase text-sm">O.R. Date:</div><div id="edit-or_date" class="edit-big">---</div>
+                        <div class="font-bold text-gray-600 uppercase text-sm">Doc. No:</div>
+                        <div id="edit-doc" class="edit-big">---</div>
+                        <div class="font-bold text-gray-600 uppercase text-sm">Page No:</div>
+                        <div id="edit-page" class="edit-big">---</div>
+                        <div class="font-bold text-gray-600 uppercase text-sm">Book No:</div>
+                        <div id="edit-book" class="edit-big">---</div>
+                        <div class="font-bold text-gray-600 uppercase text-sm">Series of:</div>
+                        <div id="edit-series" class="edit-big">---</div>
+                        <div class="font-bold text-gray-600 uppercase text-sm">Dated:</div>
+                        <div id="edit-dated" class="edit-big">---</div>
+                        <div class="font-bold text-gray-600 uppercase text-sm">Notary Public:</div>
+                        <div id="edit-notary" class="edit-big">---</div>
+                        <div class="font-bold text-gray-600 uppercase text-sm">Retention area of vendor:</div>
+                        <div id="edit-retention" class="edit-big">---</div>
+                        <div class="font-bold text-gray-600 uppercase text-sm">O.R. No:</div>
+                        <div id="edit-or_number" class="edit-big">---</div>
+                        <div class="font-bold text-gray-600 uppercase text-sm">O.R. Date:</div>
+                        <div id="edit-or_date" class="edit-big">---</div>
                     </div>
                 </div>
                 <div id="remarksSection" class="bg-gray-50 p-4 rounded border border-gray-300">
-                    <label class="block text-[10px] font-bold text-gray-700 uppercase mb-2">Remarks</label>
-                    <textarea id="reviewRemarks" class="w-full border border-gray-300 rounded p-3 text-xs focus:outline-none focus:border-[#003811]" rows="3"></textarea>
+                    <label class="block text-[10px] font-bold text-gray-700 uppercase mb-2">Remarks (Required for Disapproval)</label>
+                    <textarea id="reviewRemarks" class="w-full border border-gray-300 rounded p-3 text-xs focus:outline-none focus:border-[#003811]" rows="3" placeholder="Enter remarks here..."></textarea>
                 </div>
             </div>
 
-            <div id="actionButtons" class="flex justify-between items-center no-print"></div>
+            <div id="actionButtons" class="flex justify-between items-center no-print">
+            </div>
 
-            <div id="docRecommendation" class="doc-print-area mx-auto hidden pt-8"><div class="doc-content">
+            <div id="docRecommendation" class="doc-print-area mx-auto hidden pt-8">
+                <div class="doc-content">
                     <div class="relative w-full mb-6 page-break-avoid">
                         <div class="absolute right-0 top-0 text-right font-bold flex flex-col items-end">
                             <span class="font-bold text-[10pt]">LTC Form No. 5</span>
@@ -245,8 +335,12 @@
                         </div>
                     </div>
 
-            </div></div>
-            <div id="docCertification" class="doc-print-area mx-auto hidden pt-8"><div class="doc-content">
+                </div>
+            </div>
+
+            <div id="docCertification" class="doc-print-area mx-auto hidden pt-8">
+                <div class="doc-content">
+                    
                     <div class="relative w-full mb-6 page-break-avoid">
                         <div class="absolute right-0 top-0 text-right font-bold flex flex-col items-end">
                             <span class="font-bold text-[10pt]">LTC Form No. 5</span>
@@ -367,7 +461,9 @@
                         </div>
                     </div>
 
-            </div></div>
+                </div>
+            </div>
+
         </div>
     </div>
 
@@ -408,7 +504,9 @@
                     
                     const lbl = (item.label || "").toUpperCase();
                     const url = (item.url || "").toLowerCase();
-                    if ((lbl.includes('NEW') || lbl.includes('CREATE') || url.includes('new')) && (userRole.includes('PARPO') || userRole.includes('RECORDS'))) {
+                    const isNewClearanceMenu = lbl.includes('NEW') || url.includes('new_clearance');
+                    
+                    if (isNewClearanceMenu && (userRole.includes('PARPO') || userRole.includes('RECORDS'))) {
                         return; 
                     }
                     
@@ -497,7 +595,7 @@
             rawData.forEach(item => {
                 const st = (item.status || 'RECEIVED').trim().toUpperCase();
                 
-                if (isRecords && st !== 'FORWARDED TO RECORDS') return;
+                if (isRecords && st !== 'FORWARDED TO RECORDS' && st !== 'RELEASED TO CLIENT' && st !== 'RELEASED - CLIENT') return;
 
                 let matchesSearch = Object.values(item).some(val => val !== null && String(val).toLowerCase().includes(query));
                 if (!matchesSearch) return;
@@ -528,8 +626,11 @@
                         actions += `<button onclick='openPrint("${item.id}", "cert")' class="bg-[#d97706] text-white w-full py-1.5 rounded shadow text-[9px] font-black uppercase mt-1">Certification</button>`;
                         actions += `<button onclick='createVariant("${item.id}")' class="bg-white text-gray-800 border border-gray-300 w-full py-1 rounded shadow text-[9px] font-bold uppercase mt-1">+ Variant</button>`;
                     } else if (st === 'PRINTED LTC' || st === 'CERTIFIED' || st === 'PROCESSED') {
-                        actions += `<button onclick='openPrint("${item.id}", "rec")' class="bg-[#8b5cf6] text-white w-full py-1.5 rounded shadow text-[9px] font-black uppercase">Recommendation</button>`;
+                        actions += `<button onclick='showReview("${item.id}", "REVIEW")' class="bg-[#003811] text-white w-full py-1.5 rounded shadow text-[10px] font-bold uppercase">Edit</button>`;
+                        actions += `<button onclick='openPrint("${item.id}", "rec")' class="bg-[#8b5cf6] text-white w-full py-1.5 rounded shadow text-[9px] font-black uppercase mt-1">Recommendation</button>`;
                         actions += `<button onclick='openPrint("${item.id}", "cert")' class="bg-[#d97706] text-white w-full py-1.5 rounded shadow text-[9px] font-black uppercase mt-1">Certification</button>`;
+                    } else if (st === 'SIGNED BY PARPO' || st === 'SIGNED' || st === 'FOR SIGNATURE - PARPO II') {
+                        actions += `<button onclick='processToNext("${item.id}", "RETURNED TO LEGAL", "${st}")' class="bg-orange-600 text-white w-full py-1.5 rounded shadow text-[10px] font-bold uppercase">Return to Legal</button>`;
                     } else if (st === 'RETURNED TO LEGAL' || st === 'TO LEGAL') {
                         actions += `<button onclick='openPrint("${item.id}", "rec")' class="bg-[#8b5cf6] text-white w-full py-1.5 rounded shadow text-[9px] font-black uppercase mb-1">Recommendation</button>`;
                         actions += `<button onclick='openPrint("${item.id}", "cert")' class="bg-[#d97706] text-white w-full py-1.5 rounded shadow text-[9px] font-black uppercase mb-1">Certification</button>`;
@@ -542,7 +643,7 @@
                     } else if (st === 'DISAPPROVED') {
                         actions += `<button onclick='showReview("${item.id}", "UPDATE")' class="bg-blue-600 text-white w-full py-1.5 rounded shadow text-[10px] font-bold uppercase">Update</button>`;
                     } else {
-                        actions += `<button onclick='showReview("${item.id}", "VIEW")' class="bg-gray-500 text-white w-full py-1.5 rounded shadow text-[10px] font-bold uppercase">View Only</button>`;
+                        actions += `<button onclick='showReview("${item.id}", "VIEW_CERT")' class="bg-gray-500 text-white w-full py-1.5 rounded shadow text-[10px] font-bold uppercase">View Only</button>`;
                     }
                 } 
                 else if (isParpo) {
@@ -554,13 +655,14 @@
                     } else if (st === 'SIGNED BY PARPO' || st === 'SIGNED' || st === 'FOR SIGNATURE - PARPO II') {
                         actions += `<button onclick='processToNext("${item.id}", "RETURNED TO LEGAL", "${st}")' class="bg-orange-600 text-white w-full py-1.5 rounded shadow text-[10px] font-bold uppercase">Return to Legal</button>`;
                     } else {
-                        actions += `<button onclick='showReview("${item.id}", "VIEW")' class="bg-gray-500 text-white w-full py-1.5 rounded shadow text-[10px] font-bold uppercase">View</button>`;
+                        actions += `<button onclick='showReview("${item.id}", "VIEW_CERT")' class="bg-gray-500 text-white w-full py-1.5 rounded shadow text-[10px] font-bold uppercase">View</button>`;
                     }
                 }
                 else if (isRecords) {
                     if (st === 'FORWARDED TO RECORDS') {
                         actions += `<button onclick='processToNext("${item.id}", "RELEASED TO CLIENT", "${st}")' class="bg-cyan-600 text-white w-full py-1.5 rounded shadow text-[10px] font-bold uppercase mb-1">Release</button>`;
                     }
+                    actions += `<button onclick='showReview("${item.id}", "VIEW_CERT")' class="bg-gray-500 text-white w-full py-1.5 rounded shadow text-[10px] font-bold uppercase">View</button>`;
                 }
                 else {
                     if (isOwner) {
@@ -582,10 +684,10 @@
                         } else if (st === 'DISAPPROVED') {
                             actions += `<button onclick='showReview("${item.id}", "UPDATE")' class="bg-blue-600 text-white w-full py-1.5 rounded shadow text-[10px] font-bold uppercase">Update</button>`;
                         } else {
-                            actions += `<button onclick='showReview("${item.id}", "VIEW")' class="bg-gray-500 text-white w-full py-1.5 rounded shadow text-[10px] font-bold uppercase">View Only</button>`;
+                            actions += `<button onclick='showReview("${item.id}", "VIEW_CERT")' class="bg-gray-500 text-white w-full py-1.5 rounded shadow text-[10px] font-bold uppercase">View Only</button>`;
                         }
                     } else {
-                        actions += `<button onclick='showReview("${item.id}", "VIEW")' class="bg-gray-500 text-white w-full py-1.5 rounded shadow text-[10px] font-bold uppercase">View Only</button>`;
+                        actions += `<button onclick='showReview("${item.id}", "VIEW_CERT")' class="bg-gray-500 text-white w-full py-1.5 rounded shadow text-[10px] font-bold uppercase">View Only</button>`;
                     }
                 }
                 actions += '</div>';
@@ -697,22 +799,19 @@
                 while (pdf.internal.getNumberOfPages() > 1) { 
                     pdf.deletePage(pdf.internal.getNumberOfPages()); 
                 }
-                pdf.save(filename);
-                
+                pdf.save();
+            }).then(async () => {
                 if (type === 'cert' && currentSelection.status === 'REVIEWED') {
                     const oldStatus = currentSelection.status;
-                    supabaseClient.from('land_records').update({ status: 'PRINTED LTC', updated_at: new Date() }).eq('id', currentSelection.id).then(() => {
-                        logStatusChange(currentSelection.id, oldStatus, 'PRINTED LTC');
-                        fetchClearanceData();
-                    });
+                    await supabaseClient.from('land_records').update({ status: 'PRINTED LTC', updated_at: new Date() }).eq('id', currentSelection.id);
+                    logStatusChange(currentSelection.id, oldStatus, 'PRINTED LTC');
+                    fetchClearanceData();
                 }
-                const existingOverlay = document.getElementById('pdf-loading-overlay');
-                if (existingOverlay) document.body.removeChild(existingOverlay);
+                document.body.removeChild(overlay);
                 closeReview(); 
             }).catch(err => {
                 console.error(err);
-                const existingOverlay = document.getElementById('pdf-loading-overlay');
-                if (existingOverlay) document.body.removeChild(existingOverlay);
+                document.body.removeChild(overlay);
             });
         }
 
@@ -812,7 +911,7 @@
                 let userRole = currentUser.role.toUpperCase();
                 let isRecords = userRole.includes('RECORDS');
                 let st = (item.status || 'RECEIVED').trim().toUpperCase();
-                if (isRecords && st !== 'FORWARDED TO RECORDS') {
+                if (isRecords && st !== 'FORWARDED TO RECORDS' && st !== 'RELEASED TO CLIENT' && st !== 'RELEASED - CLIENT') {
                     return false;
                 }
                 return matchesSearch;
@@ -851,7 +950,7 @@
                 'or_date': 'or_date'
             };
 
-            const isEditable = (currentReviewMode !== 'VIEW');
+            const isEditable = (currentReviewMode !== 'VIEW_CERT');
 
             for (let dbCol in dbToHtmlMap) {
                 let htmlSuffix = dbToHtmlMap[dbCol];
@@ -885,11 +984,12 @@
             const dateStrOrdinal = `${now.getDate()}${getOrdinal(now.getDate())} day of ${monthNames[now.getMonth()]}, ${now.getFullYear()}`;
             document.querySelectorAll('.pdf-today-ordinal').forEach(el => el.innerText = dateStrOrdinal);
 
-            if (currentReviewMode === 'VIEW') {
-                document.getElementById('modalMainTitle').innerText = "VIEW CLEARANCE";
-                document.getElementById('reviewSection').classList.remove('hidden'); 
+            if (currentReviewMode === 'VIEW_CERT') {
+                document.getElementById('modalMainTitle').innerText = "CERTIFICATION VIEW";
+                document.getElementById('reviewSection').classList.add('hidden'); 
                 document.getElementById('docRecommendation').classList.add('hidden'); 
-                document.getElementById('docCertification').classList.add('hidden'); 
+                document.getElementById('docCertification').classList.remove('hidden'); 
+                document.getElementById('docCertification').style.display = 'block';
                 document.getElementById('actionButtons').classList.add('hidden');
                 document.getElementById('editNotice').classList.add('hidden');
                 document.getElementById('reviewRemarks').disabled = true;
