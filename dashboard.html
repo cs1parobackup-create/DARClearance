@@ -482,19 +482,32 @@
         let currentReviewMode = 'REVIEW';
         const statusFlow = ['RECEIVED', 'REVIEWED', 'PRINTED LTC', 'SIGNED BY PARPO', 'RETURNED TO LEGAL', 'FORWARDED TO RECORDS', 'RELEASED TO CLIENT', 'DISAPPROVED'];
 
-        let chiefLegalName = "ATTY. JAIME G. RESOCO, JR.";
+        let chiefLegalName = "---";
         let parpoName = "---";
         let backgroundImageUrl = "";
         let userRolesMap = {};
 
-        const DB_HTML_MAP = {
-            'LTC_ID_NUMBER': 'LTC_ID_NUMBER', 
-            'lot_no': 'lot', 'owner_name': 'owner', 'registered_under': 'tct', 
-            'area': 'area', 'td_no': 'td', 'location': 'location', 
-            'deed_type': 'deed', 'executed_by': 'executed', 'in_favor_of': 'favor', 
-            'doc_no': 'doc', 'page_no': 'page', 'book_no': 'book', 
-            'series_of': 'series', 'dated': 'dated', 'notary_public': 'notary', 
-            'retention_area_names': 'retention', 'or_number': 'or_number', 'or_date': 'or_date'
+        // 1. CLEAN MAPPING: Keys match DB exact names, Values DO NOT have 'edit-' prefix.
+        const DB_FIELD_MAP = {
+            'LTC_ID_NUMBER': 'LTC_ID_NUMBER',
+            'lot_no': 'lot',
+            'owner_name': 'owner',
+            'registered_under': 'tct',
+            'area': 'area',
+            'td_no': 'td',
+            'location': 'location',
+            'deed_type': 'deed',
+            'executed_by': 'executed',
+            'in_favor_of': 'favor',
+            'doc_no': 'doc',
+            'page_no': 'page',
+            'book_no': 'book',
+            'series_of': 'series',
+            'dated': 'dated',
+            'notary_public': 'notary',
+            'retention_area_names': 'retention',
+            'or_number': 'or_number',
+            'or_date': 'or_date'
         };
 
         async function loadMenu() {
@@ -584,11 +597,17 @@
             try {
                 const { error } = await supabaseClient.from('status_logs').insert([{
                     record_id: recordId,
-                    previous_status: oldStatus,
+                    previous_status: oldStatus || 'UNKNOWN',
                     new_status: newStatus,
-                    changed_by: currentUser.full_name
+                    changed_by: currentUser.full_name || 'SYSTEM',
+                    changed_at: new Date().toISOString()
                 }]);
-                if (error) console.error("Status Log Error:", error.message);
+                if (error) {
+                    console.error("Status Log Error:", error.message);
+                    if(error.message.includes('row-level security')) {
+                        alert("CRITICAL WARNING: The 'status_logs' table has RLS enabled but no policy to allow inserts. Supabase blocked the log creation. Please disable RLS or add a policy.");
+                    }
+                }
             } catch (err) { console.error("Status Log Catch:", err); }
         }
 
@@ -613,10 +632,12 @@
 
             const updateData = {};
             let hasChanges = false;
-
-            for (let dbCol in DB_HTML_MAP) {
-                let suffix = DB_HTML_MAP[dbCol];
-                let el = document.getElementById(`edit-${suffix}`);
+            
+            // Handle mapping values dynamically
+            for (let dbCol in DB_FIELD_MAP) {
+                let htmlSuffix = DB_FIELD_MAP[dbCol];
+                let el = document.getElementById(`edit-${htmlSuffix}`);
+                
                 if (el && el.innerText !== '---') { 
                     let newVal = el.innerText.replace(/\u00A0/g, ' ').trim();
                     let oldVal = currentSelection[dbCol] ? String(currentSelection[dbCol]).trim() : '';
@@ -625,21 +646,23 @@
                         currentSelection[dbCol] = newVal;
                         hasChanges = true;
                         
-                        let recEl = document.getElementById(`rec-${suffix}`);
-                        let certEl = document.getElementById(`cert-${suffix}`);
+                        let recEl = document.getElementById(`rec-${htmlSuffix}`);
+                        let certEl = document.getElementById(`cert-${htmlSuffix}`);
                         if(recEl) recEl.innerText = newVal;
                         if(certEl) certEl.innerText = newVal;
                     }
                 }
             }
 
+            // Handle Remarks separately
             const remarksEl = document.getElementById('reviewRemarks');
             if (remarksEl && !remarksEl.disabled) {
                 let newRemarks = remarksEl.value.trim();
-                let oldRemarks = currentSelection.Remarks || currentSelection.remarks || '';
+                let colRemarks = currentSelection.hasOwnProperty('Remarks') ? 'Remarks' : 'remarks';
+                let oldRemarks = currentSelection[colRemarks] ? String(currentSelection[colRemarks]).trim() : '';
                 if (newRemarks !== oldRemarks) {
-                    updateData.Remarks = newRemarks;
-                    currentSelection.Remarks = newRemarks;
+                    updateData[colRemarks] = newRemarks;
+                    currentSelection[colRemarks] = newRemarks;
                     hasChanges = true;
                 }
             }
@@ -706,7 +729,6 @@
                     else if (st === 'RELEASED TO CLIENT' || st === 'RELEASED - CLIENT' || st === 'RELEASE TO CLIENT') { stats.rel++; st = 'RELEASED TO CLIENT'; }
                     else if (st === 'DISAPPROVED') { stats.dis++; st = 'DISAPPROVED'; }
 
-                    let currentIndex = statusFlow.indexOf(st);
                     let daysPassed = item.updated_at ? getWorkingDays(new Date(item.updated_at), new Date()) : 0;
                     let warningHTML = daysPassed > 5 ? `<span class="text-red-600 font-black ml-2 text-[12px]" title="Exceeded 5 working days!">⚠️</span>` : '';
 
@@ -882,15 +904,23 @@
             const record = rawData.find(r => r.id === id);
             if (!record) return;
 
-            if (!confirm(`Are you sure you want to process a ${mode} for this record? A NEW entry will be created requiring a NEW LTC Number.`)) return;
+            let newLtc = `NEW (${mode})`;
+
+            if (mode === 'CORRECTION' || mode === 'RE-ISSUANCE') {
+                const proceed = confirm(`Process a ${mode} for this record?\nClick OK to continue.`);
+                if (!proceed) return;
+            } else {
+                if (!confirm(`Are you sure you want to process a ${mode} for this record? A new entry will be created requiring a new LTC Number.`)) return;
+            }
 
             const { id: oldId, created_at, updated_at, ...newRecordData } = record;
             
             if(newRecordData.ltc_no !== undefined) delete newRecordData.ltc_no;
 
-            newRecordData.LTC_ID_NUMBER = `NEW (${mode})`; 
+            let colLtc = record.hasOwnProperty('LTC_ID_NUMBER') ? 'LTC_ID_NUMBER' : 'ltc_no';
+            newRecordData[colLtc] = newLtc; 
             newRecordData.status = 'RECEIVED'; 
-            newRecordData.Remarks = '';
+            newRecordData.Remarks = ''; // Clear remarks for the new document
 
             const { data, error } = await supabaseClient.from('land_records').insert([newRecordData]).select();
             if (error) {
@@ -898,7 +928,7 @@
             } else {
                 await fetchClearanceData();
                 await logStatusChange(data[0].id, 'CREATED', 'RECEIVED');
-                showReview(data[0].id, 'REVIEW');
+                showReview(data[0].id, mode);
             }
         }
 
@@ -963,10 +993,10 @@
 
             const isEditable = (currentReviewMode !== 'VIEW_CERT');
 
-            for (let dbCol in DB_HTML_MAP) {
-                let suffix = DB_HTML_MAP[dbCol];
+            for (let dbCol in DB_FIELD_MAP) {
+                let htmlSuffix = DB_FIELD_MAP[dbCol];
                 
-                let editEl = document.getElementById(`edit-${suffix}`);
+                let editEl = document.getElementById(`edit-${htmlSuffix}`);
                 if(editEl) {
                     editEl.innerText = currentSelection[dbCol] || '---';
                     editEl.contentEditable = isEditable ? "true" : "false";
@@ -974,8 +1004,8 @@
                 }
 
                 let val = currentSelection[dbCol] || ' ';
-                let recEl = document.getElementById(`rec-${suffix}`);
-                let certEl = document.getElementById(`cert-${suffix}`);
+                let recEl = document.getElementById(`rec-${htmlSuffix}`);
+                let certEl = document.getElementById(`cert-${htmlSuffix}`);
                 if(recEl) recEl.innerText = val;
                 if(certEl) certEl.innerText = val;
             }
@@ -1172,8 +1202,8 @@
             const updateData = { status: newSt, updated_at: new Date().toISOString() };
             const oldStatus = currentSelection.status;
             
-            for (let dbCol in DB_HTML_MAP) {
-                let suffix = DB_HTML_MAP[dbCol];
+            for (let dbCol in DB_FIELD_MAP) {
+                let suffix = DB_FIELD_MAP[dbCol];
                 let el = document.getElementById(`edit-${suffix}`);
                 if (el && el.innerText.trim() !== '---') { updateData[dbCol] = el.innerText.trim(); }
             }
