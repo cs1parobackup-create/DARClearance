@@ -654,15 +654,19 @@
                                 actions += `<button onclick='openPrint("${item.id}", "cert")' class="bg-[#d97706] text-white w-full py-1.5 rounded shadow text-[9px] font-black tracking-wide hover:bg-amber-700 uppercase transition-colors text-center mb-1">Certification</button>`;
                                 actions += `<button onclick='processToNext("${item.id}", "FORWARDED TO RECORDS", "${st}")' class="bg-cyan-600 text-white w-full py-1.5 rounded shadow text-[10px] font-bold hover:bg-cyan-700 uppercase transition-colors text-center">TO RECORDS</button>`;
                             }
-                        } else if (st === 'FORWARDED TO RECORDS' || st === 'RELEASED TO CLIENT') {
-                            if (st === 'FORWARDED TO RECORDS' && (isRecords || isChief)) {
+                        } else if (st === 'FORWARDED TO RECORDS') {
+                            if (isRecords || isChief) {
                                 actions += `<button onclick='processToNext("${item.id}", "RELEASED TO CLIENT", "${st}")' class="bg-cyan-600 text-white w-full py-1.5 rounded shadow text-[10px] font-bold hover:bg-cyan-700 uppercase transition-colors text-center mb-1">Release</button>`;
                             }
-                            if (st === 'RELEASED TO CLIENT' && (isRecords || isChief || isLegal)) {
-                                actions += `<button onclick='showReview("${item.id}", "CORRECTION")' class="bg-yellow-500 text-white w-full py-1.5 rounded shadow text-[10px] font-bold hover:bg-yellow-600 uppercase transition-colors text-center mb-1">Correction</button>`;
-                                actions += `<button onclick='showReview("${item.id}", "RE-ISSUANCE")' class="bg-blue-500 text-white w-full py-1.5 rounded shadow text-[10px] font-bold hover:bg-blue-600 uppercase transition-colors text-center mb-1">Re-Issue</button>`;
-                            }
                             if (isParpo || isLegal || isRecords || isChief) {
+                                actions += `<button onclick='showReview("${item.id}", "VIEW_CERT")' class="bg-gray-500 text-white w-full py-1.5 rounded shadow text-[10px] font-bold hover:bg-gray-600 uppercase transition-colors text-center mb-1">View</button>`;
+                            }
+                        } else if (st === 'RELEASED TO CLIENT') {
+                            if (isChief || isLegal) {
+                                actions += `<button onclick='handleDuplicate("${item.id}", "CORRECTION")' class="bg-yellow-500 text-white w-full py-1.5 rounded shadow text-[10px] font-bold hover:bg-yellow-600 uppercase transition-colors text-center mb-1">Correction</button>`;
+                                actions += `<button onclick='handleDuplicate("${item.id}", "RE-ISSUANCE")' class="bg-blue-500 text-white w-full py-1.5 rounded shadow text-[10px] font-bold hover:bg-blue-600 uppercase transition-colors text-center mb-1">Re-Issue</button>`;
+                            }
+                            if (isParpo || isRecords) {
                                 actions += `<button onclick='showReview("${item.id}", "VIEW_CERT")' class="bg-gray-500 text-white w-full py-1.5 rounded shadow text-[10px] font-bold hover:bg-gray-600 uppercase transition-colors text-center mb-1">View</button>`;
                             }
                         } else if (st === 'DISAPPROVED') {
@@ -783,23 +787,25 @@
             }
         }
 
-        window.reIssueRecord = async function(id) {
+        window.handleDuplicate = async function(id, mode) {
             const record = rawData.find(r => r.id === id);
             if (!record) return;
+
+            if (!confirm(`Are you sure you want to process a ${mode} for this record? A new entry will be created requiring a new LTC Number.`)) return;
 
             const { id: oldId, created_at, updated_at, ...newRecordData } = record;
             
             if(newRecordData.ltc_no !== undefined) delete newRecordData.ltc_no;
 
-            newRecordData.LTC_ID_NUMBER = "";
+            newRecordData.LTC_ID_NUMBER = ""; 
             newRecordData.status = 'RECEIVED'; 
 
             const { data, error } = await supabaseClient.from('land_records').insert([newRecordData]).select();
             if (error) {
-                alert('Error re-issuing record: ' + error.message);
+                alert(`Error processing ${mode}: ` + error.message);
             } else {
                 await fetchClearanceData();
-                showReview(data[0].id, 'RE-ISSUANCE');
+                showReview(data[0].id, mode);
             }
         }
 
@@ -811,7 +817,7 @@
                 'SIGNED BY PARPO': 'bg-orange-100 text-orange-800 border border-orange-200', 
                 'RETURNED TO LEGAL': 'bg-red-100 text-red-800 border border-red-200', 
                 'FORWARDED TO RECORDS': 'bg-green-100 text-green-800 border border-green-200', 
-                'RELEASE TO CLIENT': 'bg-teal-100 text-teal-800 border border-teal-200',
+                'RELEASED TO CLIENT': 'bg-teal-100 text-teal-800 border border-teal-200',
                 'DISAPPROVED': 'bg-gray-200 text-gray-800 border border-gray-300'
             };
             return colors[s] || 'bg-gray-100 text-gray-800';
@@ -960,8 +966,8 @@
             }
         }
 
-        function openPrint(id, type) {
-            showReview(id, 'REVIEW'); 
+        async function openPrint(id, type) {
+            await showReview(id, 'REVIEW'); 
             
             document.getElementById('reviewSection').classList.add('hidden');
             document.getElementById('actionButtons').classList.add('hidden');
