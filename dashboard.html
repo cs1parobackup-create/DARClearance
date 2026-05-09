@@ -558,7 +558,12 @@
 
         async function fetchClearanceData() {
             const { data, error } = await supabaseClient.from('land_records').select('*').order('updated_at', { ascending: false });
-            if (!error) { rawData = data || []; refreshDashboard(); }
+            if (!error) { 
+                rawData = data || []; 
+                refreshDashboard(); 
+            } else {
+                console.error("Error fetching data:", error);
+            }
         }
 
         function getWorkingDays(startDate, endDate) {
@@ -891,6 +896,51 @@
                 while (pdf.internal.getNumberOfPages() > 1) { pdf.deletePage(pdf.internal.getNumberOfPages()); }
                 pdf.save(filename);
             });
+        }
+
+        function getStatusStyle(status) {
+            switch (status) {
+                case 'RECEIVED': return 'text-blue-600 bg-blue-100';
+                case 'REVIEWED': return 'text-purple-600 bg-purple-100';
+                case 'PRINTED LTC': return 'text-cyan-600 bg-cyan-100';
+                case 'SIGNED BY PARPO': return 'text-orange-600 bg-orange-100';
+                case 'RETURNED TO LEGAL': return 'text-red-600 bg-red-100';
+                case 'FORWARDED TO RECORDS': return 'text-green-600 bg-green-100';
+                case 'RELEASED TO CLIENT': return 'text-teal-600 bg-teal-100';
+                case 'DISAPPROVED': return 'text-gray-600 bg-gray-200';
+                default: return 'text-gray-600 bg-gray-100';
+            }
+        }
+
+        function closeReview() {
+            document.getElementById('reviewModal').classList.add('hidden');
+        }
+
+        function navigateReview(dir) {
+            currentNavIndex += dir;
+            if(currentNavIndex >= 0 && currentNavIndex < currentNavList.length) {
+                showReview(currentNavList[currentNavIndex].id, currentReviewMode);
+            }
+        }
+
+        function generateQRs(identifier) {
+            document.getElementById('qr-rec').innerHTML = '';
+            document.getElementById('qr-cert').innerHTML = '';
+            if(typeof QRCode !== 'undefined') {
+                new QRCode(document.getElementById("qr-rec"), { text: identifier, width: 55, height: 55 });
+                new QRCode(document.getElementById("qr-cert"), { text: identifier, width: 55, height: 55 });
+            }
+        }
+
+        async function deleteRecord(id) {
+            if(confirm("Are you sure you want to delete this record?")) {
+                const { error } = await supabaseClient.from('land_records').delete().eq('id', id);
+                if(!error) fetchClearanceData();
+            }
+        }
+
+        function createVariant(id) {
+            alert("Create Variant triggered for record: " + id);
         }
 
         function getOrdinal(d) { if (d > 3 && d < 21) return 'th'; switch (d % 10) { case 1: return "st"; case 2: return "nd"; case 3: return "rd"; default: return "th"; } }
