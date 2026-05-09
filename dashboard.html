@@ -389,34 +389,95 @@
 
         async function loadMenu() {
             const menuContainer = document.getElementById('dynamicMenu');
+            if (!currentUser || !currentUser.role) return;
             const userRole = currentUser.role.toUpperCase().trim();
-            const { data: menuItems, error } = await supabaseClient.from('clearance_menu').select('*').order('sort_order', { ascending: true });
-            if (error) return;
-            menuContainer.innerHTML = '';
-            menuItems.forEach(item => {
-                if (!item.is_active) return;
-                
-                // Strictly relying on database required_roles
-                let roles = item.required_roles ? (Array.isArray(item.required_roles) ? item.required_roles : item.required_roles.replace(/[\[\]"'{}()]/g, '').split(',').map(r => r.trim())) : [];
-                
-                if (roles.length === 0 || roles.some(r => userRole.includes(r.toUpperCase().trim()))) {
-                    const isCurrent = window.location.pathname.includes(item.url);
-                    const link = document.createElement('a');
-                    link.href = item.url; link.innerText = item.label;
-                    link.className = `block px-6 py-4 text-[11px] font-black uppercase border-l-4 transition-all ${isCurrent ? 'bg-[#006400] border-[#D4AF37]' : 'border-transparent hover:bg-[#006400]'}`;
-                    menuContainer.appendChild(link);
-                }
-            });
+            
+            try {
+                const { data: menuItems, error } = await supabaseClient
+                    .from('clearance_menu')
+                    .select('*')
+                    .order('sort_order', { ascending: true });
+
+                if (error) throw error;
+
+                menuContainer.innerHTML = '';
+                menuItems.forEach(item => {
+                    if (item.is_active === false || item.is_active === 'FALSE') return;
+                    
+                    // NEW CHECK ADDED HERE FOR PARPO RESTRICTION ON "NEW DAR CLEARANCE"
+                    const lbl = item.label.toUpperCase();
+                    const url = item.url.toLowerCase();
+                    const isNewClearanceMenu = lbl.includes('NEW') || url.includes('new_clearance');
+                    
+                    if (isNewClearanceMenu && (userRole.includes('PARPO') || userRole.includes('RECORDS'))) {
+                        return; // Forcefully skip rendering this menu item for PARPO and RECORDS
+                    }
+                    
+                    let roles = [];
+                    if (item.required_roles) {
+                        if (Array.isArray(item.required_roles)) {
+                            roles = item.required_roles;
+                        } else {
+                            try {
+                                roles = JSON.parse(item.required_roles);
+                            } catch(e) {
+                                roles = item.required_roles.replace(/[\[\]"'{}()]/g, '').split(',').map(r => r.trim());
+                            }
+                        }
+                    }
+
+                    const hasRole = roles.length === 0 || roles.some(r => userRole.includes(String(r).toUpperCase().trim()));
+                    
+                    if (hasRole) {
+                        const isCurrent = window.location.pathname.includes(item.url);
+                        const link = document.createElement('a');
+                        link.href = item.url;
+                        link.className = `block px-6 py-4 text-[11px] font-black uppercase border-l-4 transition-all ${isCurrent ? 'bg-[#006400] border-[#D4AF37]' : 'border-transparent hover:bg-[#006400]'}`;
+                        link.innerText = item.label;
+                        menuContainer.appendChild(link);
+                    }
+                });
+            } catch (err) {
+                console.error("Menu Error:", err);
+            }
         }
 
-        async function logStatusChange(recordId, oldStatus, newStatus) {
-            if (!recordId || oldStatus === newStatus) return;
-            await supabaseClient.from('status_logs').insert([{ record_id: recordId, previous_status: oldStatus, new_status: newStatus, changed_by: currentUser.full_name }]);
+        async function fetchDynamicSignatories() {
+            const { data, error } = await supabaseClient.from('users').select('full_name, role').in('role', ['Chief, Legal Division', 'DIVISION CHIEF', 'PARPO II', 'PARPO']);
+            if (data && !error) {
+                const chief = data.find(u => u.role.toUpperCase().includes('CHIEF'));
+                const parpo = data.find(u => u.role.toUpperCase().includes('PARPO'));
+                if (chief) chiefLegalName = chief.full_name;
+                if (parpo) parpoName = parpo.full_name;
+            }
+        }
+
+        async function fetchBackgroundImage() {
+            const { data } = supabaseClient.storage.from('bg').getPublicUrl('ltc_bg.jpg');
+            if (data && data.publicUrl) {
+                backgroundImageUrl = data.publicUrl;
+            }
         }
 
         async function fetchClearanceData() {
             const { data, error } = await supabaseClient.from('land_records').select('*').order('updated_at', { ascending: false });
             if (!error) { rawData = data || []; refreshDashboard(); }
+        }
+
+        function getWorkingDays(startDate, endDate) {
+            let count = 0; let curDate = new Date(startDate); curDate.setHours(0,0,0,0);
+            let end = new Date(endDate); end.setHours(0,0,0,0);
+            while (curDate < end) {
+                const dayOfWeek = curDate.getDay();
+                if (dayOfWeek !== 0 && dayOfWeek !== 6) count++;
+                curDate.setDate(curDate.getDate() + 1);
+            }
+            return count;
+        }
+
+        async function logStatusChange(recordId, oldStatus, newStatus) {
+            if (!recordId || oldStatus === newStatus) return;
+            await supabaseClient.from('status_logs').insert([{ record_id: recordId, previous_status: oldStatus, new_status: newStatus, changed_by: currentUser.full_name }]);
         }
 
         function refreshDashboard() {
@@ -435,13 +496,12 @@
             rawData.forEach(item => {
                 const st = (item.status || 'RECEIVED').trim().toUpperCase();
                 
-                // Rule 1 & 3: RECORDS Visibility & Search Limitation
+                // Rule 1: RECORDS Visibility & Search Limitation
                 if (isRecords && st !== 'FORWARDED TO RECORDS' && st !== 'RELEASED TO CLIENT' && st !== 'RELEASED - CLIENT') return;
 
                 let matchesSearch = Object.values(item).some(val => val !== null && String(val).toLowerCase().includes(query));
                 if (!matchesSearch) return;
 
-                // Update Stats
                 if (st.includes('RECEIVED')) stats.rec++;
                 else if (st.includes('REVIEWED') || st.includes('RECOMMENDED')) stats.rev++;
                 else if (st.includes('PRINTED')) stats.cer++;
@@ -451,45 +511,99 @@
                 else if (st.includes('RELEASED')) stats.rel++;
                 else if (st.includes('DISAPPROVED')) stats.dis++;
 
-                // God Mode Exception logic
-                const isOwner = (item.legalOfficer === userFullName || item.encoded_by === userFullName || item.created_by === userFullName);
-                const hasFullAccess = isChief || isParpo || isOwner;
+                let daysPassed = item.updated_at ? getWorkingDays(new Date(item.updated_at), new Date()) : 0;
+                let warningHTML = daysPassed > 5 ? `<span class="text-red-600 font-black ml-2 text-[12px]" title="Exceeded 5 working days!">⚠️</span>` : '';
 
                 let actions = '<div class="flex flex-col gap-1 w-full max-w-[120px] mx-auto">';
-                if (isRecords) {
-                    if (st === 'FORWARDED TO RECORDS') actions += `<button onclick='processToNext("${item.id}", "RELEASED TO CLIENT", "${st}")' class="bg-cyan-600 text-white w-full py-1.5 rounded shadow text-[10px] font-bold uppercase">Release</button>`;
-                    actions += `<button onclick='showReview("${item.id}", "VIEW_CERT")' class="bg-gray-500 text-white w-full py-1.5 rounded shadow text-[10px] font-bold uppercase">View</button>`;
-                } else if (hasFullAccess) {
-                    if (st === 'RECEIVED') actions += `<button onclick='showReview("${item.id}", "REVIEW")' class="bg-[#003811] text-white w-full py-1.5 rounded shadow text-[10px] font-bold uppercase">Review</button>`;
-                    else if (st === 'REVIEWED') {
+                
+                const isOwner = (item.legalOfficer === userFullName || item.legalofficer === userFullName || item.encoded_by === userFullName || item.created_by === userFullName);
+                const hasLegalAccess = isChief || (isLegal && isOwner);
+
+                if (st === 'RECEIVED' || st === 'RECEIVED - LEGAL') {
+                    if (hasLegalAccess) {
+                        actions += `<button onclick='showReview("${item.id}", "REVIEW")' class="bg-[#003811] text-white w-full py-1.5 rounded shadow text-[10px] font-bold uppercase">Review</button>`;
+                        actions += `<button onclick='createVariant("${item.id}")' class="bg-white text-gray-800 border border-gray-300 w-full py-1 mt-1 rounded shadow text-[9px] font-bold uppercase">+ Variant</button>`;
+                        actions += `<button onclick='deleteRecord("${item.id}")' class="bg-red-600 text-white w-full py-1 mt-1 rounded shadow text-[9px] font-bold uppercase">Delete</button>`;
+                    } else {
+                        actions += `<button onclick='showReview("${item.id}", "VIEW_CERT")' class="bg-gray-500 text-white w-full py-1.5 rounded shadow text-[10px] font-bold uppercase">View Only</button>`;
+                    }
+                }
+                else if (st === 'REVIEWED' || st === 'REVIEWED AND RECOMMENDED' || st === 'RECOMMENDED') {
+                    if (hasLegalAccess) {
                         actions += `<button onclick='openPrint("${item.id}", "rec")' class="bg-[#8b5cf6] text-white w-full py-1.5 rounded shadow text-[9px] font-black uppercase">Recommendation</button>`;
                         actions += `<button onclick='openPrint("${item.id}", "cert")' class="bg-[#d97706] text-white w-full py-1.5 rounded shadow text-[9px] font-black uppercase">Certification</button>`;
+                        actions += `<button onclick='createVariant("${item.id}")' class="bg-white text-gray-800 border border-gray-300 w-full py-1 rounded shadow text-[9px] font-bold uppercase mt-1">+ Variant</button>`;
+                    } else {
+                        actions += `<button onclick='showReview("${item.id}", "VIEW_CERT")' class="bg-gray-500 text-white w-full py-1.5 rounded shadow text-[10px] font-bold uppercase">View Only</button>`;
                     }
-                    else if (st === 'PRINTED LTC') {
-                        if (isParpo) {
-                            actions += `<button onclick='showReview("${item.id}", "REVIEW")' class="bg-[#003811] text-white w-full py-1.5 rounded shadow text-[10px] font-bold uppercase">Edit</button>`;
-                            actions += `<button onclick='processToNext("${item.id}", "SIGNED BY PARPO", "${st}")' class="bg-cyan-600 text-white w-full py-1.5 rounded shadow text-[10px] font-bold uppercase">Sign</button>`;
-                        }
+                }
+                else if (st === 'PRINTED LTC' || st === 'CERTIFIED' || st === 'PROCESSED') {
+                    if (isParpo) {
+                        actions += `<button onclick='showReview("${item.id}", "REVIEW")' class="bg-[#003811] text-white w-full py-1.5 rounded shadow text-[10px] font-bold uppercase">Edit</button>`;
+                        actions += `<button onclick='openPrint("${item.id}", "rec")' class="bg-[#8b5cf6] text-white w-full py-1.5 rounded shadow text-[9px] font-black uppercase mt-1">Recommendation</button>`;
+                        actions += `<button onclick='openPrint("${item.id}", "cert")' class="bg-[#d97706] text-white w-full py-1.5 rounded shadow text-[9px] font-black uppercase mt-1">Certification</button>`;
+                        actions += `<button onclick='processToNext("${item.id}", "SIGNED BY PARPO", "${st}")' class="bg-cyan-600 text-white w-full py-1.5 rounded shadow text-[10px] font-bold uppercase mt-1">Sign</button>`;
+                    } else if (hasLegalAccess) {
                         actions += `<button onclick='openPrint("${item.id}", "rec")' class="bg-[#8b5cf6] text-white w-full py-1.5 rounded shadow text-[9px] font-black uppercase">Recommendation</button>`;
-                        actions += `<button onclick='openPrint("${item.id}", "cert")' class="bg-[#d97706] text-white w-full py-1.5 rounded shadow text-[9px] font-black uppercase">Certification</button>`;
+                        actions += `<button onclick='openPrint("${item.id}", "cert")' class="bg-[#d97706] text-white w-full py-1.5 rounded shadow text-[9px] font-black uppercase mt-1">Certification</button>`;
+                    } else {
+                        actions += `<button onclick='showReview("${item.id}", "VIEW_CERT")' class="bg-gray-500 text-white w-full py-1.5 rounded shadow text-[10px] font-bold uppercase">View Only</button>`;
                     }
-                    else if (st === 'SIGNED BY PARPO' && isParpo) actions += `<button onclick='processToNext("${item.id}", "RETURNED TO LEGAL", "${st}")' class="bg-orange-600 text-white w-full py-1.5 rounded shadow text-[10px] font-bold uppercase">Return to Legal</button>`;
-                    else if (st === 'RETURNED TO LEGAL') actions += `<button onclick='processToNext("${item.id}", "FORWARDED TO RECORDS", "${st}")' class="bg-cyan-600 text-white w-full py-1.5 rounded shadow text-[10px] font-bold uppercase">TO RECORDS</button>`;
-                    else if (st.includes('RELEASED')) {
-                        actions += `<button onclick='showReview("${item.id}", "CORRECTION")' class="bg-yellow-500 text-white w-full py-1.5 rounded shadow text-[10px] font-bold uppercase">Correction</button>`;
-                        actions += `<button onclick='reIssueRecord("${item.id}")' class="bg-blue-500 text-white w-full py-1.5 rounded shadow text-[10px] font-bold uppercase">Re-Issue</button>`;
+                }
+                else if (st === 'SIGNED BY PARPO' || st === 'SIGNED' || st === 'FOR SIGNATURE - PARPO II') {
+                    if (isParpo) {
+                        actions += `<button onclick='processToNext("${item.id}", "RETURNED TO LEGAL", "${st}")' class="bg-orange-600 text-white w-full py-1.5 rounded shadow text-[10px] font-bold uppercase">Return to Legal</button>`;
+                    } else {
+                        actions += `<button onclick='showReview("${item.id}", "VIEW_CERT")' class="bg-gray-500 text-white w-full py-1.5 rounded shadow text-[10px] font-bold uppercase">View Only</button>`;
                     }
-                    else if (st === 'DISAPPROVED') actions += `<button onclick='showReview("${item.id}", "UPDATE")' class="bg-blue-600 text-white w-full py-1.5 rounded shadow text-[10px] font-bold uppercase">Update</button>`;
-                } else {
-                    actions += `<button onclick='showReview("${item.id}", "VIEW_CERT")' class="bg-gray-500 text-white w-full py-1.5 rounded shadow text-[10px] font-bold uppercase">View Only</button>`;
+                }
+                else if (st === 'RETURNED TO LEGAL' || st === 'TO LEGAL') {
+                    if (hasLegalAccess) {
+                        actions += `<button onclick='openPrint("${item.id}", "rec")' class="bg-[#8b5cf6] text-white w-full py-1.5 rounded shadow text-[9px] font-black uppercase mb-1">Recommendation</button>`;
+                        actions += `<button onclick='openPrint("${item.id}", "cert")' class="bg-[#d97706] text-white w-full py-1.5 rounded shadow text-[9px] font-black uppercase mb-1">Certification</button>`;
+                        actions += `<button onclick='processToNext("${item.id}", "FORWARDED TO RECORDS", "${st}")' class="bg-cyan-600 text-white w-full py-1.5 rounded shadow text-[10px] font-bold uppercase">TO RECORDS</button>`;
+                    } else if (isParpo) {
+                        actions += `<button onclick='showReview("${item.id}", "VIEW_CERT")' class="bg-gray-500 text-white w-full py-1.5 rounded shadow text-[10px] font-bold uppercase">View</button>`;
+                    } else {
+                        actions += `<button onclick='showReview("${item.id}", "VIEW_CERT")' class="bg-gray-500 text-white w-full py-1.5 rounded shadow text-[10px] font-bold uppercase">View Only</button>`;
+                    }
+                }
+                else if (st === 'FORWARDED TO RECORDS') {
+                    if (isRecords || isChief) {
+                        actions += `<button onclick='processToNext("${item.id}", "RELEASED TO CLIENT", "${st}")' class="bg-cyan-600 text-white w-full py-1.5 rounded shadow text-[10px] font-bold uppercase mb-1">Release</button>`;
+                    }
+                    if (isParpo || (!isRecords && !isChief)) {
+                         actions += `<button onclick='showReview("${item.id}", "VIEW_CERT")' class="bg-gray-500 text-white w-full py-1.5 rounded shadow text-[10px] font-bold uppercase">View</button>`;
+                    }
+                }
+                else if (st === 'RELEASED TO CLIENT' || st === 'RELEASED - CLIENT') {
+                    if (hasLegalAccess) {
+                        actions += `<button onclick='showReview("${item.id}", "CORRECTION")' class="bg-yellow-500 text-white w-full py-1.5 rounded shadow text-[10px] font-bold uppercase mb-1">Correction</button>`;
+                        actions += `<button onclick='showReview("${item.id}", "RE-ISSUANCE")' class="bg-blue-500 text-white w-full py-1.5 rounded shadow text-[10px] font-bold uppercase mb-1">Re-Issue</button>`;
+                    } else if (isRecords || isParpo) {
+                        actions += `<button onclick='showReview("${item.id}", "VIEW_CERT")' class="bg-gray-500 text-white w-full py-1.5 rounded shadow text-[10px] font-bold uppercase mb-1">View</button>`;
+                    } else {
+                        actions += `<button onclick='showReview("${item.id}", "VIEW_CERT")' class="bg-gray-500 text-white w-full py-1.5 rounded shadow text-[10px] font-bold uppercase">View Only</button>`;
+                    }
+                }
+                else if (st === 'DISAPPROVED') {
+                    if (hasLegalAccess) {
+                        actions += `<button onclick='showReview("${item.id}", "UPDATE")' class="bg-blue-600 text-white w-full py-1.5 rounded shadow text-[10px] font-bold uppercase">Update</button>`;
+                    } else if (isParpo) {
+                        actions += `<button onclick='showReview("${item.id}", "VIEW_CERT")' class="bg-gray-500 text-white w-full py-1.5 rounded shadow text-[10px] font-bold uppercase">View</button>`;
+                    } else {
+                        actions += `<button onclick='showReview("${item.id}", "VIEW_CERT")' class="bg-gray-500 text-white w-full py-1.5 rounded shadow text-[10px] font-bold uppercase">View Only</button>`;
+                    }
                 }
                 actions += '</div>';
+
+                let legalOfficerName = item.legalOfficer || item.legalofficer || item.encoded_by || item.created_by || '---';
 
                 tbody.innerHTML += `<tr>
                     <td class="font-bold">${item.LTC_ID_NUMBER || '---'}</td>
                     <td class="uppercase font-semibold">${item.owner_name}</td>
-                    <td class="text-xs text-gray-500">${item.legalOfficer || '---'}</td>
-                    <td><span class="px-2 py-1 rounded text-[8px] shadow-sm font-black uppercase ${getStatusStyle(st)}">${st}</span></td>
+                    <td class="text-xs text-gray-500">${legalOfficerName}</td>
+                    <td><span class="px-2 py-1 rounded text-[8px] shadow-sm font-black uppercase ${getStatusStyle(st)}">${st}</span>${warningHTML}</td>
                     <td class="text-center align-middle">${actions}</td>
                     <td class="text-right font-mono text-gray-500">${item.updated_at ? new Date(item.updated_at).toLocaleString('en-US', { hour12: true }) : '---'}</td>
                 </tr>`;
