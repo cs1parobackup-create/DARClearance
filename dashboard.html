@@ -482,10 +482,20 @@
         let currentReviewMode = 'REVIEW';
         const statusFlow = ['RECEIVED', 'REVIEWED', 'PRINTED LTC', 'SIGNED BY PARPO', 'RETURNED TO LEGAL', 'FORWARDED TO RECORDS', 'RELEASED TO CLIENT', 'DISAPPROVED'];
 
-        let chiefLegalName = "---";
+        let chiefLegalName = "ATTY. JAIME G. RESOCO, JR.";
         let parpoName = "---";
         let backgroundImageUrl = "";
         let userRolesMap = {};
+
+        const DB_HTML_MAP = {
+            'LTC_ID_NUMBER': 'LTC_ID_NUMBER', 
+            'lot_no': 'lot', 'owner_name': 'owner', 'registered_under': 'tct', 
+            'area': 'area', 'td_no': 'td', 'location': 'location', 
+            'deed_type': 'deed', 'executed_by': 'executed', 'in_favor_of': 'favor', 
+            'doc_no': 'doc', 'page_no': 'page', 'book_no': 'book', 
+            'series_of': 'series', 'dated': 'dated', 'notary_public': 'notary', 
+            'retention_area_names': 'retention', 'or_number': 'or_number', 'or_date': 'or_date'
+        };
 
         async function loadMenu() {
             const menuContainer = document.getElementById('dynamicMenu');
@@ -534,16 +544,16 @@
         }
 
         async function fetchDynamicSignatories() {
-            const { data, error } = await supabaseClient.from('users').select('full_name, role');
-            if (data && !error) {
-                data.forEach(u => {
-                    userRolesMap[u.full_name] = u.role;
-                    if (u.role && u.role.toUpperCase().includes('CHIEF')) chiefLegalName = u.full_name;
-                    if (u.role && u.role.toUpperCase().includes('PARPO')) parpoName = u.full_name;
-                });
-            } else if (error) {
-                console.error("Signatories Error:", error);
-            }
+            try {
+                const { data, error } = await supabaseClient.from('users').select('full_name, role');
+                if (data && !error) {
+                    data.forEach(u => {
+                        if(u.full_name) userRolesMap[u.full_name] = u.role;
+                        if (u.role && String(u.role).toUpperCase().includes('CHIEF')) chiefLegalName = u.full_name;
+                        if (u.role && String(u.role).toUpperCase().includes('PARPO')) parpoName = u.full_name;
+                    });
+                }
+            } catch(e) { console.error("Signatories Fetch Error:", e); }
         }
 
         async function fetchBackgroundImage() {
@@ -576,10 +586,9 @@
                     record_id: recordId,
                     previous_status: oldStatus,
                     new_status: newStatus,
-                    changed_by: currentUser.full_name,
-                    changed_at: new Date().toISOString()
+                    changed_by: currentUser.full_name
                 }]);
-                if (error) console.error("Status Log Error:", error);
+                if (error) console.error("Status Log Error:", error.message);
             } catch (err) { console.error("Status Log Catch:", err); }
         }
 
@@ -604,23 +613,10 @@
 
             const updateData = {};
             let hasChanges = false;
-            
-            let colLtc = currentSelection.hasOwnProperty('LTC_ID_NUMBER') ? 'LTC_ID_NUMBER' : 'ltc_no';
-            let colRemarks = currentSelection.hasOwnProperty('Remarks') ? 'Remarks' : 'remarks';
 
-            const dbToHtmlMap = {
-                [colLtc]: 'edit-LTC_ID_NUMBER', 
-                'lot_no': 'edit-lot', 'owner_name': 'edit-owner', 'registered_under': 'edit-tct', 
-                'area': 'edit-area', 'td_no': 'edit-td', 'location': 'edit-location', 
-                'deed_type': 'edit-deed', 'executed_by': 'edit-executed', 'in_favor_of': 'edit-favor', 
-                'doc_no': 'edit-doc', 'page_no': 'edit-page', 'book_no': 'edit-book', 
-                'series_of': 'edit-series', 'dated': 'edit-dated', 'notary_public': 'edit-notary', 
-                'retention_area_names': 'edit-retention', 'or_number': 'edit-or_number', 'or_date': 'edit-or_date'
-            };
-
-            for (let dbCol in dbToHtmlMap) {
-                let htmlSuffix = dbToHtmlMap[dbCol];
-                let el = document.getElementById(`edit-${htmlSuffix}`);
+            for (let dbCol in DB_HTML_MAP) {
+                let suffix = DB_HTML_MAP[dbCol];
+                let el = document.getElementById(`edit-${suffix}`);
                 if (el && el.innerText !== '---') { 
                     let newVal = el.innerText.replace(/\u00A0/g, ' ').trim();
                     let oldVal = currentSelection[dbCol] ? String(currentSelection[dbCol]).trim() : '';
@@ -629,8 +625,8 @@
                         currentSelection[dbCol] = newVal;
                         hasChanges = true;
                         
-                        let recEl = document.getElementById(`rec-${htmlSuffix}`);
-                        let certEl = document.getElementById(`cert-${htmlSuffix}`);
+                        let recEl = document.getElementById(`rec-${suffix}`);
+                        let certEl = document.getElementById(`cert-${suffix}`);
                         if(recEl) recEl.innerText = newVal;
                         if(certEl) certEl.innerText = newVal;
                     }
@@ -640,10 +636,10 @@
             const remarksEl = document.getElementById('reviewRemarks');
             if (remarksEl && !remarksEl.disabled) {
                 let newRemarks = remarksEl.value.trim();
-                let oldRemarks = currentSelection[colRemarks] ? String(currentSelection[colRemarks]).trim() : '';
+                let oldRemarks = currentSelection.Remarks || currentSelection.remarks || '';
                 if (newRemarks !== oldRemarks) {
-                    updateData[colRemarks] = newRemarks;
-                    currentSelection[colRemarks] = newRemarks;
+                    updateData.Remarks = newRemarks;
+                    currentSelection.Remarks = newRemarks;
                     hasChanges = true;
                 }
             }
@@ -655,7 +651,7 @@
                     console.error('Auto-save error:', error);
                     alert("Save Error: " + error.message);
                 } else {
-                    const newLtc = updateData[colLtc] || currentSelection[colLtc];
+                    const newLtc = updateData.LTC_ID_NUMBER || currentSelection.LTC_ID_NUMBER;
                     if (newLtc) {
                         const recHeaderId = document.getElementById('rec-header-id-top');
                         const certHeaderId = document.getElementById('cert-header-id');
@@ -710,6 +706,7 @@
                     else if (st === 'RELEASED TO CLIENT' || st === 'RELEASED - CLIENT' || st === 'RELEASE TO CLIENT') { stats.rel++; st = 'RELEASED TO CLIENT'; }
                     else if (st === 'DISAPPROVED') { stats.dis++; st = 'DISAPPROVED'; }
 
+                    let currentIndex = statusFlow.indexOf(st);
                     let daysPassed = item.updated_at ? getWorkingDays(new Date(item.updated_at), new Date()) : 0;
                     let warningHTML = daysPassed > 5 ? `<span class="text-red-600 font-black ml-2 text-[12px]" title="Exceeded 5 working days!">⚠️</span>` : '';
 
@@ -885,34 +882,23 @@
             const record = rawData.find(r => r.id === id);
             if (!record) return;
 
-            let newLtc = `NEW (${mode})`;
-
-            if (mode === 'CORRECTION') {
-                const proceed = confirm(`Process a CORRECTION for this record?\nClick OK to continue.`);
-                if (!proceed) return;
-                
-                const keep = confirm(`Do you want to RETAIN the current LTC Number?\n\nClick OK to keep: ${record.LTC_ID_NUMBER || record.ltc_no || 'None'}\nClick Cancel to require a NEW number.`);
-                if (keep) {
-                    newLtc = record.LTC_ID_NUMBER || record.ltc_no || '';
-                }
-            } else {
-                if (!confirm(`Are you sure you want to process a ${mode} for this record? A new entry will be created requiring a new LTC Number.`)) return;
-            }
+            if (!confirm(`Are you sure you want to process a ${mode} for this record? A NEW entry will be created requiring a NEW LTC Number.`)) return;
 
             const { id: oldId, created_at, updated_at, ...newRecordData } = record;
             
             if(newRecordData.ltc_no !== undefined) delete newRecordData.ltc_no;
 
-            let colLtc = record.hasOwnProperty('LTC_ID_NUMBER') ? 'LTC_ID_NUMBER' : 'ltc_no';
-            newRecordData[colLtc] = newLtc; 
+            newRecordData.LTC_ID_NUMBER = `NEW (${mode})`; 
             newRecordData.status = 'RECEIVED'; 
+            newRecordData.Remarks = '';
 
             const { data, error } = await supabaseClient.from('land_records').insert([newRecordData]).select();
             if (error) {
                 alert(`Error processing ${mode}: ` + error.message);
             } else {
                 await fetchClearanceData();
-                showReview(data[0].id, mode);
+                await logStatusChange(data[0].id, 'CREATED', 'RECEIVED');
+                showReview(data[0].id, 'REVIEW');
             }
         }
 
@@ -975,44 +961,21 @@
             document.getElementById('btnNext').disabled = currentNavIndex >= currentNavList.length - 1;
             document.getElementById('btnNext').className = currentNavIndex >= currentNavList.length - 1 ? 'bg-gray-100 text-gray-400 px-4 py-2 rounded text-xs font-black uppercase cursor-not-allowed' : 'bg-gray-200 hover:bg-gray-300 px-4 py-2 rounded text-xs font-black uppercase transition-colors text-gray-800';
 
-            let colLtc = currentSelection.hasOwnProperty('LTC_ID_NUMBER') ? 'LTC_ID_NUMBER' : 'ltc_no';
-
-            const dbToHtmlMap = {
-                [colLtc]: 'edit-LTC_ID_NUMBER',
-                'lot_no': 'edit-lot',
-                'owner_name': 'edit-owner',
-                'registered_under': 'tct',
-                'area': 'area',
-                'td_no': 'td',
-                'location': 'location',
-                'deed_type': 'deed',
-                'executed_by': 'executed',
-                'in_favor_of': 'favor',
-                'doc_no': 'doc',
-                'page_no': 'page',
-                'book_no': 'book',
-                'series_of': 'series',
-                'dated': 'dated',
-                'notary_public': 'notary',
-                'retention_area_names': 'retention',
-                'or_number': 'or_number',
-                'or_date': 'or_date'
-            };
-
             const isEditable = (currentReviewMode !== 'VIEW_CERT');
 
-            for (let dbCol in dbToHtmlMap) {
-                let htmlSuffix = dbToHtmlMap[dbCol];
+            for (let dbCol in DB_HTML_MAP) {
+                let suffix = DB_HTML_MAP[dbCol];
                 
-                let editEl = document.getElementById(`edit-${htmlSuffix.replace('edit-', '')}`);
+                let editEl = document.getElementById(`edit-${suffix}`);
                 if(editEl) {
                     editEl.innerText = currentSelection[dbCol] || '---';
                     editEl.contentEditable = isEditable ? "true" : "false";
+                    editEl.onblur = () => { if(isEditable) autoSaveEdits(); }; 
                 }
 
                 let val = currentSelection[dbCol] || ' ';
-                let recEl = document.getElementById(`rec-${htmlSuffix.replace('edit-', '')}`);
-                let certEl = document.getElementById(`cert-${htmlSuffix.replace('edit-', '')}`);
+                let recEl = document.getElementById(`rec-${suffix}`);
+                let certEl = document.getElementById(`cert-${suffix}`);
                 if(recEl) recEl.innerText = val;
                 if(certEl) certEl.innerText = val;
             }
@@ -1021,13 +984,13 @@
             const certHeaderId = document.getElementById('cert-header-id');
             const recFooterId = document.getElementById('rec-footer-id');
             const certFooterId = document.getElementById('cert-footer-id');
-            const headerVal = currentSelection[colLtc] || 'LTC-PENDING';
+            const headerVal = currentSelection.LTC_ID_NUMBER || currentSelection.ltc_no || 'LTC-PENDING';
             if(recHeaderId) recHeaderId.innerText = headerVal;
             if(certHeaderId) certHeaderId.innerText = headerVal;
             if(recFooterId) recFooterId.innerText = headerVal;
             if(certFooterId) certFooterId.innerText = headerVal;
 
-            document.querySelectorAll('.sys-chief-name').forEach(el => el.innerText = chiefLegalName);
+            document.querySelectorAll('.sys-chief-name').forEach(el => el.innerText = chiefLegalName && chiefLegalName !== "---" ? chiefLegalName : "ATTY. JAIME G. RESOCO, JR.");
             document.querySelectorAll('.sys-parpo-name').forEach(el => el.innerText = parpoName);
 
             const now = new Date();
@@ -1056,6 +1019,7 @@
             let colRemarks = currentSelection.hasOwnProperty('Remarks') ? 'Remarks' : 'remarks';
             document.getElementById('reviewRemarks').value = currentSelection[colRemarks] || '';
             document.getElementById('reviewRemarks').disabled = !isEditable;
+            document.getElementById('reviewRemarks').onblur = () => { if(isEditable) autoSaveEdits(); };
             
             refreshDashboard(); 
 
@@ -1208,6 +1172,12 @@
             const updateData = { status: newSt, updated_at: new Date().toISOString() };
             const oldStatus = currentSelection.status;
             
+            for (let dbCol in DB_HTML_MAP) {
+                let suffix = DB_HTML_MAP[dbCol];
+                let el = document.getElementById(`edit-${suffix}`);
+                if (el && el.innerText.trim() !== '---') { updateData[dbCol] = el.innerText.trim(); }
+            }
+
             const { error } = await supabaseClient.from('land_records').update(updateData).eq('id', currentSelection.id);
             if (!error) { 
                 await logStatusChange(currentSelection.id, oldStatus, newSt);
