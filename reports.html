@@ -10,26 +10,26 @@
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700;900&display=swap" rel="stylesheet">
     <style>
         :root { --dar-green: #003811; --dar-gold: #D4AF37; }
-        body { font-family: 'Segoe UI', sans-serif; background-color: #F3F4F6; font-size: 13px; color: #1F2937; }
+        body { font-family: 'Segoe UI', sans-serif; background-color: #e5e7eb; font-size: 13px; color: #1F2937; }
         .compact-table td, .compact-table th { padding: 0.5rem 1rem !important; }
 
         @media print {
             @page { size: landscape; margin: 0.5in; }
             body { background: white !important; }
-            nav, header, .no-print { display: none !important; }
-            main { height: auto !important; overflow: visible !important; }
-            .scroll-area { overflow: visible !important; height: auto !important; padding: 0 !important; }
-            .shadow-sm, .shadow-lg { box-shadow: none !important; }
-            .border { border: 1px solid #ccc !important; }
-            table { width: 100% !important; page-break-inside: auto; }
+            nav, header, .no-print, .filter-section { display: none !important; }
+            main { height: auto !important; overflow: visible !important; background: white !important; }
+            .scroll-area { overflow: visible !important; height: auto !important; padding: 0 !important; background: white !important; }
+            .shadow-sm, .shadow-lg { box-shadow: none !important; border: none !important; }
+            table { width: 100% !important; page-break-inside: auto; border: 1px solid #ddd; }
             tr { page-break-inside: avoid; page-break-after: auto; }
             thead { display: table-header-group; }
             tfoot { display: table-footer-group; }
-            .print-header { display: block !important; text-align: center; margin-bottom: 20px; }
+            .print-header { display: block !important; text-align: center; margin-bottom: 20px; border-bottom: 2px solid #003811; padding-bottom: 10px; }
+            th { background-color: #f3f4f6 !important; color: #000 !important; }
         }
 
         .print-header { display: none; }
-        .scroll-area::-webkit-scrollbar { width: 4px; height: 4px; }
+        .scroll-area::-webkit-scrollbar { width: 6px; height: 6px; }
         .scroll-area::-webkit-scrollbar-track { background: #f1f1f1; }
         .scroll-area::-webkit-scrollbar-thumb { background: #c1c1c1; border-radius: 4px; }
     </style>
@@ -53,9 +53,37 @@
 
     <main class="flex-1 flex flex-col overflow-hidden">
         <header class="bg-white shadow-sm border-b px-6 py-4 flex justify-between items-center no-print">
-            <h1 class="text-lg font-bold text-[#003811] uppercase tracking-tight">Status Monitoring Report</h1>
+            <div>
+                <h1 class="text-xl font-black text-[#003811] uppercase tracking-tight">Analytics & Reports</h1>
+                <p class="text-xs text-gray-500 font-bold uppercase tracking-widest">Clearance Status Monitoring</p>
+            </div>
             <div class="flex gap-2 items-center">
-                <select id="statusFilter" class="border border-gray-300 rounded px-3 py-1.5 text-xs focus:outline-none focus:border-[#003811] font-bold uppercase text-gray-700" onchange="refreshReport()">
+                <button onclick="fetchReportData()" class="bg-gray-200 text-gray-800 px-4 py-2 rounded text-xs font-bold uppercase shadow-sm hover:bg-gray-300 transition-colors">🔄 Sync Data</button>
+                <button onclick="exportCSV()" class="bg-[#D4AF37] text-[#003811] px-4 py-2 rounded text-xs font-black uppercase shadow hover:brightness-105 transition-colors flex items-center gap-1">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                    Export CSV
+                </button>
+                <button onclick="window.print()" class="bg-gray-800 text-white px-4 py-2 rounded text-xs font-bold uppercase shadow hover:bg-black transition-colors flex items-center gap-1">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
+                    Print Report
+                </button>
+            </div>
+        </header>
+
+        <!-- Filters Section -->
+        <div class="bg-white px-6 py-3 border-b border-gray-200 flex gap-4 items-center flex-wrap no-print filter-section shadow-sm z-10 relative">
+            <div class="flex items-center gap-2">
+                <label class="text-xs font-bold text-gray-500 uppercase tracking-wider">Date Range:</label>
+                <input type="date" id="startDate" class="border border-gray-300 rounded px-2 py-1.5 text-xs focus:outline-none focus:border-[#003811]" onchange="refreshReport()">
+                <span class="text-gray-400 font-bold">to</span>
+                <input type="date" id="endDate" class="border border-gray-300 rounded px-2 py-1.5 text-xs focus:outline-none focus:border-[#003811]" onchange="refreshReport()">
+            </div>
+            
+            <div class="w-px h-6 bg-gray-300"></div>
+
+            <div class="flex items-center gap-2">
+                <label class="text-xs font-bold text-gray-500 uppercase tracking-wider">Status:</label>
+                <select id="statusFilter" class="border border-gray-300 rounded px-2 py-1.5 text-xs focus:outline-none focus:border-[#003811] font-bold uppercase text-gray-700 bg-gray-50" onchange="refreshReport()">
                     <option value="ALL">All Statuses</option>
                     <option value="RECEIVED">Received</option>
                     <option value="REVIEWED">Reviewed</option>
@@ -66,70 +94,60 @@
                     <option value="RELEASED TO CLIENT">Released to Client</option>
                     <option value="DISAPPROVED">Disapproved</option>
                 </select>
-                <input type="text" id="searchInput" placeholder="Search LTC, Owner..." class="border border-gray-300 rounded px-3 py-1.5 text-xs focus:outline-none focus:border-[#003811] w-48" onkeyup="refreshReport()">
-                <button onclick="fetchReportData()" class="bg-[#003811] text-white px-4 py-1.5 rounded text-xs font-bold uppercase shadow hover:bg-[#006400]">Refresh</button>
-                <button onclick="exportCSV()" class="bg-[#D4AF37] text-[#003811] px-4 py-1.5 rounded text-xs font-black uppercase shadow hover:brightness-105 border border-yellow-600">Export CSV</button>
-                <button onclick="window.print()" class="bg-gray-800 text-white px-4 py-1.5 rounded text-xs font-bold uppercase shadow hover:bg-black">Print</button>
             </div>
-        </header>
 
-        <div class="flex-1 overflow-y-auto p-6 space-y-4 scroll-area bg-gray-100">
+            <div class="w-px h-6 bg-gray-300"></div>
+
+            <div class="flex-1 flex items-center gap-2">
+                <label class="text-xs font-bold text-gray-500 uppercase tracking-wider">Search:</label>
+                <input type="text" id="searchInput" placeholder="Search LTC No, Owner, Legal Officer..." class="border border-gray-300 rounded px-3 py-1.5 text-xs focus:outline-none focus:border-[#003811] w-full max-w-md" onkeyup="refreshReport()">
+            </div>
+        </div>
+
+        <div class="flex-1 overflow-y-auto p-6 scroll-area relative">
             
             <div class="print-header">
-                <h2 class="text-2xl font-black text-[#003811] uppercase tracking-widest">LTC Status Monitoring Report</h2>
+                <h2 class="text-2xl font-black text-[#003811] uppercase tracking-widest mb-1">LTC Status Monitoring Report</h2>
                 <p class="text-sm font-bold text-gray-600" id="printDate">Generated on: </p>
+                <p class="text-xs font-bold text-gray-500 mt-1 uppercase" id="printFilters"></p>
             </div>
 
-            <div class="grid grid-cols-4 lg:grid-cols-8 gap-3 no-print">
-                <div class="bg-white p-3 rounded border-l-4 border-blue-500 text-center shadow-sm">
-                    <p class="text-[8px] font-bold text-gray-400 uppercase">Received</p>
-                    <h3 id="stat-received" class="text-lg font-black text-blue-600">0</h3>
+            <!-- Report Summary Ribbon -->
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 flex justify-between items-center mb-6 no-print divide-x divide-gray-100">
+                <div class="p-4 flex-1 text-center hover:bg-gray-50 transition-colors">
+                    <p class="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-1">Total Records in Range</p>
+                    <p class="text-3xl font-black text-gray-800" id="rep-total">0</p>
                 </div>
-                <div class="bg-white p-3 rounded border-l-4 border-purple-500 text-center shadow-sm">
-                    <p class="text-[8px] font-bold text-gray-400 uppercase">Reviewed</p>
-                    <h3 id="stat-recommended" class="text-lg font-black text-purple-600">0</h3>
+                <div class="p-4 flex-1 text-center hover:bg-red-50 transition-colors">
+                    <p class="text-[10px] text-red-400 font-bold uppercase tracking-widest mb-1">Pending Legal / Returned</p>
+                    <p class="text-3xl font-black text-red-600" id="rep-legal">0</p>
                 </div>
-                <div class="bg-white p-3 rounded border-l-4 border-cyan-500 text-center shadow-sm">
-                    <p class="text-[8px] font-bold text-gray-400 uppercase">Printed LTC</p>
-                    <h3 id="stat-certified" class="text-lg font-black text-cyan-600">0</h3>
+                <div class="p-4 flex-1 text-center hover:bg-orange-50 transition-colors">
+                    <p class="text-[10px] text-orange-400 font-bold uppercase tracking-widest mb-1">Pending PARPO Sig</p>
+                    <p class="text-3xl font-black text-orange-600" id="rep-parpo">0</p>
                 </div>
-                <div class="bg-white p-3 rounded border-l-4 border-orange-500 text-center shadow-sm">
-                    <p class="text-[8px] font-bold text-gray-400 uppercase">Signed by PARPO</p>
-                    <h3 id="stat-signed" class="text-lg font-black text-orange-600">0</h3>
-                </div>
-                <div class="bg-white p-3 rounded border-l-4 border-red-500 text-center shadow-sm">
-                    <p class="text-[8px] font-bold text-gray-400 uppercase">Returned to Legal</p>
-                    <h3 id="stat-legal" class="text-lg font-black text-red-600">0</h3>
-                </div>
-                <div class="bg-white p-3 rounded border-l-4 border-green-500 text-center shadow-sm">
-                    <p class="text-[8px] font-bold text-gray-400 uppercase">Forwarded to Records</p>
-                    <h3 id="stat-records" class="text-lg font-black text-green-600">0</h3>
-                </div>
-                <div class="bg-white p-3 rounded border-l-4 border-teal-500 text-center shadow-sm">
-                    <p class="text-[8px] font-bold text-gray-400 uppercase">Released</p>
-                    <h3 id="stat-released" class="text-lg font-black text-teal-600">0</h3>
-                </div>
-                <div class="bg-white p-3 rounded border-l-4 border-gray-400 text-center shadow-sm">
-                    <p class="text-[8px] font-bold text-gray-400 uppercase">Disapproved</p>
-                    <h3 id="stat-disapproved" class="text-lg font-black text-gray-600">0</h3>
+                <div class="p-4 flex-1 text-center hover:bg-teal-50 transition-colors">
+                    <p class="text-[10px] text-teal-500 font-bold uppercase tracking-widest mb-1">Completed / Released</p>
+                    <p class="text-3xl font-black text-teal-600" id="rep-released">0</p>
                 </div>
             </div>
 
-            <div class="bg-white rounded-lg shadow-sm overflow-hidden border border-gray-200">
+            <!-- Main Data Table -->
+            <div class="bg-white rounded-lg shadow-sm overflow-hidden border border-gray-300">
                 <table class="w-full text-left border-collapse text-[11px] compact-table">
-                    <thead class="bg-gray-50 border-b uppercase font-bold text-[#003811] tracking-wider">
+                    <thead class="bg-[#003811] border-b-4 border-[#D4AF37] uppercase font-bold text-white tracking-widest">
                         <tr>
-                            <th class="w-[15%]">LTC Number</th>
-                            <th class="w-[20%]">Land Owner</th>
-                            <th class="w-[15%]">Area / Location</th>
-                            <th class="w-[15%]">Legal Officer</th>
-                            <th class="w-[15%] text-center">Status</th>
-                            <th class="w-[10%] text-center">Aging (Days)</th>
-                            <th class="w-[10%] text-right">Last Updated</th>
+                            <th class="w-[12%] py-3">LTC Number</th>
+                            <th class="w-[20%] py-3">Land Owner</th>
+                            <th class="w-[18%] py-3">Area / Location</th>
+                            <th class="w-[15%] py-3">Legal Officer</th>
+                            <th class="w-[15%] text-center py-3">Current Status</th>
+                            <th class="w-[10%] text-center py-3">Aging</th>
+                            <th class="w-[10%] text-right py-3">Last Updated</th>
                         </tr>
                     </thead>
-                    <tbody id="reportTableBody" class="divide-y divide-gray-100">
-                        <tr><td colspan="7" class="text-center py-8 text-gray-400 italic">Loading records...</td></tr>
+                    <tbody id="reportTableBody" class="divide-y divide-gray-200">
+                        <tr><td colspan="7" class="text-center py-10 text-gray-400 italic text-sm">Loading database records...</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -196,14 +214,14 @@
 
         async function fetchReportData() {
             const tbody = document.getElementById('reportTableBody');
-            tbody.innerHTML = '<tr><td colspan="7" class="text-center py-8 text-gray-400 font-bold uppercase tracking-widest animate-pulse">Fetching records...</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="7" class="text-center py-10 text-gray-400 font-bold uppercase tracking-widest animate-pulse">Syncing Database...</td></tr>';
             
             const { data, error } = await supabaseClient.from('land_records').select('*').order('updated_at', { ascending: false });
             if (!error) { 
                 rawData = data || []; 
                 refreshReport(); 
             } else {
-                tbody.innerHTML = `<tr><td colspan="7" class="text-center py-8 text-red-500 font-bold uppercase">Error: ${error.message}</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="7" class="text-center py-10 text-red-500 font-bold uppercase">Database Error: ${error.message}</td></tr>`;
             }
         }
 
@@ -226,26 +244,41 @@
         function refreshReport() {
             const query = document.getElementById('searchInput').value.toLowerCase();
             const statusFilter = document.getElementById('statusFilter').value;
+            const startDateStr = document.getElementById('startDate').value;
+            const endDateStr = document.getElementById('endDate').value;
+            
             const tbody = document.getElementById('reportTableBody');
             tbody.innerHTML = '';
             
-            let stats = { rec: 0, rev: 0, cer: 0, sig: 0, leg: 0, recd: 0, rel: 0, dis: 0 };
+            // Ribbon Stats
+            let statTotal = 0;
+            let statLegal = 0;
+            let statParpo = 0;
+            let statReleased = 0;
+            
             let hasResults = false;
+
+            // Update print header subtitle
+            let filterText = `Status: ${statusFilter}`;
+            if (startDateStr && endDateStr) filterText += ` | Range: ${startDateStr} to ${endDateStr}`;
+            else if (startDateStr) filterText += ` | From: ${startDateStr}`;
+            else if (endDateStr) filterText += ` | Until: ${endDateStr}`;
+            document.getElementById('printFilters').innerText = filterText;
+
+            let sDate = startDateStr ? new Date(startDateStr) : null;
+            let eDate = endDateStr ? new Date(endDateStr) : null;
+            if (eDate) eDate.setHours(23, 59, 59, 999);
 
             rawData.forEach(item => {
                 let st = (item.status || 'RECEIVED').trim().toUpperCase();
+                let itemDate = item.updated_at ? new Date(item.updated_at) : new Date(item.created_at || new Date());
                 
-                // Collect Stats (Unaffected by search filter to show overall system health)
-                if (st === 'RECEIVED' || st === 'RECEIVED - LEGAL') stats.rec++;
-                else if (st === 'REVIEWED' || st === 'REVIEWED AND RECOMMENDED' || st === 'RECOMMENDED') stats.rev++;
-                else if (st === 'PRINTED LTC' || st === 'CERTIFIED' || st === 'PROCESSED') stats.cer++;
-                else if (st === 'SIGNED BY PARPO' || st === 'SIGNED' || st === 'FOR SIGNATURE - PARPO II') stats.sig++;
-                else if (st === 'RETURNED TO LEGAL' || st === 'TO LEGAL' || st === 'FORWARDED - RECORDS') stats.leg++;
-                else if (st === 'FORWARDED TO RECORDS' || st === 'TO RECORDS') stats.recd++;
-                else if (st === 'RELEASED TO CLIENT' || st === 'RELEASED - CLIENT' || st === 'RELEASE TO CLIENT') stats.rel++;
-                else if (st === 'DISAPPROVED') stats.dis++;
+                // Date Range Check
+                let matchesDate = true;
+                if (sDate && itemDate < sDate) matchesDate = false;
+                if (eDate && itemDate > eDate) matchesDate = false;
 
-                // Apply Filters
+                // Apply Search & Status Filters
                 let matchesSearch = false;
                 if (query === '') {
                     matchesSearch = true;
@@ -254,60 +287,66 @@
                         val !== null && String(val).toLowerCase().includes(query)
                     );
                 }
-
                 let matchesStatus = (statusFilter === 'ALL' || st === statusFilter);
 
-                if (matchesSearch && matchesStatus) {
+                if (matchesSearch && matchesStatus && matchesDate) {
                     hasResults = true;
+                    statTotal++;
+
+                    if (st === 'RECEIVED' || st === 'RETURNED TO LEGAL') statLegal++;
+                    if (st === 'PRINTED LTC') statParpo++;
+                    if (st === 'RELEASED TO CLIENT' || st === 'RELEASED - CLIENT') statReleased++;
+
                     let daysPassed = item.updated_at ? getWorkingDays(new Date(item.updated_at), new Date()) : 0;
                     
-                    let agingDisplay = `<span class="font-mono font-bold text-gray-700">${daysPassed}</span>`;
+                    let agingDisplay = `<span class="font-mono font-bold text-gray-700">${daysPassed} Days</span>`;
                     if (daysPassed > 5 && st !== 'RELEASED TO CLIENT' && st !== 'DISAPPROVED') {
-                        agingDisplay = `<span class="font-mono font-black text-red-600 bg-red-100 px-2 py-0.5 rounded">${daysPassed} ⚠️</span>`;
+                        agingDisplay = `<span class="font-mono font-black text-white bg-red-600 px-2 py-1 rounded shadow-sm">${daysPassed} Days ⚠️</span>`;
+                    } else if (st === 'RELEASED TO CLIENT') {
+                        agingDisplay = `<span class="font-mono font-bold text-gray-400">-</span>`;
                     }
 
                     let legalOfficerName = item.legalOfficer || item.legalofficer || item.encoded_by || item.created_by || '---'; 
-                    let areaLoc = `${item.area || '--'} ha / ${item.location || '--'}`;
+                    let areaLoc = `${item.area ? item.area + ' ha.' : '--'} <br/> <span class="text-[9px] text-gray-400 font-normal truncate block max-w-[200px]" title="${item.location || ''}">${item.location || '--'}</span>`;
+
+                    let statusBadge = getStatusStyle(st);
 
                     tbody.innerHTML += `
-                        <tr class="hover:bg-yellow-50 transition-colors border-b border-gray-50 last:border-0">
-                            <td class="font-bold text-[#003811]">${item.LTC_ID_NUMBER || item.ltc_no || '---'}</td>
-                            <td class="uppercase font-semibold text-gray-800">${item.owner_name || '---'}</td>
-                            <td class="text-xs text-gray-600 truncate max-w-[150px]" title="${areaLoc}">${areaLoc}</td>
-                            <td class="text-xs text-gray-600">${legalOfficerName}</td>
-                            <td class="text-center"><span class="px-2 py-1 rounded text-[9px] shadow-sm font-black uppercase ${getStatusStyle(st)}">${st}</span></td>
+                        <tr class="hover:bg-blue-50 transition-colors">
+                            <td class="font-bold text-gray-800">${item.LTC_ID_NUMBER || item.ltc_no || '---'}</td>
+                            <td class="uppercase font-semibold text-gray-900">${item.owner_name || '---'}</td>
+                            <td class="text-xs text-gray-700 align-middle py-2">${areaLoc}</td>
+                            <td class="text-xs text-gray-600 font-medium">${legalOfficerName}</td>
+                            <td class="text-center"><span class="px-2 py-1 rounded-full text-[9px] border font-black uppercase ${statusBadge}">${st}</span></td>
                             <td class="text-center align-middle">${agingDisplay}</td>
-                            <td class="text-right font-mono text-xs text-gray-500">${item.updated_at ? new Date(item.updated_at).toLocaleString('en-US', { hour12: true, month: 'short', day: '2-digit', year: 'numeric' }) : '---'}</td>
+                            <td class="text-right font-mono text-xs text-gray-500">${item.updated_at ? new Date(item.updated_at).toLocaleString('en-US', { month: 'short', day: '2-digit', year: 'numeric', hour: '2-digit', minute:'2-digit' }) : '---'}</td>
                         </tr>`;
                 }
             });
 
             if (!hasResults) {
-                tbody.innerHTML = '<tr><td colspan="7" class="text-center py-8 text-gray-400 font-bold uppercase tracking-widest">No records match the selected filters.</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="7" class="text-center py-10 text-gray-400 font-bold uppercase tracking-widest bg-gray-50">No records match the selected date range or filters.</td></tr>';
             }
             
-            updateStats(stats);
+            // Update Ribbon
+            document.getElementById('rep-total').innerText = statTotal;
+            document.getElementById('rep-legal').innerText = statLegal;
+            document.getElementById('rep-parpo').innerText = statParpo;
+            document.getElementById('rep-released').innerText = statReleased;
         }
 
         function getStatusStyle(s) {
             const colors = { 
-                'RECEIVED': 'bg-blue-100 text-blue-800 border border-blue-200', 
-                'REVIEWED': 'bg-purple-100 text-purple-800 border border-purple-200', 
-                'PRINTED LTC': 'bg-cyan-100 text-cyan-800 border border-cyan-200', 
-                'SIGNED BY PARPO': 'bg-orange-100 text-orange-800 border border-orange-200', 
-                'RETURNED TO LEGAL': 'bg-red-100 text-red-800 border border-red-200', 
-                'FORWARDED TO RECORDS': 'bg-green-100 text-green-800 border border-green-200', 
-                'RELEASED TO CLIENT': 'bg-teal-100 text-teal-800 border border-teal-200',
-                'DISAPPROVED': 'bg-gray-200 text-gray-800 border border-gray-300'
+                'RECEIVED': 'bg-blue-50 text-blue-700 border-blue-200', 
+                'REVIEWED': 'bg-purple-50 text-purple-700 border-purple-200', 
+                'PRINTED LTC': 'bg-cyan-50 text-cyan-700 border-cyan-200', 
+                'SIGNED BY PARPO': 'bg-orange-50 text-orange-700 border-orange-200', 
+                'RETURNED TO LEGAL': 'bg-red-50 text-red-700 border-red-200', 
+                'FORWARDED TO RECORDS': 'bg-green-50 text-green-700 border-green-200', 
+                'RELEASED TO CLIENT': 'bg-teal-50 text-teal-700 border-teal-200',
+                'DISAPPROVED': 'bg-gray-100 text-gray-600 border-gray-300'
             };
-            return colors[s] || 'bg-gray-100 text-gray-800';
-        }
-        
-        function updateStats(s) { 
-            document.getElementById('stat-received').innerText = s.rec; document.getElementById('stat-recommended').innerText = s.rev; 
-            document.getElementById('stat-certified').innerText = s.cer; document.getElementById('stat-signed').innerText = s.sig; 
-            document.getElementById('stat-legal').innerText = s.leg; document.getElementById('stat-records').innerText = s.recd; 
-            document.getElementById('stat-released').innerText = s.rel; document.getElementById('stat-disapproved').innerText = s.dis;
+            return colors[s] || 'bg-gray-50 text-gray-700 border-gray-200';
         }
 
         function exportCSV() {
@@ -315,18 +354,30 @@
             
             const query = document.getElementById('searchInput').value.toLowerCase();
             const statusFilter = document.getElementById('statusFilter').value;
+            const startDateStr = document.getElementById('startDate').value;
+            const endDateStr = document.getElementById('endDate').value;
+            
+            let sDate = startDateStr ? new Date(startDateStr) : null;
+            let eDate = endDateStr ? new Date(endDateStr) : null;
+            if (eDate) eDate.setHours(23, 59, 59, 999);
 
-            // Filter data same as view
+            // Filter data exactly as seen on screen
             let exportData = rawData.filter(item => {
                 let st = (item.status || 'RECEIVED').trim().toUpperCase();
+                let itemDate = item.updated_at ? new Date(item.updated_at) : new Date(item.created_at || new Date());
+                
+                let matchesDate = true;
+                if (sDate && itemDate < sDate) matchesDate = false;
+                if (eDate && itemDate > eDate) matchesDate = false;
+
                 let matchesSearch = query === '' || Object.values(item).some(val => val !== null && String(val).toLowerCase().includes(query));
                 let matchesStatus = (statusFilter === 'ALL' || st === statusFilter);
-                return matchesSearch && matchesStatus;
+                
+                return matchesSearch && matchesStatus && matchesDate;
             });
 
             if (exportData.length === 0) return alert("Filtered list is empty.");
 
-            // Define columns
             const headers = ['LTC Number', 'Land Owner', 'Registered Under (TCT)', 'Area', 'Location', 'Legal Officer', 'Status', 'Days Pending', 'Last Updated'];
             let csvContent = headers.join(',') + '\n';
 
@@ -336,12 +387,12 @@
                 let legalOfficerName = item.legalOfficer || item.legalofficer || item.encoded_by || item.created_by || ''; 
                 
                 let row = [
-                    `"${item.LTC_ID_NUMBER || item.ltc_no || ''}"`,
-                    `"${item.owner_name || ''}"`,
-                    `"${item.registered_under || ''}"`,
-                    `"${item.area || ''}"`,
-                    `"${item.location || ''}"`,
-                    `"${legalOfficerName}"`,
+                    `"${(item.LTC_ID_NUMBER || item.ltc_no || '').replace(/"/g, '""')}"`,
+                    `"${(item.owner_name || '').replace(/"/g, '""')}"`,
+                    `"${(item.registered_under || '').replace(/"/g, '""')}"`,
+                    `"${(item.area || '').replace(/"/g, '""')}"`,
+                    `"${(item.location || '').replace(/"/g, '""')}"`,
+                    `"${legalOfficerName.replace(/"/g, '""')}"`,
                     `"${st}"`,
                     `"${daysPassed}"`,
                     `"${item.updated_at ? new Date(item.updated_at).toLocaleString() : ''}"`
