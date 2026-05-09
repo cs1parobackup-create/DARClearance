@@ -88,39 +88,7 @@
         </header>
 
         <div class="flex-1 overflow-y-auto p-6 space-y-4 no-print scroll-area">
-            <div class="grid grid-cols-4 lg:grid-cols-8 gap-3">
-                <div class="bg-white p-3 rounded border-l-4 border-blue-500 text-center shadow-sm">
-                    <p class="text-[8px] font-bold text-gray-400 uppercase">Received</p>
-                    <h3 id="stat-received" class="text-lg font-black text-blue-600">0</h3>
-                </div>
-                <div class="bg-white p-3 rounded border-l-4 border-purple-500 text-center shadow-sm">
-                    <p class="text-[8px] font-bold text-gray-400 uppercase">Reviewed</p>
-                    <h3 id="stat-recommended" class="text-lg font-black text-purple-600">0</h3>
-                </div>
-                <div class="bg-white p-3 rounded border-l-4 border-cyan-500 text-center shadow-sm">
-                    <p class="text-[8px] font-bold text-gray-400 uppercase">Printed LTC</p>
-                    <h3 id="stat-certified" class="text-lg font-black text-cyan-600">0</h3>
-                </div>
-                <div class="bg-white p-3 rounded border-l-4 border-orange-500 text-center shadow-sm">
-                    <p class="text-[8px] font-bold text-gray-400 uppercase">Signed by PARPO</p>
-                    <h3 id="stat-signed" class="text-lg font-black text-orange-600">0</h3>
-                </div>
-                <div class="bg-white p-3 rounded border-l-4 border-red-500 text-center shadow-sm">
-                    <p class="text-[8px] font-bold text-gray-400 uppercase">Returned to Legal</p>
-                    <h3 id="stat-legal" class="text-lg font-black text-red-600">0</h3>
-                </div>
-                <div class="bg-white p-3 rounded border-l-4 border-green-500 text-center shadow-sm">
-                    <p class="text-[8px] font-bold text-gray-400 uppercase">Forwarded to Records</p>
-                    <h3 id="stat-records" class="text-lg font-black text-green-600">0</h3>
-                </div>
-                <div class="bg-white p-3 rounded border-l-4 border-teal-500 text-center shadow-sm">
-                    <p class="text-[8px] font-bold text-gray-400 uppercase">Released</p>
-                    <h3 id="stat-released" class="text-lg font-black text-teal-600">0</h3>
-                </div>
-                <div class="bg-white p-3 rounded border-l-4 border-gray-400 text-center shadow-sm">
-                    <p class="text-[8px] font-bold text-gray-400 uppercase">Disapproved</p>
-                    <h3 id="stat-disapproved" class="text-lg font-black text-gray-600">0</h3>
-                </div>
+            <div class="grid grid-cols-4 lg:grid-cols-8 gap-3" id="statsGrid">
             </div>
 
             <div class="bg-white rounded-lg shadow-sm overflow-hidden border border-gray-200">
@@ -504,7 +472,7 @@
                     
                     const lbl = (item.label || "").toUpperCase();
                     const url = (item.url || "").toLowerCase();
-                    const isNewClearanceMenu = lbl.includes('NEW') || url.includes('new_clearance');
+                    const isNewClearanceMenu = lbl.includes('NEW') || url.includes('new');
                     
                     if (isNewClearanceMenu && (userRole.includes('PARPO') || userRole.includes('RECORDS'))) {
                         return; 
@@ -590,8 +558,6 @@
             const isRecords = userRole.includes('RECORDS');
             const isLegal = (userRole.includes('LEGAL') || userRole.includes('SARPO') || userRole.includes('ARPT') || userRole.includes('ARPO')) && !isParpo;
 
-            let displayCount = 0;
-
             rawData.forEach(item => {
                 const st = (item.status || 'RECEIVED').trim().toUpperCase();
                 
@@ -626,11 +592,8 @@
                         actions += `<button onclick='openPrint("${item.id}", "cert")' class="bg-[#d97706] text-white w-full py-1.5 rounded shadow text-[9px] font-black uppercase mt-1">Certification</button>`;
                         actions += `<button onclick='createVariant("${item.id}")' class="bg-white text-gray-800 border border-gray-300 w-full py-1 rounded shadow text-[9px] font-bold uppercase mt-1">+ Variant</button>`;
                     } else if (st === 'PRINTED LTC' || st === 'CERTIFIED' || st === 'PROCESSED') {
-                        actions += `<button onclick='showReview("${item.id}", "REVIEW")' class="bg-[#003811] text-white w-full py-1.5 rounded shadow text-[10px] font-bold uppercase">Edit</button>`;
-                        actions += `<button onclick='openPrint("${item.id}", "rec")' class="bg-[#8b5cf6] text-white w-full py-1.5 rounded shadow text-[9px] font-black uppercase mt-1">Recommendation</button>`;
+                        actions += `<button onclick='openPrint("${item.id}", "rec")' class="bg-[#8b5cf6] text-white w-full py-1.5 rounded shadow text-[9px] font-black uppercase">Recommendation</button>`;
                         actions += `<button onclick='openPrint("${item.id}", "cert")' class="bg-[#d97706] text-white w-full py-1.5 rounded shadow text-[9px] font-black uppercase mt-1">Certification</button>`;
-                    } else if (st === 'SIGNED BY PARPO' || st === 'SIGNED' || st === 'FOR SIGNATURE - PARPO II') {
-                        actions += `<button onclick='processToNext("${item.id}", "RETURNED TO LEGAL", "${st}")' class="bg-orange-600 text-white w-full py-1.5 rounded shadow text-[10px] font-bold uppercase">Return to Legal</button>`;
                     } else if (st === 'RETURNED TO LEGAL' || st === 'TO LEGAL') {
                         actions += `<button onclick='openPrint("${item.id}", "rec")' class="bg-[#8b5cf6] text-white w-full py-1.5 rounded shadow text-[9px] font-black uppercase mb-1">Recommendation</button>`;
                         actions += `<button onclick='openPrint("${item.id}", "cert")' class="bg-[#d97706] text-white w-full py-1.5 rounded shadow text-[9px] font-black uppercase mb-1">Certification</button>`;
@@ -655,14 +618,14 @@
                     } else if (st === 'SIGNED BY PARPO' || st === 'SIGNED' || st === 'FOR SIGNATURE - PARPO II') {
                         actions += `<button onclick='processToNext("${item.id}", "RETURNED TO LEGAL", "${st}")' class="bg-orange-600 text-white w-full py-1.5 rounded shadow text-[10px] font-bold uppercase">Return to Legal</button>`;
                     } else {
-                        actions += `<button onclick='showReview("${item.id}", "VIEW_CERT")' class="bg-gray-500 text-white w-full py-1.5 rounded shadow text-[10px] font-bold uppercase">View</button>`;
+                        actions += `<button onclick='showReview("${item.id}", "VIEW_CERT")' class="bg-gray-500 text-white w-full py-1.5 rounded shadow text-[10px] font-bold uppercase">View Only</button>`;
                     }
                 }
                 else if (isRecords) {
-                    if (st === 'FORWARDED TO RECORDS') {
+                    if (st === 'FORWARDED TO RECORDS' || st === 'TO RECORDS') {
                         actions += `<button onclick='processToNext("${item.id}", "RELEASED TO CLIENT", "${st}")' class="bg-cyan-600 text-white w-full py-1.5 rounded shadow text-[10px] font-bold uppercase mb-1">Release</button>`;
                     }
-                    actions += `<button onclick='showReview("${item.id}", "VIEW_CERT")' class="bg-gray-500 text-white w-full py-1.5 rounded shadow text-[10px] font-bold uppercase">View</button>`;
+                    actions += `<button onclick='showReview("${item.id}", "VIEW_CERT")' class="bg-gray-500 text-white w-full py-1.5 rounded shadow text-[10px] font-bold uppercase">View Only</button>`;
                 }
                 else {
                     if (isOwner) {
@@ -692,19 +655,14 @@
                 }
                 actions += '</div>';
 
-                let legalOfficerName = item.legalOfficer || item.legalofficer || item.encoded_by || item.created_by || '---';
-
-                if (query !== '' || displayCount < 30) {
-                    tbody.innerHTML += `<tr>
-                        <td class="font-bold">${item.LTC_ID_NUMBER || '---'}</td>
-                        <td class="uppercase font-semibold">${item.owner_name}</td>
-                        <td class="text-xs text-gray-500">${legalOfficerName}</td>
-                        <td><span class="px-2 py-1 rounded text-[8px] shadow-sm font-black uppercase ${getStatusStyle(st)}">${st}</span>${warningHTML}</td>
-                        <td class="text-center align-middle">${actions}</td>
-                        <td class="text-right font-mono text-gray-500">${item.updated_at ? new Date(item.updated_at).toLocaleString('en-US', { hour12: true }) : '---'}</td>
-                    </tr>`;
-                    displayCount++;
-                }
+                tbody.innerHTML += `<tr>
+                    <td class="font-bold">${item.LTC_ID_NUMBER || '---'}</td>
+                    <td class="uppercase font-semibold">${item.owner_name}</td>
+                    <td class="text-xs text-gray-500">${item.legalOfficer || item.legalofficer || item.encoded_by || item.created_by || '---'}</td>
+                    <td><span class="px-2 py-1 rounded text-[8px] shadow-sm font-black uppercase ${getStatusStyle(st)}">${st}</span>${warningHTML}</td>
+                    <td class="text-center align-middle">${actions}</td>
+                    <td class="text-right font-mono text-gray-500">${item.updated_at ? new Date(item.updated_at).toLocaleString('en-US', { hour12: true }) : '---'}</td>
+                </tr>`;
             });
             updateSummaryCards(stats);
         }
@@ -773,45 +731,16 @@
             document.getElementById(sourceId).classList.remove('hidden');
             document.getElementById(sourceId).style.display = 'block';
 
-            setTimeout(() => { 
-                generateStrictPDF(sourceId, filename, type); 
-            }, 100); 
+            setTimeout(() => { generateStrictPDF(sourceId, filename, type); }, 100); 
         }
 
         function generateStrictPDF(sourceId, filename, type) {
-            const element = document.getElementById(sourceId);
-            
-            const overlay = document.createElement('div');
-            overlay.id = 'pdf-loading-overlay';
-            overlay.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100vh; background: #1F2937; z-index: 999999; display: flex; align-items: center; justify-content: center; flex-direction: column; color: white; font-family: sans-serif;';
-            overlay.innerHTML = '<div class="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-[#D4AF37] mb-4"></div><h2 class="text-2xl font-black tracking-widest uppercase mb-6">Rendering Document...</h2>';
-            document.body.appendChild(overlay);
-
-            const opt = { 
-                margin: 0, 
-                filename: filename, 
-                image: { type: 'jpeg', quality: 1.0 }, 
-                html2canvas: { scale: 2, useCORS: true, logging: false }, 
-                jsPDF: { unit: 'in', format: [8.5, 13], orientation: 'portrait' } 
-            };
-
-            html2pdf().set(opt).from(element).toPdf().get('pdf').then(pdf => {
-                while (pdf.internal.getNumberOfPages() > 1) { 
-                    pdf.deletePage(pdf.internal.getNumberOfPages()); 
-                }
-                pdf.save();
-            }).then(async () => {
-                if (type === 'cert' && currentSelection.status === 'REVIEWED') {
-                    const oldStatus = currentSelection.status;
-                    await supabaseClient.from('land_records').update({ status: 'PRINTED LTC', updated_at: new Date() }).eq('id', currentSelection.id);
-                    logStatusChange(currentSelection.id, oldStatus, 'PRINTED LTC');
-                    fetchClearanceData();
-                }
-                document.body.removeChild(overlay);
-                closeReview(); 
-            }).catch(err => {
-                console.error(err);
-                document.body.removeChild(overlay);
+            const wrapper = document.getElementById('modalContainer'); // Dummy for html2pdf
+            const opt = { margin: 0, filename: filename, image: { type: 'jpeg', quality: 1.0 }, html2canvas: { scale: 3, useCORS: true }, jsPDF: { unit: 'in', format: [8.5, 13], orientation: 'portrait' } };
+            html2pdf().set(opt).from(document.getElementById(sourceId)).toPdf().get('pdf').then(pdf => {
+                // Strict Page Killer: Remove any page after page 1
+                while (pdf.internal.getNumberOfPages() > 1) { pdf.deletePage(pdf.internal.getNumberOfPages()); }
+                pdf.save(filename);
             });
         }
 
@@ -908,6 +837,7 @@
                         val !== null && String(val).toLowerCase().includes(query)
                     );
                 }
+                
                 let userRole = currentUser.role.toUpperCase();
                 let isRecords = userRole.includes('RECORDS');
                 let st = (item.status || 'RECEIVED').trim().toUpperCase();
@@ -954,11 +884,13 @@
 
             for (let dbCol in dbToHtmlMap) {
                 let htmlSuffix = dbToHtmlMap[dbCol];
+                
                 let editEl = document.getElementById(`edit-${htmlSuffix}`);
                 if(editEl) {
                     editEl.innerText = currentSelection[dbCol] || '---';
                     editEl.contentEditable = isEditable ? "true" : "false";
                 }
+
                 let val = currentSelection[dbCol] || ' ';
                 let recEl = document.getElementById(`rec-${htmlSuffix}`);
                 let certEl = document.getElementById(`cert-${htmlSuffix}`);
@@ -986,13 +918,12 @@
 
             if (currentReviewMode === 'VIEW_CERT') {
                 document.getElementById('modalMainTitle').innerText = "CERTIFICATION VIEW";
-                document.getElementById('reviewSection').classList.add('hidden'); 
-                document.getElementById('docRecommendation').classList.add('hidden'); 
-                document.getElementById('docCertification').classList.remove('hidden'); 
+                document.getElementById('reviewSection').classList.add('hidden');
+                document.getElementById('docRecommendation').classList.add('hidden');
+                document.getElementById('docCertification').classList.remove('hidden');
                 document.getElementById('docCertification').style.display = 'block';
                 document.getElementById('actionButtons').classList.add('hidden');
                 document.getElementById('editNotice').classList.add('hidden');
-                document.getElementById('reviewRemarks').disabled = true;
             } else {
                 document.getElementById('modalMainTitle').innerText = currentReviewMode.replace('-', ' ').toUpperCase();
                 document.getElementById('docRecommendation').classList.add('hidden');
@@ -1001,11 +932,19 @@
                 document.getElementById('reviewSection').classList.remove('hidden');
                 document.getElementById('actionButtons').classList.remove('hidden');
                 document.getElementById('editNotice').classList.remove('hidden');
-                document.getElementById('reviewRemarks').value = currentSelection.Remarks || currentSelection.remarks || '';
-                document.getElementById('reviewRemarks').disabled = false;
             }
             
-            refreshDashboard(); 
+            document.getElementById('reviewRemarks').value = currentSelection.Remarks || currentSelection.remarks || '';
+            document.getElementById('reviewRemarks').disabled = !isEditable;
+            
+            const actionDiv = document.getElementById('actionButtons');
+            if (currentReviewMode === 'VIEW_CERT') {
+                actionDiv.innerHTML = '';
+            } else if (['CORRECTION', 'RE-ISSUANCE', 'UPDATE'].includes(currentReviewMode)) {
+                actionDiv.innerHTML = `<button onclick="decideStatus('PRINTED LTC')" class="bg-yellow-600 text-white px-8 py-3 rounded text-sm font-black uppercase ml-auto">Save & Route to PARPO</button>`;
+            } else {
+                actionDiv.innerHTML = `<button onclick="decideStatus('REVIEWED')" class="bg-green-700 text-white px-8 py-3 rounded text-sm font-black uppercase ml-auto">Approve</button>`;
+            }
 
             document.getElementById('reviewModal').classList.remove('hidden');
 
