@@ -72,9 +72,9 @@
                         </div>
                         <div>
                             <label class="form-label">Assigned Legal Officer</label>
-                            <input type="text" id="legalOfficerSelect" name="legalOfficer" list="legalOfficersList" class="form-input text-lg font-bold text-[#003811] bg-white shadow-sm" placeholder="Select or type name..." required>
-                            <datalist id="legalOfficersList">
-                                </datalist>
+                            <select id="legalOfficerSelect" name="legalOfficer" class="form-input text-lg font-bold text-[#003811] bg-white shadow-sm cursor-pointer" required>
+                                <option value="" disabled selected>Loading personnel...</option>
+                            </select>
                         </div>
                     </div>
 
@@ -173,7 +173,8 @@
                                 <input type="text" name="or_date" class="form-input" placeholder="e.g. JANUARY 1, 2026">
                             </div>
                         </div>
-                    </div> <div class="flex justify-end gap-4 border-t pt-6">
+                    </div> 
+                    <div class="flex justify-end gap-4 border-t pt-6">
                         <button type="reset" class="px-6 py-2 border border-gray-300 rounded text-sm font-bold hover:bg-gray-50 transition-colors uppercase">Clear Form</button>
                         <button type="submit" id="btnSubmit" class="px-8 py-2 bg-[#003811] text-white rounded text-sm font-bold shadow hover:bg-[#006400] transition-colors uppercase">Save Application</button>
                     </div>
@@ -190,8 +191,14 @@
         document.getElementById('activeUser').innerText = currentUser.full_name;
         document.getElementById('userRoleBadge').innerText = currentUser.role;
 
-        // --- UX LOGIC: HIDE DETAILS FOR ENCODER ---
+        // --- SECURITY LOCK: KICK OUT RECORDS/PARPO ---
         const userRole = currentUser.role.toUpperCase().trim();
+        if (userRole.includes('RECORDS') || userRole.includes('PARPO')) {
+            alert("Access Denied: Your role is not authorized to create new clearances.");
+            window.location.href = 'dashboard.html';
+        }
+
+        // --- UX LOGIC: HIDE DETAILS FOR ENCODER ---
         if (userRole.includes('ENCODER')) {
             document.getElementById('extendedDetails').classList.add('hidden');
             document.getElementById('encoderNotice').classList.remove('hidden');
@@ -199,7 +206,6 @@
 
         // --- FETCH LEGAL OFFICERS ---
         async function fetchLegalOfficers() {
-            const datalist = document.getElementById('legalOfficersList');
             const selectElement = document.getElementById('legalOfficerSelect');
             
             try {
@@ -211,7 +217,7 @@
                 
                 if (error) throw error;
                 
-                datalist.innerHTML = '';
+                selectElement.innerHTML = '<option value="" disabled selected>Select assigned officer...</option>';
                 
                 let isCurrentUserLegalOfficer = false;
 
@@ -223,7 +229,8 @@
                         if (user.full_name) {
                             const option = document.createElement('option');
                             option.value = user.full_name;
-                            datalist.appendChild(option);
+                            option.innerText = `${user.full_name} (${user.role})`;
+                            selectElement.appendChild(option);
 
                             // Check if the currently logged-in user is one of these legal officers
                             if (currentUser.full_name === user.full_name) {
@@ -240,6 +247,7 @@
 
             } catch (err) {
                 console.error("Error fetching legal officers:", err);
+                selectElement.innerHTML = '<option value="" disabled selected>Error loading personnel.</option>';
             }
         }
 
