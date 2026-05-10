@@ -34,18 +34,65 @@
         <div class="bg-gray-50 p-4 text-center border-t text-[9px] text-gray-400 font-bold uppercase">Dept. of Agrarian Reform - Camarines Sur</div>
     </div>
     <script>
+        // SHA-256 Hashing function (matches users.html)
+        async function hashPassword(password) {
+            const encoder = new TextEncoder();
+            const data = encoder.encode(password);
+            const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+            return hashHex;
+        }
+
         document.getElementById('loginForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const btn = document.getElementById('loginBtn');
             const err = document.getElementById('errorMessage');
-            btn.innerText = "VERIFYING..."; btn.disabled = true; err.classList.add('hidden');
+            
+            btn.innerText = "VERIFYING..."; 
+            btn.disabled = true; 
+            err.classList.add('hidden');
+            
             try {
-                const { data, error } = await supabaseClient.from('users').select('*').eq('username', document.getElementById('username').value.trim()).eq('password', document.getElementById('password').value.trim()).maybeSingle();
-                if (error || !data) throw new Error("Invalid Username or Password.");
+                const inputUser = document.getElementById('username').value.trim();
+                const plainPass = document.getElementById('password').value.trim();
+                
+                // Hash the inputted password for secure comparison
+                const hashedPass = await hashPassword(plainPass);
+
+                // 1. Try logging in with the secure HASHED password first
+                let { data, error } = await supabaseClient
+                    .from('users')
+                    .select('*')
+                    .eq('username', inputUser)
+                    .eq('password', hashedPass)
+                    .maybeSingle();
+
+                // 2. FALLBACK: If hash fails, try the plain-text password for unmigrated accounts
+                if (!data) {
+                    const fallback = await supabaseClient
+                        .from('users')
+                        .select('*')
+                        .eq('username', inputUser)
+                        .eq('password', plainPass)
+                        .maybeSingle();
+                    
+                    data = fallback.data;
+                }
+
+                if (!data || data.is_active === false || data.is_active === 'FALSE') {
+                    throw new Error("Invalid Username, Password, or Account Disabled.");
+                }
+
+                // Success
                 sessionStorage.setItem('currentUser', JSON.stringify(data));
                 window.location.href = 'dashboard.html';
+                
             } catch (fail) {
-                err.innerText = fail.message; err.classList.remove('hidden'); btn.innerText = "LOG IN"; btn.disabled = false;
+                err.innerText = fail.message; 
+                err.classList.remove('hidden'); 
+                btn.innerText = "LOG IN"; 
+                btn.disabled = false;
             }
         });
     </script>
