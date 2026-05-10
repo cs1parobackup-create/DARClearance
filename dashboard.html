@@ -505,7 +505,7 @@
             'series_of': 'series',
             'dated': 'dated',
             'notary_public': 'notary',
-            'retention_area_names': 'retention',
+            'retention_area_n': 'retention',
             'or_number': 'or_number',
             'or_date': 'or_date'
         };
@@ -638,10 +638,11 @@
                 let htmlSuffix = DB_FIELD_MAP[dbCol];
                 let el = document.getElementById(`edit-${htmlSuffix}`);
                 
+                // CRITICAL FIX: Only save if the field isn't the default "---" placeholder
                 if (el && el.innerText !== '---') { 
                     let newVal = el.innerText.replace(/\u00A0/g, ' ').trim();
                     let oldVal = currentSelection[dbCol] ? String(currentSelection[dbCol]).trim() : '';
-                    if (newVal !== oldVal && newVal !== '') {
+                    if (newVal !== oldVal) {
                         updateData[dbCol] = newVal;
                         currentSelection[dbCol] = newVal;
                         hasChanges = true;
@@ -790,13 +791,15 @@
                     }
                     actions += `</div>`;
 
+                    // Graceful fallback for blank data
                     let legalOfficerName = item.legalOfficer || item.legalofficer || item.encoded_by || item.created_by || '---'; 
+                    let ownerNameDisplay = item.owner_name || '<span class="text-gray-400 italic">Pending Encoding</span>';
 
                     if (query !== '' || displayCount < 30) {
                         tbody.innerHTML += `
                             <tr class="hover:bg-gray-50 transition-colors">
                                 <td class="font-bold">${item.LTC_ID_NUMBER || item.ltc_no || '---'}</td>
-                                <td class="uppercase font-semibold">${item.owner_name}</td>
+                                <td class="uppercase font-semibold">${ownerNameDisplay}</td>
                                 <td class="text-xs text-gray-500">${legalOfficerName}</td>
                                 <td><span class="px-2 py-1 rounded text-[8px] shadow-sm font-black uppercase ${getStatusStyle(st)}">${st}</span>${warningHTML}</td>
                                 <td class="text-center align-middle">${actions}</td>
