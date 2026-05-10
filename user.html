@@ -26,8 +26,7 @@
         </div>
         
         <div id="dynamicMenu" class="flex-1 overflow-y-auto py-2">
-            <!-- Menu items injected here -->
-        </div>
+            </div>
 
         <div class="p-4 bg-black/20">
             <p id="activeUser" class="text-xs text-gray-300 truncate mb-2 font-bold"></p>
@@ -69,7 +68,6 @@
         </div>
     </main>
 
-    <!-- User Add/Edit Modal -->
     <div id="userModal" class="fixed inset-0 bg-black/60 z-50 hidden flex items-center justify-center p-4 backdrop-blur-sm">
         <div class="bg-white max-w-md w-full p-6 rounded-lg shadow-2xl relative border-t-4 border-[#003811]">
             
@@ -93,7 +91,7 @@
                     </div>
                     <div>
                         <label class="block text-[10px] font-bold text-gray-700 uppercase mb-1">Password</label>
-                        <input type="text" id="userPassword" required class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-[#003811] focus:ring-1 focus:ring-[#003811]">
+                        <input type="password" id="userPassword" class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-[#003811] focus:ring-1 focus:ring-[#003811]">
                     </div>
                 </div>
 
@@ -131,6 +129,16 @@
 
         const isChief = currentUser.role.toUpperCase().includes('CHIEF');
         let usersData = [];
+
+        // Simple SHA-256 Hashing function for client-side encryption
+        async function hashPassword(password) {
+            const encoder = new TextEncoder();
+            const data = encoder.encode(password);
+            const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+            return hashHex;
+        }
 
         async function loadMenu() {
             const menuContainer = document.getElementById('dynamicMenu');
@@ -173,7 +181,6 @@
                     }
                 });
                 
-                // Add static User Management link if not naturally in menu
                 const isCurrentUsers = window.location.pathname.includes('users.html');
                 const usersLink = document.createElement('a');
                 usersLink.href = 'users.html';
@@ -193,7 +200,6 @@
             try {
                 let query = supabaseClient.from('users').select('*').order('full_name', { ascending: true });
                 
-                // If not chief, strictly limit to their own account only
                 if (!isChief) {
                     query = query.eq('id', currentUser.id);
                 } else {
@@ -230,14 +236,14 @@
                         ? `<span class="bg-green-100 text-green-800 border border-green-200 px-2 py-1 rounded text-[9px] font-black uppercase">ACTIVE</span>`
                         : `<span class="bg-red-100 text-red-800 border border-red-200 px-2 py-1 rounded text-[9px] font-black uppercase">DISABLED</span>`;
 
-                    // Only Chief can see plain text passwords of others. Mask it otherwise.
-                    let displayPassword = (isChief || user.id === currentUser.id) ? user.password : '••••••••';
+                    // Always strictly mask passwords in the UI
+                    let displayPassword = '••••••••';
 
                     tbody.innerHTML += `
                         <tr class="hover:bg-gray-50 transition-colors border-b border-gray-100">
                             <td class="font-bold text-gray-900">${user.full_name || '---'}</td>
                             <td class="font-mono text-gray-700">${user.username || '---'}</td>
-                            <td class="font-mono text-gray-500">${displayPassword}</td>
+                            <td class="font-mono text-gray-400 tracking-widest">${displayPassword}</td>
                             <td class="text-xs text-gray-600 font-bold uppercase tracking-wider">${user.role || '---'}</td>
                             <td class="text-center">${statusBadge}</td>
                             <td class="text-center">
@@ -258,6 +264,7 @@
             const title = document.getElementById('modalTitle');
             const roleSelect = document.getElementById('userRole');
             const statusContainer = document.getElementById('statusToggleContainer');
+            const passInput = document.getElementById('userPassword');
 
             form.reset();
             document.getElementById('userId').value = '';
@@ -269,9 +276,12 @@
                     document.getElementById('userId').value = user.id;
                     document.getElementById('userFullName').value = user.full_name || '';
                     document.getElementById('userUsername').value = user.username || '';
-                    document.getElementById('userPassword').value = user.password || '';
                     
-                    // Add existing role to options if not present
+                    // Leave password blank. It only updates if the user types something new.
+                    passInput.value = '';
+                    passInput.placeholder = 'Leave blank to keep password';
+                    passInput.required = false;
+                    
                     if (![...roleSelect.options].some(opt => opt.value === user.role)) {
                         roleSelect.add(new Option(user.role, user.role));
                     }
@@ -280,10 +290,12 @@
                 }
             } else {
                 title.innerText = "Create New User";
-                document.getElementById('userIsActive').checked = true; // Default to active
+                passInput.value = '';
+                passInput.placeholder = 'Required';
+                passInput.required = true;
+                document.getElementById('userIsActive').checked = true;
             }
 
-            // Security Lock: Non-chiefs cannot change their role or active status
             if (!isChief) {
                 roleSelect.disabled = true;
                 statusContainer.style.display = 'none';
@@ -309,15 +321,19 @@
             btn.disabled = true;
 
             const userId = document.getElementById('userId').value;
+            const rawPassword = document.getElementById('userPassword').value.trim();
             
             const payload = {
                 full_name: document.getElementById('userFullName').value.trim(),
                 username: document.getElementById('userUsername').value.trim(),
-                password: document.getElementById('userPassword').value.trim(),
                 updated_at: new Date().toISOString()
             };
 
-            // Only update restricted fields if user is Chief
+            // Encrypt the password if a new one was typed
+            if (rawPassword) {
+                payload.password = await hashPassword(rawPassword);
+            }
+
             if (isChief) {
                 payload.role = document.getElementById('userRole').value;
                 payload.is_active = document.getElementById('userIsActive').checked;
@@ -326,11 +342,9 @@
             try {
                 let error;
                 if (userId) {
-                    // Update existing
                     const res = await supabaseClient.from('users').update(payload).eq('id', userId);
                     error = res.error;
                     
-                    // Update session storage if editing self
                     if (!error && userId === currentUser.id) {
                         const updatedUser = { ...currentUser, ...payload };
                         sessionStorage.setItem('currentUser', JSON.stringify(updatedUser));
@@ -338,7 +352,6 @@
                         document.getElementById('userRoleBadge').innerText = updatedUser.role;
                     }
                 } else {
-                    // Insert new (Chief only)
                     payload.created_at = new Date().toISOString();
                     const res = await supabaseClient.from('users').insert([payload]);
                     error = res.error;
