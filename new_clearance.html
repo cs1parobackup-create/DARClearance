@@ -8,26 +8,14 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="supabase-config.js"></script>
     <style>
-        :root {
-            --color-primary: #003811;
-            --color-secondary: #D4AF37;
-        }
+        :root { --color-primary: #003811; --color-secondary: #D4AF37; }
         body { font-family: 'Segoe UI', sans-serif; background-color: #F3F4F6; color: #1F2937; }
         .card { background: #FFFFFF; border-radius: 0.5rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1); border: 1px solid #E5E7EB; }
-        
         .form-label { display: block; font-size: 0.75rem; font-weight: 700; color: var(--color-primary); margin-bottom: 0.25rem; text-transform: uppercase; }
         .form-input { width: 100%; background: #F9FAFB; border: 1px solid #D1D5DB; border-radius: 0.375rem; padding: 0.6rem; font-size: 0.875rem; transition: border-color 0.2s; }
         .form-input:focus { outline: none; border-color: var(--color-primary); ring: 1px solid var(--color-primary); }
-        
-        textarea {
-            font-family: inherit;
-            resize: vertical;
-            min-height: 70px;
-            background-color: #fffdf5 !important; 
-        }
-
+        textarea { font-family: inherit; resize: vertical; min-height: 70px; background-color: #fffdf5 !important; }
         .hint { font-size: 0.7rem; color: #6B7280; font-style: italic; margin-top: 2px; }
-
         .scroll-area::-webkit-scrollbar { width: 4px; }
         .scroll-area::-webkit-scrollbar-track { background: #f1f1f1; }
         .scroll-area::-webkit-scrollbar-thumb { background: #c1c1c1; border-radius: 4px; }
@@ -40,9 +28,7 @@
             <h2 class="text-xl font-bold text-[#D4AF37]">DARPO-CS</h2>
             <p id="userRoleBadge" class="text-[10px] text-gray-300 uppercase tracking-widest mt-1 font-bold">---</p>
         </div>
-        
         <div id="dynamicMenu" class="flex-1 overflow-y-auto py-2"></div>
-
         <div class="p-4 bg-black/20">
             <p id="activeUser" class="text-xs text-gray-300 truncate mb-2 font-bold"></p>
             <button onclick="logout()" class="w-full bg-red-800 py-2 text-xs font-bold rounded shadow hover:bg-red-700 transition-colors uppercase">Logout</button>
@@ -57,13 +43,11 @@
 
         <div class="flex-1 overflow-y-auto p-8 scroll-area">
             <div class="max-w-4xl mx-auto card p-8">
-                
                 <div id="encoderNotice" class="hidden bg-blue-50 text-blue-800 p-4 rounded-lg border border-blue-200 mb-6 text-sm">
-                    <strong>Routing Desk Mode:</strong> As an ODTS Encoder, you only need to assign the LTC Number and Legal Officer. The assigned officer will complete the rest of the details directly on their dashboard.
+                    <strong>Routing Desk Mode:</strong> As an ODTS Encoder, you only need to assign the LTC Number and Legal Officer.
                 </div>
 
                 <form id="documentForm" class="space-y-6">
-                    
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 bg-green-50 p-4 rounded-lg border border-green-100">
                         <div>
                             <label class="form-label">LTC Number</label>
@@ -78,103 +62,42 @@
 
                     <div id="extendedDetails" class="space-y-6">
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div>
-                                <label class="form-label">Lot No/s</label>
-                                <input type="text" name="lot_no" class="form-input" placeholder="e.g. 24757">
-                            </div>
-                            <div>
-                                <label class="form-label">Registered under</label>
-                                <input type="text" name="registered_under" class="form-input" placeholder="e.g. KOT BLG. 3429">
-                            </div>
+                            <div><label class="form-label">Lot No/s</label><input type="text" name="lot_no" class="form-input"></div>
+                            <div><label class="form-label">Registered under</label><input type="text" name="registered_under" class="form-input"></div>
                         </div>
-
-                        <div>
-                            <label class="form-label">In the Name of</label>
-                            <textarea name="owner_name" class="form-input" placeholder="Enter name(s)..."></textarea>
-                            <div class="hint">Line breaks here will be reflected on the printed PDF.</div>
-                        </div>
-
+                        <div><label class="form-label">In the Name of</label><textarea name="owner_name" class="form-input"></textarea></div>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div>
-                                <label class="form-label">Area (in has.)</label>
-                                <input type="text" name="area" class="form-input" placeholder="e.g. 0.1331 hectare">
-                            </div>
-                            <div>
-                                <label class="form-label">Declared under T.D. No.</label>
-                                <input type="text" name="td_no" class="form-input" placeholder="e.g. TITLED">
-                            </div>
+                            <div><label class="form-label">Area (in has.)</label><input type="text" name="area" class="form-input"></div>
+                            <div><label class="form-label">Declared under T.D. No.</label><input type="text" name="td_no" class="form-input"></div>
                         </div>
-
-                        <div>
-                            <label class="form-label">Located at</label>
-                            <textarea name="location" class="form-input" placeholder="e.g. SAN VICENTE SUR, IRIGA CITY..."></textarea>
-                        </div>
-
-                        <div>
-                            <label class="form-label">Subjected of the Deed of</label>
-                            <textarea name="deed_type" class="form-input" placeholder="e.g. EXTRAJUDICIAL SETTLEMENT..."></textarea>
-                        </div>
-
+                        <div><label class="form-label">Located at</label><textarea name="location" class="form-input"></textarea></div>
+                        <div><label class="form-label">Subjected of the Deed of</label><textarea name="deed_type" class="form-input"></textarea></div>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div>
-                                <label class="form-label">Executed by</label>
-                                <textarea name="executed_by" class="form-input" placeholder="List names exactly..."></textarea>
-                            </div>
-                            <div>
-                                <label class="form-label">In favor of</label>
-                                <textarea name="in_favor_of" class="form-input" placeholder="List beneficiaries..."></textarea>
-                            </div>
+                            <div><label class="form-label">Executed by</label><textarea name="executed_by" class="form-input"></textarea></div>
+                            <div><label class="form-label">In favor of</label><textarea name="in_favor_of" class="form-input"></textarea></div>
                         </div>
-
                         <div class="grid grid-cols-2 md:grid-cols-4 gap-4 pt-4 border-t">
-                            <div>
-                                <label class="form-label">Doc. No.</label>
-                                <input type="text" name="doc_no" class="form-input">
-                            </div>
-                            <div>
-                                <label class="form-label">Page No.</label>
-                                <input type="text" name="page_no" class="form-input">
-                            </div>
-                            <div>
-                                <label class="form-label">Book No.</label>
-                                <input type="text" name="book_no" class="form-input">
-                            </div>
-                            <div>
-                                <label class="form-label">Series of</label>
-                                <input type="text" name="series_of" class="form-input">
-                            </div>
+                            <div><label class="form-label">Doc. No.</label><input type="text" name="doc_no" class="form-input"></div>
+                            <div><label class="form-label">Page No.</label><input type="text" name="page_no" class="form-input"></div>
+                            <div><label class="form-label">Book No.</label><input type="text" name="book_no" class="form-input"></div>
+                            <div><label class="form-label">Series of</label><input type="text" name="series_of" class="form-input"></div>
                         </div>
-
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div>
-                                <label class="form-label">Date Executed</label>
-                                <input type="text" name="dated" class="form-input" placeholder="e.g. JANUARY 3, 2025">
-                            </div>
-                            <div>
-                                <label class="form-label">Notary Public</label>
-                                <input type="text" name="notary_public" class="form-input">
-                            </div>
+                            <div><label class="form-label">Date Executed</label><input type="text" name="dated" class="form-input"></div>
+                            <div><label class="form-label">Notary Public</label><input type="text" name="notary_public" class="form-input"></div>
                         </div>
-
                         <div>
                             <label class="form-label">Retention area of vendor/transferor</label>
                             <textarea name="retention_area_n" class="form-input" placeholder="List names..."></textarea>
                         </div>
-
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6 border-t pt-4">
-                            <div>
-                                <label class="form-label">O.R. No.</label>
-                                <input type="text" name="or_number" class="form-input" placeholder="Enter OR Number">
-                            </div>
-                            <div>
-                                <label class="form-label">O.R. Date</label>
-                                <input type="text" name="or_date" class="form-input" placeholder="e.g. JANUARY 1, 2026">
-                            </div>
+                            <div><label class="form-label">O.R. No.</label><input type="text" name="or_number" class="form-input"></div>
+                            <div><label class="form-label">O.R. Date</label><input type="text" name="or_date" class="form-input"></div>
                         </div>
                     </div> 
 
                     <div class="flex justify-end gap-4 border-t pt-6">
-                        <button type="reset" class="px-6 py-2 border border-gray-300 rounded text-sm font-bold hover:bg-gray-50 transition-colors uppercase">Clear Form</button>
+                        <button type="reset" class="px-6 py-2 border border-gray-300 rounded text-sm font-bold hover:bg-gray-50 uppercase">Clear Form</button>
                         <button type="submit" id="btnSubmit" class="px-8 py-2 bg-[#003811] text-white rounded text-sm font-bold shadow hover:bg-[#006400] transition-colors uppercase">Save Application</button>
                     </div>
                 </form>
@@ -183,7 +106,6 @@
     </main>
 
     <script>
-        // --- SESSION & AUTH ---
         const userData = sessionStorage.getItem('currentUser');
         if (!userData) { window.location.href = 'index.html'; }
         const currentUser = JSON.parse(userData);
@@ -191,86 +113,33 @@
         document.getElementById('userRoleBadge').innerText = currentUser.role;
 
         const userRole = currentUser.role.toUpperCase().trim();
-        if (userRole.includes('RECORDS') || userRole.includes('PARPO')) {
-            alert("Access Denied: Your role is not authorized to create new clearances.");
-            window.location.href = 'dashboard.html';
-        }
+        const isEncoder = userRole.includes('ENCODER');
 
-        if (userRole.includes('ENCODER')) {
+        if (isEncoder) {
             document.getElementById('extendedDetails').classList.add('hidden');
             document.getElementById('encoderNotice').classList.remove('hidden');
         }
 
         async function fetchLegalOfficers() {
-            const datalist = document.getElementById('legalOfficersList');
-            const selectElement = document.getElementById('legalOfficerSelect');
-            
             try {
-                const { data, error } = await supabaseClient
-                    .from('users')
-                    .select('full_name, role')
-                    .in('role', ['CHIEF, LEGAL DIVISION', 'ATTORNEY IV', 'SARPO', 'ARPO II', 'ARPT']);
-                
+                const { data, error } = await supabaseClient.from('users').select('full_name').in('role', ['CHIEF, LEGAL DIVISION', 'ATTORNEY IV', 'SARPO', 'ARPO II', 'ARPT']);
                 if (error) throw error;
-                
-                datalist.innerHTML = '';
-                let isCurrentUserLegalOfficer = false;
-
-                if (data && data.length > 0) {
-                    data.sort((a, b) => a.full_name.localeCompare(b.full_name));
-
-                    data.forEach(user => {
-                        if (user.full_name) {
-                            const option = document.createElement('option');
-                            option.value = user.full_name; // Just the name, per your request
-                            datalist.appendChild(option);
-
-                            if (currentUser.full_name === user.full_name) {
-                                isCurrentUserLegalOfficer = true;
-                            }
-                        }
-                    });
-                }
-
-                if (isCurrentUserLegalOfficer) {
-                    selectElement.value = currentUser.full_name;
-                }
-
-            } catch (err) {
-                console.error("Error fetching legal officers:", err);
-            }
+                const datalist = document.getElementById('legalOfficersList');
+                datalist.innerHTML = data.map(u => `<option value="${u.full_name}">`).join('');
+                if (!isEncoder) { document.getElementById('legalOfficerSelect').value = currentUser.full_name; }
+            } catch (err) { console.error(err); }
         }
 
         async function renderMenu() {
             const menuContainer = document.getElementById('dynamicMenu');
             try {
-                const { data: menuItems, error } = await supabaseClient
-                    .from('clearance_menu')
-                    .select('*')
-                    .order('sort_order', { ascending: true });
-
+                const { data: menuItems, error } = await supabaseClient.from('clearance_menu').select('*').order('sort_order', { ascending: true });
                 if (error) throw error;
-
                 menuContainer.innerHTML = '';
                 menuItems.forEach(item => {
-                    if (item.is_active === false || item.is_active === 'FALSE') return;
-                    
-                    let roles = [];
-                    if (item.required_roles) {
-                        if (Array.isArray(item.required_roles)) {
-                            roles = item.required_roles;
-                        } else {
-                            try {
-                                roles = JSON.parse(item.required_roles);
-                            } catch(e) {
-                                roles = item.required_roles.replace(/[\[\]"'{}()]/g, '').split(',').map(r => r.trim());
-                            }
-                        }
-                    }
-
-                    const hasRole = roles.length === 0 || roles.some(r => userRole.includes(String(r).toUpperCase().trim()));
-                    
-                    if (hasRole) {
+                    if (item.is_active === false) return;
+                    let roles = JSON.parse(item.required_roles || "[]");
+                    if (roles.length === 0 || roles.some(r => userRole.includes(r.toUpperCase()))) {
                         const isCurrent = window.location.pathname.includes(item.url);
                         const link = document.createElement('a');
                         link.href = item.url;
@@ -279,23 +148,28 @@
                         menuContainer.appendChild(link);
                     }
                 });
-            } catch (err) {
-                console.error("Menu Error:", err);
-            }
+            } catch (err) { console.error(err); }
         }
 
         document.getElementById('documentForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             const btn = document.getElementById('btnSubmit');
-            btn.innerText = "SAVING..."; 
-            btn.disabled = true;
+            btn.innerText = "SAVING..."; btn.disabled = true;
 
             const formData = new FormData(this);
-            const payload = Object.fromEntries(formData.entries());
-            
-            // System defaults
-            payload.status = 'RECEIVED';
-            // payload.created_by removed because column does not exist in land_records
+            let payload = {};
+
+            if (isEncoder) {
+                // STICT INTAKE: Only send these 3 columns to Supabase
+                payload = {
+                    LTC_ID_NUMBER: formData.get('LTC_ID_NUMBER'),
+                    legalOfficer: formData.get('legalOfficer'),
+                    status: 'RECEIVED'
+                };
+            } else {
+                payload = Object.fromEntries(formData.entries());
+                payload.status = 'RECEIVED';
+            }
 
             try {
                 const { data, error } = await supabaseClient.from('land_records').insert([payload]).select();
@@ -311,28 +185,18 @@
                     }]);
                 }
 
-                alert("Clearance Application Recorded Successfully.");
+                alert("Application Recorded Successfully.");
                 this.reset();
-                
-                if (!userRole.includes('ENCODER')) {
-                    document.getElementById('legalOfficerSelect').value = currentUser.full_name;
-                }
-
+                if (!isEncoder) { document.getElementById('legalOfficerSelect').value = currentUser.full_name; }
             } catch (err) {
                 alert("System Error: " + err.message);
-                console.error(err);
             } finally {
-                btn.innerText = "SAVE APPLICATION"; 
-                btn.disabled = false;
+                btn.innerText = "SAVE APPLICATION"; btn.disabled = false;
             }
         });
 
         function logout() { sessionStorage.removeItem('currentUser'); window.location.href = 'index.html'; }
-        
-        window.onload = () => {
-            renderMenu();
-            fetchLegalOfficers();
-        };
+        window.onload = () => { renderMenu(); fetchLegalOfficers(); };
     </script>
 </body>
 </html>
