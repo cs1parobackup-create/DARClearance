@@ -72,9 +72,9 @@
                         </div>
                         <div>
                             <label class="form-label">Assigned Legal Officer</label>
-                            <select id="legalOfficerSelect" name="legalOfficer" class="form-input text-lg font-bold text-[#003811] bg-white shadow-sm cursor-pointer" required>
-                                <option value="" disabled selected>Loading personnel...</option>
-                            </select>
+                            <input type="text" id="legalOfficerSelect" name="legalOfficer" list="legalOfficersList" class="form-input text-lg font-bold text-[#003811] bg-white shadow-sm" placeholder="Select or type name..." required>
+                            <datalist id="legalOfficersList">
+                                </datalist>
                         </div>
                     </div>
 
@@ -206,6 +206,7 @@
 
         // --- FETCH LEGAL OFFICERS ---
         async function fetchLegalOfficers() {
+            const datalist = document.getElementById('legalOfficersList');
             const selectElement = document.getElementById('legalOfficerSelect');
             
             try {
@@ -217,7 +218,7 @@
                 
                 if (error) throw error;
                 
-                selectElement.innerHTML = '<option value="" disabled selected>Select assigned officer...</option>';
+                datalist.innerHTML = '';
                 
                 let isCurrentUserLegalOfficer = false;
 
@@ -228,9 +229,8 @@
                     data.forEach(user => {
                         if (user.full_name) {
                             const option = document.createElement('option');
-                            option.value = user.full_name;
-                            option.innerText = `${user.full_name} (${user.role})`;
-                            selectElement.appendChild(option);
+                            option.value = user.full_name; // Name only, no role appended
+                            datalist.appendChild(option);
 
                             // Check if the currently logged-in user is one of these legal officers
                             if (currentUser.full_name === user.full_name) {
@@ -247,7 +247,6 @@
 
             } catch (err) {
                 console.error("Error fetching legal officers:", err);
-                selectElement.innerHTML = '<option value="" disabled selected>Error loading personnel.</option>';
             }
         }
 
@@ -315,7 +314,7 @@
 
             // System defaults
             payload.status = 'RECEIVED';
-            payload.created_by = currentUser.full_name; // Records the encoder/creator
+            // Removed payload.created_by to prevent schema cache crash
 
             try {
                 const { data, error } = await supabaseClient.from('land_records').insert([payload]).select();
