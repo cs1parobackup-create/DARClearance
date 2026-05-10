@@ -41,8 +41,7 @@
             <p id="userRoleBadge" class="text-[10px] text-gray-300 uppercase tracking-widest mt-1 font-bold">---</p>
         </div>
         
-        <div id="dynamicMenu" class="flex-1 overflow-y-auto py-2">
-            </div>
+        <div id="dynamicMenu" class="flex-1 overflow-y-auto py-2"></div>
 
         <div class="p-4 bg-black/20">
             <p id="activeUser" class="text-xs text-gray-300 truncate mb-2 font-bold"></p>
@@ -73,8 +72,7 @@
                         <div>
                             <label class="form-label">Assigned Legal Officer</label>
                             <input type="text" id="legalOfficerSelect" name="legalOfficer" list="legalOfficersList" class="form-input text-lg font-bold text-[#003811] bg-white shadow-sm" placeholder="Select or type name..." required>
-                            <datalist id="legalOfficersList">
-                                </datalist>
+                            <datalist id="legalOfficersList"></datalist>
                         </div>
                     </div>
 
@@ -174,6 +172,7 @@
                             </div>
                         </div>
                     </div> 
+
                     <div class="flex justify-end gap-4 border-t pt-6">
                         <button type="reset" class="px-6 py-2 border border-gray-300 rounded text-sm font-bold hover:bg-gray-50 transition-colors uppercase">Clear Form</button>
                         <button type="submit" id="btnSubmit" class="px-8 py-2 bg-[#003811] text-white rounded text-sm font-bold shadow hover:bg-[#006400] transition-colors uppercase">Save Application</button>
@@ -191,26 +190,22 @@
         document.getElementById('activeUser').innerText = currentUser.full_name;
         document.getElementById('userRoleBadge').innerText = currentUser.role;
 
-        // --- SECURITY LOCK: KICK OUT RECORDS/PARPO ---
         const userRole = currentUser.role.toUpperCase().trim();
         if (userRole.includes('RECORDS') || userRole.includes('PARPO')) {
             alert("Access Denied: Your role is not authorized to create new clearances.");
             window.location.href = 'dashboard.html';
         }
 
-        // --- UX LOGIC: HIDE DETAILS FOR ENCODER ---
         if (userRole.includes('ENCODER')) {
             document.getElementById('extendedDetails').classList.add('hidden');
             document.getElementById('encoderNotice').classList.remove('hidden');
         }
 
-        // --- FETCH LEGAL OFFICERS ---
         async function fetchLegalOfficers() {
             const datalist = document.getElementById('legalOfficersList');
             const selectElement = document.getElementById('legalOfficerSelect');
             
             try {
-                // Fetch users that match the requested Legal roles
                 const { data, error } = await supabaseClient
                     .from('users')
                     .select('full_name, role')
@@ -219,20 +214,17 @@
                 if (error) throw error;
                 
                 datalist.innerHTML = '';
-                
                 let isCurrentUserLegalOfficer = false;
 
                 if (data && data.length > 0) {
-                    // Sort alphabetically
                     data.sort((a, b) => a.full_name.localeCompare(b.full_name));
 
                     data.forEach(user => {
                         if (user.full_name) {
                             const option = document.createElement('option');
-                            option.value = user.full_name; // Name only, no role appended
+                            option.value = user.full_name; // Just the name, per your request
                             datalist.appendChild(option);
 
-                            // Check if the currently logged-in user is one of these legal officers
                             if (currentUser.full_name === user.full_name) {
                                 isCurrentUserLegalOfficer = true;
                             }
@@ -240,7 +232,6 @@
                     });
                 }
 
-                // Smart Default: Auto-select if the user is a Legal Officer encoding their own work
                 if (isCurrentUserLegalOfficer) {
                     selectElement.value = currentUser.full_name;
                 }
@@ -250,10 +241,8 @@
             }
         }
 
-        // --- DYNAMIC MENU RENDER ---
         async function renderMenu() {
             const menuContainer = document.getElementById('dynamicMenu');
-
             try {
                 const { data: menuItems, error } = await supabaseClient
                     .from('clearance_menu')
@@ -295,7 +284,6 @@
             }
         }
 
-        // --- FORM SUBMISSION ---
         document.getElementById('documentForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             const btn = document.getElementById('btnSubmit');
@@ -305,22 +293,14 @@
             const formData = new FormData(this);
             const payload = Object.fromEntries(formData.entries());
             
-            // Clean up empty strings from payload to keep database clean
-            Object.keys(payload).forEach(key => {
-                if (payload[key] === "") {
-                    payload[key] = null;
-                }
-            });
-
             // System defaults
             payload.status = 'RECEIVED';
-            // Removed payload.created_by to prevent schema cache crash
+            // payload.created_by removed because column does not exist in land_records
 
             try {
                 const { data, error } = await supabaseClient.from('land_records').insert([payload]).select();
                 if (error) throw error;
                 
-                // Add an initial log entry for creation
                 if (data && data[0]) {
                     await supabaseClient.from('status_logs').insert([{
                         record_id: data[0].id,
@@ -334,7 +314,6 @@
                 alert("Clearance Application Recorded Successfully.");
                 this.reset();
                 
-                // Re-apply smart default after reset
                 if (!userRole.includes('ENCODER')) {
                     document.getElementById('legalOfficerSelect').value = currentUser.full_name;
                 }
