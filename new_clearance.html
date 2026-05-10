@@ -60,9 +60,17 @@
             <div class="max-w-4xl mx-auto card p-8">
                 <form id="documentForm" class="space-y-6">
                     
-                    <div>
-                        <label class="form-label">LTC Number</label>
-                        <input type="text" name="LTC_ID_NUMBER" class="form-input text-lg font-black text-red-800 bg-red-50 border-red-200" placeholder="e.g. 2026-LTC-001" required>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 bg-green-50 p-4 rounded-lg border border-green-100">
+                        <div>
+                            <label class="form-label">LTC Number</label>
+                            <input type="text" name="LTC_ID_NUMBER" class="form-input text-lg font-black text-red-800 bg-white border-red-200 shadow-sm" placeholder="e.g. 2026-LTC-001" required>
+                        </div>
+                        <div>
+                            <label class="form-label">Assigned Legal Officer</label>
+                            <input type="text" id="legalOfficerSelect" name="legalOfficer" list="legalOfficersList" class="form-input text-lg font-bold text-[#003811] bg-white shadow-sm" placeholder="Select or type name..." required>
+                            <datalist id="legalOfficersList">
+                                </datalist>
+                        </div>
                     </div>
 
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -146,7 +154,7 @@
 
                     <div>
                         <label class="form-label">Retention area of vendor/transferor</label>
-                        <textarea name="retention_area_names" class="form-input" placeholder="List names..."></textarea>
+                        <textarea name="retention_area_n" class="form-input" placeholder="List names..."></textarea>
                     </div>
 
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 border-t pt-4">
@@ -176,6 +184,52 @@
         const currentUser = JSON.parse(userData);
         document.getElementById('activeUser').innerText = currentUser.full_name;
         document.getElementById('userRoleBadge').innerText = currentUser.role;
+
+        // --- FETCH LEGAL OFFICERS ---
+        async function fetchLegalOfficers() {
+            const datalist = document.getElementById('legalOfficersList');
+            const selectElement = document.getElementById('legalOfficerSelect');
+            
+            try {
+                // Fetch users that match the requested Legal roles
+                const { data, error } = await supabaseClient
+                    .from('users')
+                    .select('full_name, role')
+                    .in('role', ['CHIEF, LEGAL DIVISION', 'ATTORNEY IV', 'SARPO', 'ARPO II', 'ARPT']);
+                
+                if (error) throw error;
+                
+                datalist.innerHTML = '';
+                
+                let isCurrentUserLegalOfficer = false;
+
+                if (data && data.length > 0) {
+                    // Sort alphabetically
+                    data.sort((a, b) => a.full_name.localeCompare(b.full_name));
+
+                    data.forEach(user => {
+                        if (user.full_name) {
+                            const option = document.createElement('option');
+                            option.value = user.full_name;
+                            datalist.appendChild(option);
+
+                            // Check if the currently logged-in user is one of these legal officers
+                            if (currentUser.full_name === user.full_name) {
+                                isCurrentUserLegalOfficer = true;
+                            }
+                        }
+                    });
+                }
+
+                // Smart Default: Auto-select if the user is a Legal Officer encoding their own work
+                if (isCurrentUserLegalOfficer) {
+                    selectElement.value = currentUser.full_name;
+                }
+
+            } catch (err) {
+                console.error("Error fetching legal officers:", err);
+            }
+        }
 
         // --- DYNAMIC MENU RENDER ---
         async function renderMenu() {
@@ -227,31 +281,55 @@
         document.getElementById('documentForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             const btn = document.getElementById('btnSubmit');
-            btn.innerText = "SAVING..."; btn.disabled = true;
+            btn.innerText = "SAVING..."; 
+            btn.disabled = true;
 
             const formData = new FormData(this);
             const payload = Object.fromEntries(formData.entries());
             
-            // Assign legalOfficer from current session
-            payload.legalOfficer = currentUser.full_name;
-            payload.status = 'RECEIVED - Legal';
+            // System defaults
+            payload.status = 'RECEIVED';
+            payload.created_by = currentUser.full_name; // Records the encoder/creator
 
             try {
-                const { error } = await supabaseClient.from('land_records').insert([payload]);
+                const { data, error } = await supabaseClient.from('land_records').insert([payload]).select();
                 if (error) throw error;
                 
+                // Add an initial log entry for creation
+                if (data && data[0]) {
+                    await supabaseClient.from('status_logs').insert([{
+                        record_id: data[0].id,
+                        previous_status: 'CREATED',
+                        new_status: 'RECEIVED',
+                        changed_by: currentUser.full_name,
+                        changed_at: new Date().toISOString()
+                    }]);
+                }
+
                 alert("Clearance Application Recorded Successfully.");
                 this.reset();
+                
+                // Re-apply smart default after reset
+                const userRole = currentUser.role.toUpperCase();
+                if (!userRole.includes('ENCODER') && !userRole.includes('RECORDS') && !userRole.includes('PARPO')) {
+                    document.getElementById('legalOfficerSelect').value = currentUser.full_name;
+                }
+
             } catch (err) {
                 alert("System Error: " + err.message);
+                console.error(err);
             } finally {
-                btn.innerText = "SAVE APPLICATION"; btn.disabled = false;
+                btn.innerText = "SAVE APPLICATION"; 
+                btn.disabled = false;
             }
         });
 
         function logout() { sessionStorage.removeItem('currentUser'); window.location.href = 'index.html'; }
         
-        renderMenu();
+        window.onload = () => {
+            renderMenu();
+            fetchLegalOfficers();
+        };
     </script>
 </body>
 </html>
