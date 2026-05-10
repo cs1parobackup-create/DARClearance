@@ -97,15 +97,17 @@
 
                 <div>
                     <label class="block text-[10px] font-bold text-gray-700 uppercase mb-1">System Role</label>
-                    <select id="userRole" required class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-[#003811] focus:ring-1 focus:ring-[#003811] bg-white">
-                        <option value="" disabled selected>Select Role</option>
-                        <option value="CHIEF, LEGAL DIVISION">CHIEF, LEGAL DIVISION</option>
-                        <option value="PARPO II">PARPO II</option>
-                        <option value="RECORDS">RECORDS</option>
-                        <option value="SARPO">SARPO</option>
-                        <option value="LEGAL OFFICER">LEGAL OFFICER</option>
-                        <option value="ODTS ENCODER">ODTS ENCODER</option>
-                    </select>
+                    <input type="text" id="userRole" list="roleOptions" required class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-[#003811] focus:ring-1 focus:ring-[#003811] bg-white" placeholder="Select or type a role...">
+                    <datalist id="roleOptions">
+                        <option value="SARPO">
+                        <option value="CHIEF, LEGAL DIVISION">
+                        <option value="ATTORNEY IV">
+                        <option value="PARPO II">
+                        <option value="RECORDS">
+                        <option value="ARPT">
+                        <option value="ARPO II">
+                        <option value="ODTS ENCODER">
+                    </datalist>
                 </div>
 
                 <div class="flex items-center gap-2 pt-2" id="statusToggleContainer">
@@ -278,9 +280,6 @@
                     passInput.placeholder = 'Leave blank to keep password';
                     passInput.required = false;
                     
-                    if (![...roleSelect.options].some(opt => opt.value === user.role)) {
-                        roleSelect.add(new Option(user.role, user.role));
-                    }
                     roleSelect.value = user.role || '';
                     document.getElementById('userIsActive').checked = user.is_active !== false;
                 }
@@ -332,7 +331,7 @@
             }
 
             if (isChief) {
-                payload.role = document.getElementById('userRole').value;
+                payload.role = document.getElementById('userRole').value.trim();
                 payload.is_active = document.getElementById('userIsActive').checked;
             }
 
