@@ -102,6 +102,7 @@
                         <option value="CHIEF, LEGAL DIVISION">CHIEF, LEGAL DIVISION</option>
                         <option value="PARPO II">PARPO II</option>
                         <option value="RECORDS">RECORDS</option>
+                        <option value="SARPO">SARPO</option>
                         <option value="LEGAL OFFICER">LEGAL OFFICER</option>
                         <option value="ODTS ENCODER">ODTS ENCODER</option>
                     </select>
@@ -172,7 +173,8 @@
                     const hasRole = roles.length === 0 || roles.some(r => userRole.includes(String(r).toUpperCase().trim()));
                     
                     if (hasRole) {
-                        const isCurrent = window.location.pathname.includes(item.url);
+                        // Dynamically highlight the current page even if it's named user.html
+                        const isCurrent = window.location.pathname.includes(item.url) || (window.location.pathname.includes('user.html') && item.url.includes('user'));
                         const link = document.createElement('a');
                         link.href = item.url;
                         link.className = `block px-6 py-4 text-[11px] font-black uppercase border-l-4 transition-all ${isCurrent ? 'bg-[#006400] border-[#D4AF37]' : 'border-transparent hover:bg-[#006400]'}`;
@@ -180,13 +182,6 @@
                         menuContainer.appendChild(link);
                     }
                 });
-                
-                const isCurrentUsers = window.location.pathname.includes('users.html');
-                const usersLink = document.createElement('a');
-                usersLink.href = 'users.html';
-                usersLink.className = `block px-6 py-4 text-[11px] font-black uppercase border-l-4 transition-all ${isCurrentUsers ? 'bg-[#006400] border-[#D4AF37]' : 'border-transparent hover:bg-[#006400]'}`;
-                usersLink.innerHTML = '👤 My Account / Users';
-                menuContainer.appendChild(usersLink);
 
             } catch (err) {
                 console.error("Menu Error:", err);
@@ -200,6 +195,7 @@
             try {
                 let query = supabaseClient.from('users').select('*').order('full_name', { ascending: true });
                 
+                // If not chief, strictly limit to their own account only
                 if (!isChief) {
                     query = query.eq('id', currentUser.id);
                 } else {
@@ -236,7 +232,7 @@
                         ? `<span class="bg-green-100 text-green-800 border border-green-200 px-2 py-1 rounded text-[9px] font-black uppercase">ACTIVE</span>`
                         : `<span class="bg-red-100 text-red-800 border border-red-200 px-2 py-1 rounded text-[9px] font-black uppercase">DISABLED</span>`;
 
-                    // Always strictly mask passwords in the UI
+                    // Always mask password
                     let displayPassword = '••••••••';
 
                     tbody.innerHTML += `
@@ -286,7 +282,7 @@
                         roleSelect.add(new Option(user.role, user.role));
                     }
                     roleSelect.value = user.role || '';
-                    document.getElementById('userIsActive').checked = user.is_active;
+                    document.getElementById('userIsActive').checked = user.is_active !== false;
                 }
             } else {
                 title.innerText = "Create New User";
@@ -296,6 +292,7 @@
                 document.getElementById('userIsActive').checked = true;
             }
 
+            // Security Lock: Non-chiefs cannot change their role or active status
             if (!isChief) {
                 roleSelect.disabled = true;
                 statusContainer.style.display = 'none';
@@ -342,9 +339,11 @@
             try {
                 let error;
                 if (userId) {
+                    // Update existing
                     const res = await supabaseClient.from('users').update(payload).eq('id', userId);
                     error = res.error;
                     
+                    // Update session storage if editing self
                     if (!error && userId === currentUser.id) {
                         const updatedUser = { ...currentUser, ...payload };
                         sessionStorage.setItem('currentUser', JSON.stringify(updatedUser));
@@ -352,6 +351,7 @@
                         document.getElementById('userRoleBadge').innerText = updatedUser.role;
                     }
                 } else {
+                    // Insert new (Chief only)
                     payload.created_at = new Date().toISOString();
                     const res = await supabaseClient.from('users').insert([payload]);
                     error = res.error;
