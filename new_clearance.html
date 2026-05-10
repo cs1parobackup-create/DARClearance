@@ -50,6 +50,19 @@
 
                 <form id="documentForm" class="space-y-6">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 bg-green-50 p-4 rounded-lg border border-green-100">
+                        <div class="md:col-span-2">
+                            <label class="form-label">Clearance Type</label>
+                            <div class="flex items-center gap-6 mt-1">
+                                <label class="flex items-center gap-2 cursor-pointer text-sm font-bold text-[#1F2937]">
+                                    <input type="radio" name="clearance_type" value="AO4" required class="w-4 h-4 text-[#003811] focus:ring-[#003811]">
+                                    AO4
+                                </label>
+                                <label class="flex items-center gap-2 cursor-pointer text-sm font-bold text-[#1F2937]">
+                                    <input type="radio" name="clearance_type" value="AO8" required class="w-4 h-4 text-[#003811] focus:ring-[#003811]">
+                                    AO8
+                                </label>
+                            </div>
+                        </div>
                         <div>
                             <label class="form-label">LTC Number</label>
                             <input type="text" name="LTC_ID_NUMBER" class="form-input text-lg font-black text-red-800 bg-white border-red-200 shadow-sm" placeholder="e.g. 2026-LTC-001" required>
@@ -189,6 +202,7 @@
 
             if (isEncoder) {
                 payload = {
+                    clearance_type: formData.get('clearance_type'),
                     LTC_ID_NUMBER: formData.get('LTC_ID_NUMBER'),
                     legalOfficer: formData.get('legalOfficer'),
                     status: 'RECEIVED'
