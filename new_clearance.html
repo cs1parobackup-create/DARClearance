@@ -58,6 +58,11 @@
 
         <div class="flex-1 overflow-y-auto p-8 scroll-area">
             <div class="max-w-4xl mx-auto card p-8">
+                
+                <div id="encoderNotice" class="hidden bg-blue-50 text-blue-800 p-4 rounded-lg border border-blue-200 mb-6 text-sm">
+                    <strong>Routing Desk Mode:</strong> As an ODTS Encoder, you only need to assign the LTC Number and Legal Officer. The assigned officer will complete the rest of the details directly on their dashboard.
+                </div>
+
                 <form id="documentForm" class="space-y-6">
                     
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 bg-green-50 p-4 rounded-lg border border-green-100">
@@ -73,102 +78,102 @@
                         </div>
                     </div>
 
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div>
-                            <label class="form-label">Lot No/s</label>
-                            <input type="text" name="lot_no" class="form-input" placeholder="e.g. 24757" required>
+                    <div id="extendedDetails" class="space-y-6">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label class="form-label">Lot No/s</label>
+                                <input type="text" name="lot_no" class="form-input" placeholder="e.g. 24757">
+                            </div>
+                            <div>
+                                <label class="form-label">Registered under</label>
+                                <input type="text" name="registered_under" class="form-input" placeholder="e.g. KOT BLG. 3429">
+                            </div>
                         </div>
-                        <div>
-                            <label class="form-label">Registered under</label>
-                            <input type="text" name="registered_under" class="form-input" placeholder="e.g. KOT BLG. 3429">
-                        </div>
-                    </div>
 
-                    <div>
-                        <label class="form-label">In the Name of</label>
-                        <textarea name="owner_name" class="form-input" placeholder="Enter name(s)..." required></textarea>
-                        <div class="hint">Line breaks here will be reflected on the printed PDF.</div>
-                    </div>
+                        <div>
+                            <label class="form-label">In the Name of</label>
+                            <textarea name="owner_name" class="form-input" placeholder="Enter name(s)..."></textarea>
+                            <div class="hint">Line breaks here will be reflected on the printed PDF.</div>
+                        </div>
 
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div>
-                            <label class="form-label">Area (in has.)</label>
-                            <input type="text" name="area" class="form-input" placeholder="e.g. 0.1331 hectare">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label class="form-label">Area (in has.)</label>
+                                <input type="text" name="area" class="form-input" placeholder="e.g. 0.1331 hectare">
+                            </div>
+                            <div>
+                                <label class="form-label">Declared under T.D. No.</label>
+                                <input type="text" name="td_no" class="form-input" placeholder="e.g. TITLED">
+                            </div>
                         </div>
-                        <div>
-                            <label class="form-label">Declared under T.D. No.</label>
-                            <input type="text" name="td_no" class="form-input" placeholder="e.g. TITLED">
-                        </div>
-                    </div>
 
-                    <div>
-                        <label class="form-label">Located at</label>
-                        <textarea name="location" class="form-input" placeholder="e.g. SAN VICENTE SUR, IRIGA CITY..."></textarea>
-                    </div>
+                        <div>
+                            <label class="form-label">Located at</label>
+                            <textarea name="location" class="form-input" placeholder="e.g. SAN VICENTE SUR, IRIGA CITY..."></textarea>
+                        </div>
 
-                    <div>
-                        <label class="form-label">Subjected of the Deed of</label>
-                        <textarea name="deed_type" class="form-input" placeholder="e.g. EXTRAJUDICIAL SETTLEMENT..."></textarea>
-                    </div>
+                        <div>
+                            <label class="form-label">Subjected of the Deed of</label>
+                            <textarea name="deed_type" class="form-input" placeholder="e.g. EXTRAJUDICIAL SETTLEMENT..."></textarea>
+                        </div>
 
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div>
-                            <label class="form-label">Executed by</label>
-                            <textarea name="executed_by" class="form-input" placeholder="List names exactly..."></textarea>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label class="form-label">Executed by</label>
+                                <textarea name="executed_by" class="form-input" placeholder="List names exactly..."></textarea>
+                            </div>
+                            <div>
+                                <label class="form-label">In favor of</label>
+                                <textarea name="in_favor_of" class="form-input" placeholder="List beneficiaries..."></textarea>
+                            </div>
                         </div>
-                        <div>
-                            <label class="form-label">In favor of</label>
-                            <textarea name="in_favor_of" class="form-input" placeholder="List beneficiaries..."></textarea>
-                        </div>
-                    </div>
 
-                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 pt-4 border-t">
-                        <div>
-                            <label class="form-label">Doc. No.</label>
-                            <input type="text" name="doc_no" class="form-input">
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 pt-4 border-t">
+                            <div>
+                                <label class="form-label">Doc. No.</label>
+                                <input type="text" name="doc_no" class="form-input">
+                            </div>
+                            <div>
+                                <label class="form-label">Page No.</label>
+                                <input type="text" name="page_no" class="form-input">
+                            </div>
+                            <div>
+                                <label class="form-label">Book No.</label>
+                                <input type="text" name="book_no" class="form-input">
+                            </div>
+                            <div>
+                                <label class="form-label">Series of</label>
+                                <input type="text" name="series_of" class="form-input">
+                            </div>
                         </div>
-                        <div>
-                            <label class="form-label">Page No.</label>
-                            <input type="text" name="page_no" class="form-input">
-                        </div>
-                        <div>
-                            <label class="form-label">Book No.</label>
-                            <input type="text" name="book_no" class="form-input">
-                        </div>
-                        <div>
-                            <label class="form-label">Series of</label>
-                            <input type="text" name="series_of" class="form-input">
-                        </div>
-                    </div>
 
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div>
-                            <label class="form-label">Date Executed</label>
-                            <input type="text" name="dated" class="form-input" placeholder="e.g. JANUARY 3, 2025">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label class="form-label">Date Executed</label>
+                                <input type="text" name="dated" class="form-input" placeholder="e.g. JANUARY 3, 2025">
+                            </div>
+                            <div>
+                                <label class="form-label">Notary Public</label>
+                                <input type="text" name="notary_public" class="form-input">
+                            </div>
                         </div>
-                        <div>
-                            <label class="form-label">Notary Public</label>
-                            <input type="text" name="notary_public" class="form-input">
-                        </div>
-                    </div>
 
-                    <div>
-                        <label class="form-label">Retention area of vendor/transferor</label>
-                        <textarea name="retention_area_n" class="form-input" placeholder="List names..."></textarea>
-                    </div>
-
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 border-t pt-4">
                         <div>
-                            <label class="form-label">O.R. No.</label>
-                            <input type="text" name="or_number" class="form-input" placeholder="Enter OR Number">
+                            <label class="form-label">Retention area of vendor/transferor</label>
+                            <textarea name="retention_area_n" class="form-input" placeholder="List names..."></textarea>
                         </div>
-                        <div>
-                            <label class="form-label">O.R. Date</label>
-                            <input type="text" name="or_date" class="form-input" placeholder="e.g. JANUARY 1, 2026">
-                        </div>
-                    </div>
 
-                    <div class="flex justify-end gap-4 border-t pt-6">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 border-t pt-4">
+                            <div>
+                                <label class="form-label">O.R. No.</label>
+                                <input type="text" name="or_number" class="form-input" placeholder="Enter OR Number">
+                            </div>
+                            <div>
+                                <label class="form-label">O.R. Date</label>
+                                <input type="text" name="or_date" class="form-input" placeholder="e.g. JANUARY 1, 2026">
+                            </div>
+                        </div>
+                    </div> <div class="flex justify-end gap-4 border-t pt-6">
                         <button type="reset" class="px-6 py-2 border border-gray-300 rounded text-sm font-bold hover:bg-gray-50 transition-colors uppercase">Clear Form</button>
                         <button type="submit" id="btnSubmit" class="px-8 py-2 bg-[#003811] text-white rounded text-sm font-bold shadow hover:bg-[#006400] transition-colors uppercase">Save Application</button>
                     </div>
@@ -184,6 +189,13 @@
         const currentUser = JSON.parse(userData);
         document.getElementById('activeUser').innerText = currentUser.full_name;
         document.getElementById('userRoleBadge').innerText = currentUser.role;
+
+        // --- UX LOGIC: HIDE DETAILS FOR ENCODER ---
+        const userRole = currentUser.role.toUpperCase().trim();
+        if (userRole.includes('ENCODER')) {
+            document.getElementById('extendedDetails').classList.add('hidden');
+            document.getElementById('encoderNotice').classList.remove('hidden');
+        }
 
         // --- FETCH LEGAL OFFICERS ---
         async function fetchLegalOfficers() {
@@ -221,8 +233,7 @@
                     });
                 }
 
-                // Smart Default: Auto-select if the user is a Legal Officer encoding their own work.
-                // ODTS ENCODER will stay blank.
+                // Smart Default: Auto-select if the user is a Legal Officer encoding their own work
                 if (isCurrentUserLegalOfficer) {
                     selectElement.value = currentUser.full_name;
                 }
@@ -235,7 +246,6 @@
         // --- DYNAMIC MENU RENDER ---
         async function renderMenu() {
             const menuContainer = document.getElementById('dynamicMenu');
-            const userRole = currentUser.role.toUpperCase().trim();
 
             try {
                 const { data: menuItems, error } = await supabaseClient
@@ -288,6 +298,13 @@
             const formData = new FormData(this);
             const payload = Object.fromEntries(formData.entries());
             
+            // Clean up empty strings from payload to keep database clean
+            Object.keys(payload).forEach(key => {
+                if (payload[key] === "") {
+                    payload[key] = null;
+                }
+            });
+
             // System defaults
             payload.status = 'RECEIVED';
             payload.created_by = currentUser.full_name; // Records the encoder/creator
@@ -310,8 +327,8 @@
                 alert("Clearance Application Recorded Successfully.");
                 this.reset();
                 
-                // Re-apply smart default after reset: strictly blank for ODTS Encoder, auto-fill for others.
-                if (!currentUser.role.toUpperCase().includes('ENCODER')) {
+                // Re-apply smart default after reset
+                if (!userRole.includes('ENCODER')) {
                     document.getElementById('legalOfficerSelect').value = currentUser.full_name;
                 }
 
