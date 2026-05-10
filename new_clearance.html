@@ -28,7 +28,8 @@
             <h2 class="text-xl font-bold text-[#D4AF37]">DARPO-CS</h2>
             <p id="userRoleBadge" class="text-[10px] text-gray-300 uppercase tracking-widest mt-1 font-bold">---</p>
         </div>
-        <div id="dynamicMenu" class="flex-1 overflow-y-auto py-2"></div>
+        <div id="dynamicMenu" class="flex-1 overflow-y-auto py-2">
+            </div>
         <div class="p-4 bg-black/20">
             <p id="activeUser" class="text-xs text-gray-300 truncate mb-2 font-bold"></p>
             <button onclick="logout()" class="w-full bg-red-800 py-2 text-xs font-bold rounded shadow hover:bg-red-700 transition-colors uppercase">Logout</button>
@@ -115,6 +116,12 @@
         const userRole = currentUser.role.toUpperCase().trim();
         const isEncoder = userRole.includes('ENCODER');
 
+        // Security check for unauthorized roles
+        if (userRole.includes('RECORDS') || userRole.includes('PARPO')) {
+            alert("Access Denied: Your role is not authorized to create new clearances.");
+            window.location.href = 'dashboard.html';
+        }
+
         if (isEncoder) {
             document.getElementById('extendedDetails').classList.add('hidden');
             document.getElementById('encoderNotice').classList.remove('hidden');
@@ -127,19 +134,40 @@
                 const datalist = document.getElementById('legalOfficersList');
                 datalist.innerHTML = data.map(u => `<option value="${u.full_name}">`).join('');
                 if (!isEncoder) { document.getElementById('legalOfficerSelect').value = currentUser.full_name; }
-            } catch (err) { console.error(err); }
+            } catch (err) { console.error("Officer fetch error:", err); }
         }
 
         async function renderMenu() {
             const menuContainer = document.getElementById('dynamicMenu');
             try {
-                const { data: menuItems, error } = await supabaseClient.from('clearance_menu').select('*').order('sort_order', { ascending: true });
+                const { data: menuItems, error } = await supabaseClient
+                    .from('clearance_menu')
+                    .select('*')
+                    .order('sort_order', { ascending: true });
+
                 if (error) throw error;
+
                 menuContainer.innerHTML = '';
                 menuItems.forEach(item => {
-                    if (item.is_active === false) return;
-                    let roles = JSON.parse(item.required_roles || "[]");
-                    if (roles.length === 0 || roles.some(r => userRole.includes(r.toUpperCase()))) {
+                    if (item.is_active === false || item.is_active === 'FALSE') return;
+                    
+                    let roles = [];
+                    if (item.required_roles) {
+                        // Fix for Supabase jsonb/array handling
+                        if (Array.isArray(item.required_roles)) {
+                            roles = item.required_roles;
+                        } else {
+                            try {
+                                roles = JSON.parse(item.required_roles);
+                            } catch(e) {
+                                roles = item.required_roles.replace(/[\[\]"']/g, '').split(',').map(r => r.trim());
+                            }
+                        }
+                    }
+
+                    const hasRole = roles.length === 0 || roles.some(r => userRole.includes(String(r).toUpperCase().trim()));
+                    
+                    if (hasRole) {
                         const isCurrent = window.location.pathname.includes(item.url);
                         const link = document.createElement('a');
                         link.href = item.url;
@@ -148,7 +176,7 @@
                         menuContainer.appendChild(link);
                     }
                 });
-            } catch (err) { console.error(err); }
+            } catch (err) { console.error("Menu loading error:", err); }
         }
 
         document.getElementById('documentForm').addEventListener('submit', async function(e) {
@@ -160,7 +188,6 @@
             let payload = {};
 
             if (isEncoder) {
-                // STICT INTAKE: Only send these 3 columns to Supabase
                 payload = {
                     LTC_ID_NUMBER: formData.get('LTC_ID_NUMBER'),
                     legalOfficer: formData.get('legalOfficer'),
