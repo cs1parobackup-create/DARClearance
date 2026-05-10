@@ -221,7 +221,8 @@
                     });
                 }
 
-                // Smart Default: Auto-select if the user is a Legal Officer encoding their own work
+                // Smart Default: Auto-select if the user is a Legal Officer encoding their own work.
+                // ODTS ENCODER will stay blank.
                 if (isCurrentUserLegalOfficer) {
                     selectElement.value = currentUser.full_name;
                 }
@@ -309,9 +310,8 @@
                 alert("Clearance Application Recorded Successfully.");
                 this.reset();
                 
-                // Re-apply smart default after reset
-                const userRole = currentUser.role.toUpperCase();
-                if (!userRole.includes('ENCODER') && !userRole.includes('RECORDS') && !userRole.includes('PARPO')) {
+                // Re-apply smart default after reset: strictly blank for ODTS Encoder, auto-fill for others.
+                if (!currentUser.role.toUpperCase().includes('ENCODER')) {
                     document.getElementById('legalOfficerSelect').value = currentUser.full_name;
                 }
 
