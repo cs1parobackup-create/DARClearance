@@ -39,37 +39,10 @@
             </div>
 
             <div class="p-6 md:p-8 space-y-4">
-                <div class="grid grid-cols-1 md:grid-cols-[150px_1fr] gap-1 md:gap-4 items-baseline border-b border-gray-100 pb-3">
-                    <div class="text-xs font-bold text-gray-400 uppercase tracking-wider">LTC Number</div>
+                <div class="grid grid-cols-1 md:grid-cols-[200px_1fr] gap-1 md:gap-4 items-baseline pb-1">
+                    <div class="text-xs font-bold text-gray-400 uppercase tracking-wider">DAR Clearance Number</div>
                     <div class="font-black text-lg text-[#003811]" id="disp-ltc">---</div>
                 </div>
-                <div class="grid grid-cols-1 md:grid-cols-[150px_1fr] gap-1 md:gap-4 items-baseline border-b border-gray-100 pb-3">
-                    <div class="text-xs font-bold text-gray-400 uppercase tracking-wider">Land Owner</div>
-                    <div class="font-bold text-sm uppercase" id="disp-owner">---</div>
-                </div>
-                <div class="grid grid-cols-1 md:grid-cols-[150px_1fr] gap-1 md:gap-4 items-baseline border-b border-gray-100 pb-3">
-                    <div class="text-xs font-bold text-gray-400 uppercase tracking-wider">Registered Under</div>
-                    <div class="font-bold text-sm uppercase" id="disp-tct">---</div>
-                </div>
-                <div class="grid grid-cols-1 md:grid-cols-[150px_1fr] gap-1 md:gap-4 items-baseline border-b border-gray-100 pb-3">
-                    <div class="text-xs font-bold text-gray-400 uppercase tracking-wider">Area (in has.)</div>
-                    <div class="font-bold text-sm uppercase" id="disp-area">---</div>
-                </div>
-                <div class="grid grid-cols-1 md:grid-cols-[150px_1fr] gap-1 md:gap-4 items-baseline border-b border-gray-100 pb-3">
-                    <div class="text-xs font-bold text-gray-400 uppercase tracking-wider">Location</div>
-                    <div class="font-bold text-sm uppercase" id="disp-location">---</div>
-                </div>
-                <div class="grid grid-cols-1 md:grid-cols-[150px_1fr] gap-1 md:gap-4 items-baseline border-b border-gray-100 pb-3">
-                    <div class="text-xs font-bold text-gray-400 uppercase tracking-wider">Subjected Deed</div>
-                    <div class="font-bold text-sm uppercase" id="disp-deed">---</div>
-                </div>
-                <div class="grid grid-cols-1 md:grid-cols-[150px_1fr] gap-1 md:gap-4 items-baseline pb-1">
-                    <div class="text-xs font-bold text-gray-400 uppercase tracking-wider">In Favor Of</div>
-                    <div class="font-bold text-sm uppercase" id="disp-favor">---</div>
-                </div>
-            </div>
-            <div class="bg-gray-50 p-4 border-t text-center text-xs text-gray-400 font-medium">
-                Last Updated: <span id="disp-date">---</span>
             </div>
         </div>
     </div>
@@ -104,17 +77,7 @@
                 
                 document.getElementById('statusDisplay').innerText = `STATUS: ${record.status || 'PROCESSING'}`;
                 document.getElementById('disp-ltc').innerText = record.LTC_ID_NUMBER || record.ltc_no || '---';
-                document.getElementById('disp-owner').innerText = record.owner_name || '---';
-                document.getElementById('disp-tct').innerText = record.registered_under || '---';
-                document.getElementById('disp-area').innerText = record.area || '---';
-                document.getElementById('disp-location').innerText = record.location || '---';
-                document.getElementById('disp-deed').innerText = record.deed_type || '---';
-                document.getElementById('disp-favor').innerText = record.in_favor_of || '---';
                 
-                if (record.updated_at) {
-                    document.getElementById('disp-date').innerText = new Date(record.updated_at).toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' });
-                }
-
                 verifiedState.classList.remove('hidden');
             }
         }
