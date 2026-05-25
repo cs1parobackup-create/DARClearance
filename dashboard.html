@@ -1,6 +1,4 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
+<!DOCTYPE html><html lang="en"><head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard - DAR Clearance Monitor</title>
@@ -59,9 +57,7 @@
             text-transform: uppercase; outline: none; transition: all 0.2s;
         }
         .edit-big:focus { background-color: #fef08a !important; border-bottom: 3px solid #eab308 !important; }
-    </style>
-</head>
-<body class="flex h-screen overflow-hidden text-[#1F2937]">
+    </style></head><body class="flex h-screen overflow-hidden text-[#1F2937]">
 
     <nav class="bg-[#003811] md:w-64 flex flex-col text-white flex-shrink-0 shadow-xl z-20 no-print">
         <div class="p-6 border-b border-[#006400]">
@@ -241,7 +237,7 @@
                         <div class="text-[10pt]">(Land Transfer Clearance)</div>
                     </div>
                     
-                    <p class="mb-3 text-justify ml-12 page-break-avoid">
+                    <p class="mb-3 text-justify indent-12 page-break-avoid">
                         This is to recommend that the application/request for Issuance of Land Transfer Clearance (LTC) be <span class="font-bold">APPROVED</span> on the parcel of agricultural land with the following pertinent information, to wit;
                     </p>
 
@@ -301,11 +297,11 @@
                         </div>
                     </div>
 
-                    <p class="mb-3 text-justify leading-relaxed ml-12 page-break-avoid">
+                    <p class="mb-3 text-justify leading-relaxed indent-12 page-break-avoid">
                         based on the Attestation of the CARPO-LTS/FOD and from the report and recommendation of the Chief Legal Division/Authorized Legal Officer pursuant to Administrative Order (AO) No. 4 Series of 2021.
                     </p>
 
-                    <div class="mt-3 mb-3 page-break-avoid ml-12">
+                    <div class="mt-3 mb-3 page-break-avoid indent-12">
                         Done this <span class="pdf-today-ordinal font-bold">---</span>. Naga City, Camarines Sur.
                     </div>
 
@@ -365,7 +361,7 @@
                         <div class="text-[10pt]">(Land Transfer Clearance)</div>
                     </div>
                     
-                    <p class="mb-3 text-justify ml-12 page-break-avoid">
+                    <p class="mb-3 text-justify indent-12 page-break-avoid">
                         This is to certify that the application/request for Issuance of Land Transfer Clearance (LTC) filed to this Office with the following pertinent information, to wit:
                     </p>
 
@@ -425,23 +421,23 @@
                         </div>
                     </div>
 
-                    <p class="mb-3 text-justify leading-relaxed ml-12 page-break-avoid">
+                    <p class="mb-3 text-justify leading-relaxed indent-12 page-break-avoid">
                         based on the Attestation of the CARPO-LTS/FOD and from the report and recommendation of the Chief Legal Division/Authorized Legal Officer pursuant to Administrative Order (AO) No. 4 Series of 2021.
                     </p>
 
-                    <p class="mb-3 text-justify leading-relaxed ml-12 page-break-avoid">
+                    <p class="mb-3 text-justify leading-relaxed indent-12 page-break-avoid">
                         Any actual change in the use of the land and/or development over the subject land, requires a prior Order of Conversion or Exemption/Exclusion from the Office of the DAR Regional Director.
                     </p>
 
-                    <p class="mb-3 text-justify leading-relaxed ml-12 page-break-avoid">
+                    <p class="mb-3 text-justify leading-relaxed indent-12 page-break-avoid">
                         This Office reserves the right to revoke this Certification of LTC in case of findings of misrepresentation or submission of falsified documents by either or both parties to the Deed of Transfer and any third person who may be affected by the transfer.
                     </p>
 
-                    <p class="mb-4 text-justify leading-relaxed ml-12 page-break-avoid">
+                    <p class="mb-4 text-justify leading-relaxed indent-12 page-break-avoid">
                         This Certification is hereby issued only for the purpose stated in the application/request for issuance of LTC.
                     </p>
 
-                    <div class="mt-3 mb-3 page-break-avoid ml-12">
+                    <div class="mt-3 mb-3 page-break-avoid indent-12">
                         Done and issued this <span class="pdf-today-ordinal font-bold">---</span> at the DAR Provincial Office.
                     </div>
 
@@ -493,7 +489,6 @@
         let backgroundImageUrl = "";
         let userRolesMap = {};
 
-        // 1. CLEAN MAPPING: Keys match DB exact names, Values DO NOT have 'edit-' prefix.
         const DB_FIELD_MAP = {
             'LTC_ID_NUMBER': 'LTC_ID_NUMBER',
             'lot_no': 'lot',
@@ -639,12 +634,10 @@
             const updateData = {};
             let hasChanges = false;
             
-            // Handle mapping values dynamically
             for (let dbCol in DB_FIELD_MAP) {
                 let htmlSuffix = DB_FIELD_MAP[dbCol];
                 let el = document.getElementById(`edit-${htmlSuffix}`);
                 
-                // CRITICAL FIX: Only save if the field isn't the default "---" placeholder
                 if (el && el.innerText !== '---') { 
                     let newVal = el.innerText.replace(/\u00A0/g, ' ').trim();
                     let oldVal = currentSelection[dbCol] ? String(currentSelection[dbCol]).trim() : '';
@@ -661,7 +654,6 @@
                 }
             }
 
-            // Handle Remarks separately
             const remarksEl = document.getElementById('reviewRemarks');
             if (remarksEl && !remarksEl.disabled) {
                 let newRemarks = remarksEl.value.trim();
@@ -804,7 +796,6 @@
                     }
                     actions += `</div>`;
 
-                    // Graceful fallback for blank data
                     let legalOfficerName = item.legalOfficer || item.legalofficer || item.encoded_by || item.created_by || '---'; 
                     let ownerNameDisplay = item.owner_name || '<span class="text-gray-400 italic">Pending Encoding</span>';
 
@@ -1275,6 +1266,4 @@
             loadMenu(); 
             fetchClearanceData(); 
         };
-    </script>
-</body>
-</html>
+    </script></body></html>
