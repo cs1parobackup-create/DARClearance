@@ -1,4 +1,6 @@
-<!DOCTYPE html><html lang="en"><head>
+<!DOCTYPE html>
+<html lang="en">
+<head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard - DAR Clearance Monitor</title>
@@ -57,7 +59,9 @@
             text-transform: uppercase; outline: none; transition: all 0.2s;
         }
         .edit-big:focus { background-color: #fef08a !important; border-bottom: 3px solid #eab308 !important; }
-    </style></head><body class="flex h-screen overflow-hidden text-[#1F2937]">
+    </style>
+</head>
+<body class="flex h-screen overflow-hidden text-[#1F2937]">
 
     <nav class="bg-[#003811] md:w-64 flex flex-col text-white flex-shrink-0 shadow-xl z-20 no-print">
         <div class="p-6 border-b border-[#006400]">
@@ -1113,7 +1117,6 @@
                     Array.from(child.children).forEach(subChild => {
                         const clone = subChild.cloneNode(true);
                         clone.style.marginBottom = '6px';
-                        clone.classList.add('ml-12');
                         blocks.push(clone);
                     });
                 } else {
@@ -1133,6 +1136,18 @@
                 bg.style.cssText = 'position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; object-fit: fill; display: block; pointer-events: none;';
                 page.appendChild(bg);
                 
+                // --- SECURITY FEATURE INJECTION START ---
+                // Generating microprinting overlay across the approximate position of the black border line
+                const securityData = `${currentSelection.LTC_ID_NUMBER || 'LTC-PENDING'} | ${currentSelection.owner_name || 'PENDING OWNER'} | ${currentSelection.registered_under || 'PENDING TCT'}`;
+                const microTextString = Array(20).fill(securityData).join(' • ');
+                const securityBorder = document.createElement('div');
+                
+                // Placed at top: 1.08in to overlay directly inside the typical black banner space
+                securityBorder.style.cssText = 'position: absolute; top: 1.08in; left: 0; width: 100%; font-size: 3.5pt; color: rgba(255,255,255,0.7); font-family: monospace; font-weight: bold; white-space: nowrap; overflow: hidden; z-index: 5; text-transform: uppercase; letter-spacing: 1.5px; user-select: none; pointer-events: none;';
+                securityBorder.innerText = microTextString;
+                page.appendChild(securityBorder);
+                // --- SECURITY FEATURE INJECTION END ---
+
                 const content = document.createElement('div');
                 content.style.cssText = 'position: absolute; top: 1.15in; left: 1in; right: 1in; bottom: 1.15in; z-index: 10; display: flex; flex-direction: column; font-family: "Roboto", sans-serif; font-size: 9pt; color: black; line-height: 1.5; overflow: hidden;';
                 page.appendChild(content);
@@ -1267,4 +1282,6 @@
             loadMenu(); 
             fetchClearanceData(); 
         };
-    </script></body></html>
+    </script>
+</body>
+</html>
