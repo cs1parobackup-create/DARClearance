@@ -1113,6 +1113,7 @@
                     Array.from(child.children).forEach(subChild => {
                         const clone = subChild.cloneNode(true);
                         clone.style.marginBottom = '6px';
+                        clone.classList.add('ml-12');
                         blocks.push(clone);
                     });
                 } else {
