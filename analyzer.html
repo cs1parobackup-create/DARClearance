@@ -1,87 +1,108 @@
-<a href="#" onclick="switchTab('analyzer-view')" class="block px-6 py-4 text-[11px] font-black uppercase border-l-4 border-transparent hover:bg-[#006400]">AI ANALYZER</a>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Affidavit Analyzer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        // REPLACE WITH YOUR ACTUAL KEYS
+        const SUPABASE_URL = "YOUR_SUPABASE_URL";
+        const SUPABASE_KEY = "YOUR_SUPABASE_ANON_KEY";
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    </script>
+    <style>
+        :root { --dar-green: #003811; --dar-gold: #D4AF37; }
+        body { font-family: 'Segoe UI', sans-serif; background-color: #f4f7f6; }
+    </style>
+</head>
+<body class="p-6">
 
-<div id="analyzer-view" class="hidden flex-1 p-6 scroll-area">
-    <div class="max-w-2xl mx-auto bg-white p-6 rounded shadow border-t-4 border-[#D4AF37]">
-        <h2 class="text-xl font-black text-[#003811] mb-4 uppercase">Affidavit Analyzer</h2>
-        
-        <div class="mb-4">
-            <label class="block text-xs font-bold text-gray-500 mb-2">UPLOAD OR SNAP AFFIDAVIT</label>
-            <input type="file" id="ai-file-input" accept="image/*" capture="environment" class="w-full p-2 border rounded text-xs">
+    <div class="max-w-2xl mx-auto bg-white p-6 rounded shadow border-t-8 border-[#D4AF37]">
+        <h2 class="text-2xl font-black text-[#003811] mb-2 uppercase">AI Affidavit Analyzer</h2>
+        <p class="text-xs text-gray-500 mb-6">Upload or snap a photo of the Affidavit to auto-fill the database.</p>
+
+        <div class="mb-6">
+            <input type="file" id="ai-file-input" accept="image/*" capture="environment" class="w-full p-4 border-2 border-dashed rounded text-sm">
         </div>
 
-        <button id="btn-analyze" onclick="startAnalysis()" class="bg-[#003811] text-white w-full py-3 rounded font-black uppercase hover:bg-[#006400] transition-colors">START AI EXTRACTION</button>
+        <button id="btn-analyze" onclick="startAnalysis()" class="bg-[#003811] text-white w-full py-4 rounded font-black uppercase hover:bg-[#006400] transition-colors">START AI EXTRACTION</button>
         
-        <div id="ai-output" class="mt-6 hidden space-y-4">
-            <h3 class="font-bold text-[#003811] border-b pb-2">Extracted Data (Verify before saving)</h3>
+        <div id="ai-output" class="mt-8 hidden">
+            <h3 class="font-bold text-[#003811] border-b pb-2 mb-4">Extracted Data (Review & Verify)</h3>
             <div id="ai-fields-container" class="grid grid-cols-2 gap-4 text-xs"></div>
-            <button onclick="saveAiData()" class="bg-[#D4AF37] text-[#003811] w-full py-3 rounded font-black uppercase hover:bg-yellow-500 transition-colors">SAVE TO RECORDS</button>
+            <button onclick="saveAiData()" class="mt-6 bg-[#D4AF37] text-[#003811] w-full py-4 rounded font-black uppercase hover:bg-yellow-500 transition-colors">SAVE TO DATABASE</button>
         </div>
     </div>
-</div>
 
-<script>
-    let aiDataBuffer = {};
+    <script>
+        let aiDataBuffer = {};
 
-    window.switchTab = function(id) {
-        document.getElementById('dashboard-view')?.classList.add('hidden');
-        document.getElementById('analyzer-view')?.classList.add('hidden');
-        document.getElementById(id).classList.remove('hidden');
-    }
+        async function startAnalysis() {
+            const fileInput = document.getElementById('ai-file-input');
+            if(!fileInput.files[0]) return alert("Please select an affidavit photo.");
+            
+            const btn = document.getElementById('btn-analyze');
+            btn.innerText = "PROCESSING WITH AI...";
+            btn.disabled = true;
 
-    async function startAnalysis() {
-        const fileInput = document.getElementById('ai-file-input');
-        if(!fileInput.files[0]) return alert("Please select an affidavit photo.");
-        
-        const btn = document.getElementById('btn-analyze');
-        btn.innerText = "PROCESSING WITH AI...";
-        btn.disabled = true;
+            const reader = new FileReader();
+            reader.readAsDataURL(fileInput.files[0]);
+            reader.onloadend = async () => {
+                try {
+                    // This calls your Edge Function. 
+                    // Make sure you have created the 'process-affidavit' function in Supabase.
+                    const { data, error } = await supabase.functions.invoke('process-affidavit', {
+                        body: { image: reader.result }
+                    });
 
-        const reader = new FileReader();
-        reader.readAsDataURL(fileInput.files[0]);
-        reader.onloadend = async () => {
-            try {
-                // Call your Supabase Edge Function
-                const response = await supabaseClient.functions.invoke('process-affidavit', {
-                    body: { image: reader.result }
-                });
-
-                if(response.error) throw response.error;
-                
-                aiDataBuffer = response.data;
-                renderAiFields(aiDataBuffer);
-                document.getElementById('ai-output').classList.remove('hidden');
-            } catch (e) {
-                alert("AI Extraction Failed: " + e.message);
-            } finally {
-                btn.innerText = "START AI EXTRACTION";
-                btn.disabled = false;
-            }
-        };
-    }
-
-    function renderAiFields(data) {
-        const container = document.getElementById('ai-fields-container');
-        container.innerHTML = Object.keys(data).map(key => `
-            <div>
-                <label class="block uppercase font-bold text-[10px] text-gray-500">${key.replace('_', ' ')}</label>
-                <input type="text" id="ai-val-${key}" value="${data[key]}" class="w-full border p-2 rounded">
-            </div>
-        `).join('');
-    }
-
-    async function saveAiData() {
-        // Collect updated values from input fields
-        const finalData = { ...aiDataBuffer, is_ai_extracted: true };
-        for(let key in aiDataBuffer) {
-            finalData[key] = document.getElementById(`ai-val-${key}`).value;
+                    if(error) throw error;
+                    
+                    aiDataBuffer = data;
+                    renderAiFields(aiDataBuffer);
+                    document.getElementById('ai-output').classList.remove('hidden');
+                } catch (e) {
+                    alert("AI Extraction Failed: " + e.message);
+                    console.error(e);
+                } finally {
+                    btn.innerText = "START AI EXTRACTION";
+                    btn.disabled = false;
+                }
+            };
         }
 
-        const { error } = await supabaseClient.from('land_records').insert([finalData]);
-        if(error) return alert("Save failed: " + error.message);
-        
-        alert("Record Saved Successfully!");
-        document.getElementById('ai-output').classList.add('hidden');
-        window.switchTab('dashboard-view');
-        fetchClearanceData();
-    }
-</script>
+        function renderAiFields(data) {
+            const container = document.getElementById('ai-fields-container');
+            container.innerHTML = Object.keys(data).map(key => `
+                <div>
+                    <label class="block uppercase font-bold text-[10px] text-gray-500 mb-1">${key.replace('_', ' ')}</label>
+                    <input type="text" id="ai-val-${key}" value="${data[key]}" class="w-full border p-2 rounded focus:ring-2 focus:ring-[#003811]">
+                </div>
+            `).join('');
+        }
+
+        async function saveAiData() {
+            const btn = document.querySelector('button[onclick="saveAiData()"]');
+            btn.innerText = "SAVING...";
+            
+            // Gather all inputs from the AI generated form
+            const finalData = { is_ai_extracted: true }; 
+            Object.keys(aiDataBuffer).forEach(key => {
+                finalData[key] = document.getElementById(`ai-val-${key}`).value;
+            });
+
+            try {
+                const { error } = await supabase.from('land_records').insert([finalData]);
+                if(error) throw error;
+                
+                alert("Record Saved Successfully!");
+                window.location.href = 'index.html'; // Go back to dashboard
+            } catch (e) {
+                alert("Save Failed: " + e.message);
+                btn.innerText = "SAVE TO DATABASE";
+            }
+        }
+    </script>
+</body>
+</html>
