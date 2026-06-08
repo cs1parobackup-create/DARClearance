@@ -1,0 +1,87 @@
+<a href="#" onclick="switchTab('analyzer-view')" class="block px-6 py-4 text-[11px] font-black uppercase border-l-4 border-transparent hover:bg-[#006400]">AI ANALYZER</a>
+
+<div id="analyzer-view" class="hidden flex-1 p-6 scroll-area">
+    <div class="max-w-2xl mx-auto bg-white p-6 rounded shadow border-t-4 border-[#D4AF37]">
+        <h2 class="text-xl font-black text-[#003811] mb-4 uppercase">Affidavit Analyzer</h2>
+        
+        <div class="mb-4">
+            <label class="block text-xs font-bold text-gray-500 mb-2">UPLOAD OR SNAP AFFIDAVIT</label>
+            <input type="file" id="ai-file-input" accept="image/*" capture="environment" class="w-full p-2 border rounded text-xs">
+        </div>
+
+        <button id="btn-analyze" onclick="startAnalysis()" class="bg-[#003811] text-white w-full py-3 rounded font-black uppercase hover:bg-[#006400] transition-colors">START AI EXTRACTION</button>
+        
+        <div id="ai-output" class="mt-6 hidden space-y-4">
+            <h3 class="font-bold text-[#003811] border-b pb-2">Extracted Data (Verify before saving)</h3>
+            <div id="ai-fields-container" class="grid grid-cols-2 gap-4 text-xs"></div>
+            <button onclick="saveAiData()" class="bg-[#D4AF37] text-[#003811] w-full py-3 rounded font-black uppercase hover:bg-yellow-500 transition-colors">SAVE TO RECORDS</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    let aiDataBuffer = {};
+
+    window.switchTab = function(id) {
+        document.getElementById('dashboard-view')?.classList.add('hidden');
+        document.getElementById('analyzer-view')?.classList.add('hidden');
+        document.getElementById(id).classList.remove('hidden');
+    }
+
+    async function startAnalysis() {
+        const fileInput = document.getElementById('ai-file-input');
+        if(!fileInput.files[0]) return alert("Please select an affidavit photo.");
+        
+        const btn = document.getElementById('btn-analyze');
+        btn.innerText = "PROCESSING WITH AI...";
+        btn.disabled = true;
+
+        const reader = new FileReader();
+        reader.readAsDataURL(fileInput.files[0]);
+        reader.onloadend = async () => {
+            try {
+                // Call your Supabase Edge Function
+                const response = await supabaseClient.functions.invoke('process-affidavit', {
+                    body: { image: reader.result }
+                });
+
+                if(response.error) throw response.error;
+                
+                aiDataBuffer = response.data;
+                renderAiFields(aiDataBuffer);
+                document.getElementById('ai-output').classList.remove('hidden');
+            } catch (e) {
+                alert("AI Extraction Failed: " + e.message);
+            } finally {
+                btn.innerText = "START AI EXTRACTION";
+                btn.disabled = false;
+            }
+        };
+    }
+
+    function renderAiFields(data) {
+        const container = document.getElementById('ai-fields-container');
+        container.innerHTML = Object.keys(data).map(key => `
+            <div>
+                <label class="block uppercase font-bold text-[10px] text-gray-500">${key.replace('_', ' ')}</label>
+                <input type="text" id="ai-val-${key}" value="${data[key]}" class="w-full border p-2 rounded">
+            </div>
+        `).join('');
+    }
+
+    async function saveAiData() {
+        // Collect updated values from input fields
+        const finalData = { ...aiDataBuffer, is_ai_extracted: true };
+        for(let key in aiDataBuffer) {
+            finalData[key] = document.getElementById(`ai-val-${key}`).value;
+        }
+
+        const { error } = await supabaseClient.from('land_records').insert([finalData]);
+        if(error) return alert("Save failed: " + error.message);
+        
+        alert("Record Saved Successfully!");
+        document.getElementById('ai-output').classList.add('hidden');
+        window.switchTab('dashboard-view');
+        fetchClearanceData();
+    }
+</script>
