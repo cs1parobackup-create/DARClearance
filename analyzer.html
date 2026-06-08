@@ -3,16 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Affidavit Extractor</title>
+    <title>AI Affidavit Extractor - DAR Clearance</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700;900&display=swap" rel="stylesheet">
     
     <script>
-        // --- 1. INITIALIZE SUPABASE ---
-        const SUPABASE_URL = "YOUR_SUPABASE_URL";
-        const SUPABASE_KEY = "YOUR_SUPABASE_ANON_KEY";
-        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        // --- 1. SUPABASE CREDENTIALS ---
+        const SUPABASE_URL = 'https://tqeueibigqwxcizhvdty.supabase.co';
+        // ONLY use the PUBLIC ANON key here. Never use the secret key in HTML.
+        const SUPABASE_ANON_KEY = 'sb_publishable_oXBtC1VgBlO07oEmqpcFpw_gBtVMpvT'; 
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        // --- 2. GOOGLE GEMINI API KEY ---
+        // Paste the key you created in Google AI Studio here
+        const GEMINI_API_KEY = "PASTE_YOUR_GEMINI_API_KEY_HERE";
     </script>
     
     <style>
@@ -24,16 +29,21 @@
 <body class="p-6 md:p-10 flex justify-center">
 
     <div class="w-full max-w-4xl bg-white p-8 rounded-lg shadow-xl border-t-8 border-[#003811]">
-        <h1 class="text-2xl font-black text-[#003811] mb-2 uppercase">AI Affidavit Extractor</h1>
-        <p class="text-sm text-gray-500 mb-8 border-b pb-4">Upload an Affidavit (Image or PDF) to automatically extract DAR Clearance land records.</p>
+        <div class="flex justify-between items-center mb-6 border-b pb-4">
+            <div>
+                <h1 class="text-2xl font-black text-[#003811] uppercase">AI Affidavit Extractor</h1>
+                <p class="text-sm text-gray-500">Capture or upload an Affidavit to auto-fill land records.</p>
+            </div>
+            <a href="index.html" class="text-sm font-bold text-blue-600 hover:underline">← Back to Dashboard</a>
+        </div>
 
         <div id="upload-section" class="mb-8">
-            <label class="block text-xs font-bold text-gray-700 uppercase mb-2">Upload Document</label>
-            <input type="file" id="file-input" accept="image/*,application/pdf" class="w-full p-4 border-2 border-dashed border-gray-300 rounded bg-gray-50 text-sm focus:outline-none mb-4 cursor-pointer">
+            <label class="block text-xs font-bold text-gray-700 uppercase mb-2">Upload Document (Image or PDF)</label>
+            <input type="file" id="file-input" accept="image/*,application/pdf" capture="environment" class="w-full p-4 border-2 border-dashed border-gray-300 rounded bg-gray-50 text-sm focus:outline-none mb-4 cursor-pointer">
             
-            <button id="btn-extract" onclick="startExtraction()" class="w-full bg-[#003811] text-white font-black py-4 rounded uppercase tracking-wider hover:bg-[#00220a] transition-colors flex justify-center items-center gap-2">
+            <button id="btn-extract" onclick="startExtraction()" class="w-full bg-[#003811] text-white font-black py-4 rounded uppercase tracking-wider hover:bg-[#00220a] transition-colors flex justify-center items-center gap-2 shadow-lg">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd" /></svg>
-                Extract Data
+                Extract Data with AI
             </button>
         </div>
 
@@ -45,21 +55,21 @@
         <div id="validation-section" class="hidden">
             <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6">
                 <p class="text-sm text-yellow-800 font-bold uppercase">Extraction Complete</p>
-                <p class="text-xs text-yellow-700">Please review, correct any mistakes, and validate the extracted fields below before saving to the database.</p>
+                <p class="text-xs text-yellow-700">Please review and correct the extracted fields below before saving.</p>
             </div>
 
-            <form id="ai-form" class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm" onsubmit="event.preventDefault(); saveToDatabase();">
+            <form id="ai-form" class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                 </form>
 
             <div class="mt-8 flex gap-4 border-t pt-6">
                 <button type="button" onclick="resetPage()" class="w-1/3 bg-gray-200 text-gray-800 font-bold py-3 rounded uppercase hover:bg-gray-300 transition-colors">Discard</button>
-                <button type="button" onclick="saveToDatabase()" id="btn-save" class="w-2/3 bg-[#D4AF37] text-[#003811] font-black py-3 rounded uppercase hover:bg-yellow-500 transition-colors shadow-md">Confirm & Save to Records</button>
+                <button type="button" onclick="saveToDatabase()" id="btn-save" class="w-2/3 bg-[#D4AF37] text-[#003811] font-black py-3 rounded uppercase hover:bg-yellow-500 transition-colors shadow-md">Confirm & Save Record</button>
             </div>
         </div>
     </div>
 
     <script>
-        // Mapping exactly to your Supabase land_records table
+        // Mapping exactly to your Supabase land_records table columns
         const dbFields = [
             'lot_no', 'owner_name', 'registered_under', 'area', 'td_no', 'location', 
             'deed_type', 'executed_by', 'in_favor_of', 'doc_no', 'page_no', 
@@ -71,6 +81,7 @@
             const file = fileInput.files[0];
             
             if (!file) return alert("Please select an Image or PDF file first.");
+            if (GEMINI_API_KEY === "PASTE_YOUR_GEMINI_API_KEY_HERE") return alert("Please paste your Google Gemini API Key in the code first.");
 
             // UI transitions
             document.getElementById('upload-section').classList.add('hidden');
@@ -78,18 +89,16 @@
             document.getElementById('validation-section').classList.add('hidden');
 
             try {
-                const base64Data = await convertFileToBase64(file);
+                // 1. Read file as base64
+                const fileData = await convertFileToBase64(file);
                 const mimeType = file.type;
+                const base64String = fileData.split(',')[1]; // Remove data:image/jpeg;base64, prefix
 
-                // Send to Supabase Edge Function
-                const { data, error } = await supabase.functions.invoke('process-affidavit', {
-                    body: { fileData: base64Data, mimeType: mimeType }
-                });
+                // 2. Send directly to Gemini API
+                const extractedData = await callGeminiAPI(base64String, mimeType);
 
-                if (error) throw error;
-                if (!data || Object.keys(data).length === 0) throw new Error("No data returned from AI.");
-
-                renderValidationForm(data);
+                // 3. Render the form with extracted data
+                renderValidationForm(extractedData);
                 
                 // UI transitions
                 document.getElementById('loading-section').classList.add('hidden');
@@ -100,6 +109,50 @@
                 alert("AI Extraction Failed: " + err.message);
                 resetPage();
             }
+        }
+
+        async function callGeminiAPI(base64String, mimeType) {
+            const promptText = `
+                You are an expert legal document parser for the Department of Agrarian Reform.
+                Analyze the attached Affidavit or Land Transfer document.
+                Extract the following fields exactly as they appear. 
+                Respond ONLY with a valid, raw JSON object containing these exact keys. Do not include markdown formatting like \`\`\`json.
+                If a field cannot be found, leave it as an empty string "".
+
+                Keys required:
+                "lot_no", "owner_name", "registered_under", "area", "td_no", "location", 
+                "deed_type", "executed_by", "in_favor_of", "doc_no", "page_no", 
+                "book_no", "series_of", "dated", "notary_public", "retention_area_n"
+            `;
+
+            const requestBody = {
+                contents: [{
+                    parts: [
+                        { text: promptText },
+                        { inline_data: { mime_type: mimeType, data: base64String } }
+                    ]
+                }],
+                generationConfig: { temperature: 0.1 }
+            };
+
+            const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(requestBody)
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.error?.message || "Failed to process via Gemini");
+            }
+
+            let aiText = data.candidates[0].content.parts[0].text;
+            
+            // Clean markdown blocks if the AI adds them
+            aiText = aiText.replace(/```json/gi, '').replace(/```/g, '').trim();
+            
+            return JSON.parse(aiText);
         }
 
         function renderValidationForm(aiData) {
@@ -114,8 +167,8 @@
                 const div = document.createElement('div');
                 div.className = "flex flex-col";
                 div.innerHTML = `
-                    <label class="text-[10px] font-bold text-gray-500 mb-1 tracking-wide">${labelText}</label>
-                    <input type="text" id="ai_${field}" name="${field}" value="${value.replace(/"/g, '&quot;')}" class="p-2 border border-gray-300 rounded bg-white focus:outline-none focus:border-[#003811] focus:ring-1 focus:ring-[#003811] text-sm font-semibold">
+                    <label class="text-[10px] font-bold text-[#003811] mb-1 tracking-wide">${labelText}</label>
+                    <input type="text" id="ai_${field}" name="${field}" value="${value.replace(/"/g, '&quot;')}" class="p-2 border border-gray-300 rounded bg-white focus:outline-none focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37] text-sm font-semibold">
                 `;
                 form.appendChild(div);
             });
@@ -128,8 +181,8 @@
             try {
                 // 1. Gather all data from the form
                 const recordData = {
-                    status: 'RECEIVED', // Default status
-                    is_ai_extracted: true // Hardcoded flag based on your request
+                    status: 'RECEIVED', // Default status for new records
+                    is_ai_extracted: true // Flag to show it came from the AI analyzer
                 };
 
                 dbFields.forEach(field => {
@@ -141,12 +194,12 @@
 
                 if (error) throw error;
 
-                alert("Data successfully validated and saved to land_records!");
-                window.location.href = 'index.html'; // Redirect to main dashboard
-
+                alert("Data successfully validated and saved to records!");
+                resetPage(); // Ready for the next scan
+                
             } catch (err) {
                 alert("Failed to save record: " + err.message);
-                btnSave.innerText = "Confirm & Save to Records";
+                btnSave.innerText = "Confirm & Save Record";
                 btnSave.disabled = false;
             }
         }
@@ -156,17 +209,17 @@
             document.getElementById('upload-section').classList.remove('hidden');
             document.getElementById('loading-section').classList.add('hidden');
             document.getElementById('validation-section').classList.add('hidden');
+            
+            const btnSave = document.getElementById('btn-save');
+            btnSave.innerText = "Confirm & Save Record";
+            btnSave.disabled = false;
         }
 
         function convertFileToBase64(file) {
             return new Promise((resolve, reject) => {
                 const reader = new FileReader();
                 reader.readAsDataURL(file);
-                reader.onload = () => {
-                    // Extract just the base64 string, removing the "data:image/jpeg;base64," prefix
-                    const base64String = reader.result.split(',')[1];
-                    resolve(base64String);
-                };
+                reader.onload = () => resolve(reader.result);
                 reader.onerror = error => reject(error);
             });
         }
