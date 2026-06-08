@@ -15,14 +15,14 @@
         const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
         // --- GOOGLE GEMINI CONFIGURATION ---
-        // Securely paste the API Key generated from Google AI Studio here
+        // Note: Exposing API keys in client-side code is risky for production. Consider moving this to a secure backend later.
         const GEMINI_API_KEY = "AQ.Ab8RN6KNylqlIovrOTx5niUx5Iznwcmx7O6-Y854EaKkj6VA3g";
     </script>
     
     <style>
         body { font-family: 'Roboto', sans-serif; background-color: #F9FAFB; color: #1F2937; }
         .data-input { transition: all 0.2s ease-in-out; }
-        .data-input:focus { border-color: #003811; ring: 2px; ring-color: #D4AF37; }
+        .data-input:focus { border-color: #003811; outline: none; box-shadow: 0 0 0 2px #D4AF37; }
         .spinner { border-top-color: #D4AF37; animation: spin 1s linear infinite; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
@@ -56,7 +56,7 @@
             </div>
 
             <div id="processing-loader" class="hidden flex-col items-center justify-center py-12">
-                <div class="spinner ease-linear rounded-full border-4 border-t-4 border-gray-100 h-12 w-12 mb-4"></div>
+                <div class="spinner ease-linear rounded-full border-4 border-t-4 border-gray-200 h-12 w-12 mb-4"></div>
                 <p class="text-xs font-bold text-[#003811] uppercase tracking-widest animate-pulse">Gemini LLM Engine Extracting Text Fields...</p>
             </div>
 
@@ -65,7 +65,7 @@
                     <span class="text-amber-600 font-bold text-lg leading-none">⚠️</span>
                     <div>
                         <h4 class="text-xs font-bold text-amber-800 uppercase tracking-wide">Validation Layer Active</h4>
-                        <p class="text-xs text-amber-700 mt-0.5">AI-generated extractions require rigorous human verification. Review highlighted database columns prior to commitment.</p>
+                        <p class="text-xs text-amber-700 mt-0.5">AI-generated extractions require rigorous human verification. Review and modify the extracted fields below before saving.</p>
                     </div>
                 </div>
 
@@ -73,19 +73,20 @@
                     </form>
 
                 <div class="flex gap-4 pt-4 border-t border-gray-200">
-                    <button type="button" onclick="resetExtractionContext()" class="w-1/3 bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-3 rounded-lg uppercase tracking-wide transition-colors">Discard Ingestion</button>
-                    <button type="button" onclick="commitRecordToDatabase()" id="btn-commit" class="w-2/3 bg-[#D4AF37] hover:bg-yellow-500 text-[#003811] font-black py-3 rounded-lg uppercase tracking-wide transition-colors shadow-md text-center">Commit Document to Database</button>
+                    <button type="button" onclick="resetExtractionContext()" class="w-1/3 bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-3 rounded-lg uppercase tracking-wide transition-colors">Discard</button>
+                    <button type="button" onclick="commitRecordToDatabase()" id="btn-commit" class="w-2/3 bg-[#D4AF37] hover:bg-yellow-500 text-[#003811] font-black py-3 rounded-lg uppercase tracking-wide transition-colors shadow-md text-center">Save & Commit to Database</button>
                 </div>
             </div>
         </div>
     </div>
 
     <script>
-        // Mapped Database targets exactly conforming to schema parameters
+        // Updated to fully match your provided Supabase table image
         const targetedSchemaFields = [
             'LTC_ID_NUMBER', 'lot_no', 'owner_name', 'registered_under', 'area', 'td_no', 
             'location', 'deed_type', 'executed_by', 'in_favor_of', 'doc_no', 'page_no', 
-            'book_no', 'series_of', 'dated', 'notary_public', 'retention_area_n', 'clearance_type'
+            'book_no', 'series_of', 'dated', 'notary_public', 'retention_area_n', 'clearance_type',
+            'or_number', 'or_date', 'Remarks'
         ];
 
         let bufferedExtractionPayload = null;
@@ -102,7 +103,6 @@
             const inputElement = document.getElementById('file-selector');
             const targetFile = inputElement.files[0];
             if(!targetFile) return alert("System requires a file path context before extraction execution.");
-            if(GEMINI_API_KEY === "PASTE_YOUR_GEMINI_API_KEY_HERE") return alert("Configuration mismatch: Paste public Gemini key framework context into standard parameters.");
 
             // UI Switch Transitions
             document.getElementById('upload-zone').classList.add('hidden');
@@ -131,30 +131,33 @@
             const promptDirectives = `
                 You are a highly calibrated legal clerk assistant for the Department of Agrarian Reform (DAR).
                 Analyze the provided raw snapshot file context (Affidavit, Deed, or Legal Clearance document).
-                Accurately extract explicit string target values to construct an database entry.
+                Accurately extract explicit string target values to construct a database entry.
                 Respond with a single raw unformatted stringified JSON matching the strict dictionary schema below.
-                Exclude markdown backticks like \`\`\`json. If metadata parameter targets are completely missing, explicitly assign empty string "".
+                Exclude markdown backticks like \`\`\`json. If metadata parameter targets are missing, explicitly assign an empty string "".
 
                 Required Dictionary Mapping Specifications:
                 {
-                    "LTC_ID_NUMBER": "Extract Land Transfer Clearance Number context if present, else assign empty string",
-                    "lot_no": "Extract numbers identifying lot allocations explicitly",
-                    "owner_name": "Extract primary land owner entity name context explicitly",
-                    "registered_under": "Extract Title / TCT reference strings explicitly",
+                    "LTC_ID_NUMBER": "Extract Land Transfer Clearance Number context if present",
+                    "lot_no": "Extract numbers identifying lot allocations",
+                    "owner_name": "Extract primary land owner entity name",
+                    "registered_under": "Extract Title / TCT reference strings",
                     "area": "Extract area magnitude explicitly",
-                    "td_no": "Extract Tax Declaration Number explicitly",
+                    "td_no": "Extract Tax Declaration Number",
                     "location": "Extract complete address, municipality or provincial designation text",
-                    "deed_type": "Extract structural type of legal execution deed explicitly",
-                    "executed_by": "Extract names of executors/transferors context explicitly",
-                    "in_favor_of": "Extract beneficiary parties context explicitly",
-                    "doc_no": "Extract Document numeric target parameter string",
-                    "page_no": "Extract Page numeric target parameter string",
-                    "book_no": "Extract Book numeric target parameter string",
+                    "deed_type": "Extract structural type of legal execution deed",
+                    "executed_by": "Extract names of executors/transferors",
+                    "in_favor_of": "Extract beneficiary parties",
+                    "doc_no": "Extract Document numeric target string",
+                    "page_no": "Extract Page numeric target string",
+                    "book_no": "Extract Book numeric target string",
                     "series_of": "Extract Year Series parameters string",
                     "dated": "Extract date string identifying actual timestamp of closing",
-                    "notary_public": "Extract target identity text of handling Notary Public legal representative",
-                    "retention_area_n": "Extract numerical bounds of land retention allocations matching vendor context",
-                    "clearance_type": "Identify categorization explicitly"
+                    "notary_public": "Extract handling Notary Public name",
+                    "retention_area_n": "Extract numerical bounds of land retention allocations",
+                    "clearance_type": "Identify clearance categorization",
+                    "or_number": "Extract the Official Receipt (OR) Number if present",
+                    "or_date": "Extract the date of the Official Receipt if present",
+                    "Remarks": "Extract any special notes, annotations, or additional remarks"
                 }
             `;
 
@@ -165,7 +168,7 @@
                         { inline_data: { mime_type: mimeType, data: base64Data } }
                     ]
                 }],
-                generationConfig: { temperature: 0.05, responseMimeType: "application/json" }
+                generationConfig: { temperature: 0.1, responseMimeType: "application/json" }
             };
 
             const targetEndpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`;
@@ -183,7 +186,9 @@
             }
 
             let responseText = responseBody.candidates[0].content.parts[0].text;
-            responseText = responseText.replace(/```json/gi, '').replace(/```/g, '').trim();
+            
+            // Clean up possible markdown code blocks to ensure safe parsing
+            responseText = responseText.replace(/^```json/mi, '').replace(/```$/m, '').trim();
             return JSON.parse(responseText);
         }
 
@@ -199,7 +204,7 @@
                 fieldContainer.className = "flex flex-col space-y-1";
                 fieldContainer.innerHTML = `
                     <label class="text-[10px] font-bold text-gray-500 tracking-wider">${humanizedLabelText}</label>
-                    <input type="text" id="target_${fieldKey}" name="${fieldKey}" value="${cleanValue.replace(/"/g, '&quot;')}" class="data-input w-full p-2.5 border border-gray-300 rounded bg-white text-xs font-semibold focus:outline-none focus:border-[#003811] focus:ring-1 focus:ring-[#003811]">
+                    <input type="text" id="target_${fieldKey}" name="${fieldKey}" value="${cleanValue.replace(/"/g, '&quot;')}" class="data-input w-full p-2.5 border border-gray-300 rounded bg-white text-xs font-semibold">
                 `;
                 displayForm.appendChild(fieldContainer);
             });
@@ -207,32 +212,35 @@
 
         async function commitRecordToDatabase() {
             const operationCommitBtn = document.getElementById('btn-commit');
-            operationCommitBtn.innerText = "COMMITMENT IN PROGRESS...";
+            operationCommitBtn.innerText = "SAVING...";
             operationCommitBtn.disabled = true;
 
             try {
-                // Initialize insertion context payload dictionary structure
+                // Initialize payload
                 const committedPayload = {
-                    status: 'RECEIVED', // Default initial pipeline routing trace
-                    is_ai_extracted: true, // System tag marking source context origin trace
+                    status: 'RECEIVED',
+                    is_ai_extracted: true, 
                     updated_at: new Date().toISOString()
                 };
 
+                // Pull values from user-edited inputs
                 targetedSchemaFields.forEach(fieldKey => {
                     const DOMElementVal = document.getElementById(`target_${fieldKey}`).value.trim();
                     committedPayload[fieldKey] = DOMElementVal === "" ? null : DOMElementVal;
                 });
 
-                // Write operation to land_records target parameters table matching standard client framework configurations
+                // Write operation to land_records table
                 const { error } = await supabase.from('land_records').insert([committedPayload]);
                 if (error) throw error;
 
-                alert("Database synchronization transaction completed successfully. Document ingested into monitor lifecycle.");
+                alert("Successfully extracted, verified, and saved to database!");
                 resetExtractionContext();
-                window.location.href = 'index.html'; // Fallback redirect targeting home pipeline context Trace
+                
+                // Optional: Redirect to dashboard
+                // window.location.href = 'index.html'; 
             } catch(error) {
-                alert(`Commit Failure Encountered: ${error.message}`);
-                operationCommitBtn.innerText = "Commit Document to Database";
+                alert(`Commit Failure: ${error.message}`);
+                operationCommitBtn.innerText = "Save & Commit to Database";
                 operationCommitBtn.disabled = false;
             }
         }
