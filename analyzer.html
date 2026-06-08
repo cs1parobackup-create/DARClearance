@@ -15,7 +15,6 @@
         const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
         // --- GOOGLE GEMINI CONFIGURATION ---
-        // Note: Exposing API keys in client-side code is risky for production. Consider moving this to a secure backend later.
         const GEMINI_API_KEY = "AQ.Ab8RN6KNylqlIovrOTx5niUx5Iznwcmx7O6-Y854EaKkj6VA3g";
     </script>
     
@@ -50,7 +49,7 @@
                     <span class="text-xs text-gray-400 mt-1">Supports PDF, PNG, JPEG</span>
                 </div>
                 
-                <button id="btn-process" onclick="executeAIExtraction()" class="w-full mt-4 bg-[#003811] hover:bg-[#00220a] text-white font-bold py-3.5 rounded-lg uppercase tracking-wider transition-colors shadow flex items-center justify-center gap-2">
+                <button id="btn-process" onclick="executeAIExtraction()" disabled class="w-full mt-4 bg-gray-400 text-white font-bold py-3.5 rounded-lg uppercase tracking-wider transition-colors shadow flex items-center justify-center gap-2 cursor-not-allowed">
                     ⚡ Extract Parameters via AI
                 </button>
             </div>
@@ -81,7 +80,7 @@
     </div>
 
     <script>
-        // Updated to fully match your provided Supabase table image
+        // Database targets matching your Supabase schema exactly
         const targetedSchemaFields = [
             'LTC_ID_NUMBER', 'lot_no', 'owner_name', 'registered_under', 'area', 'td_no', 
             'location', 'deed_type', 'executed_by', 'in_favor_of', 'doc_no', 'page_no', 
@@ -93,15 +92,24 @@
 
         function handleFileSelection(element) {
             const fileText = document.getElementById('file-status-text');
+            const processBtn = document.getElementById('btn-process');
+
             if(element.files && element.files[0]) {
                 fileText.innerText = `Selected document: ${element.files[0].name}`;
                 fileText.classList.add('text-green-700', 'font-bold');
+                
+                // Wake up the extraction button
+                processBtn.disabled = false;
+                processBtn.classList.remove('bg-gray-400', 'cursor-not-allowed');
+                processBtn.classList.add('bg-[#003811]', 'hover:bg-[#00220a]');
             }
         }
 
         async function executeAIExtraction() {
             const inputElement = document.getElementById('file-selector');
             const targetFile = inputElement.files[0];
+            
+            // This alert is still here as a final fallback, but the disabled button prevents it.
             if(!targetFile) return alert("System requires a file path context before extraction execution.");
 
             // UI Switch Transitions
@@ -235,9 +243,6 @@
 
                 alert("Successfully extracted, verified, and saved to database!");
                 resetExtractionContext();
-                
-                // Optional: Redirect to dashboard
-                // window.location.href = 'index.html'; 
             } catch(error) {
                 alert(`Commit Failure: ${error.message}`);
                 operationCommitBtn.innerText = "Save & Commit to Database";
@@ -247,6 +252,7 @@
 
         function resetExtractionContext() {
             document.getElementById('file-selector').value = '';
+            
             const statusText = document.getElementById('file-status-text');
             statusText.innerText = "Click to capture image or attach file";
             statusText.className = "text-sm font-medium text-gray-600";
@@ -255,6 +261,12 @@
             document.getElementById('processing-loader').classList.add('hidden');
             document.getElementById('validation-matrix').classList.add('hidden');
             bufferedExtractionPayload = null;
+
+            // Reset the extraction button back to disabled state
+            const processBtn = document.getElementById('btn-process');
+            processBtn.disabled = true;
+            processBtn.classList.remove('bg-[#003811]', 'hover:bg-[#00220a]');
+            processBtn.classList.add('bg-gray-400', 'cursor-not-allowed');
         }
 
         function convertFileContextToBase64(fileContext) {
