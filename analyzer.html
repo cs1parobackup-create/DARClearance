@@ -3,224 +3,258 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Affidavit Extractor - DAR Clearance</title>
+    <title>AI Extractor - Land Records Validation Portal</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;900&display=swap" rel="stylesheet">
     
     <script>
-        // --- 1. SUPABASE CREDENTIALS ---
-        const SUPABASE_URL = 'https://tqeueibigqwxcizhvdty.supabase.co';
-        // ONLY use the PUBLIC ANON key here. Never use the secret key in HTML.
-        const SUPABASE_ANON_KEY = 'sb_publishable_oXBtC1VgBlO07oEmqpcFpw_gBtVMpvT'; 
+        // --- SUPABASE CONFIGURATION ---
+        const SUPABASE_URL = "https://tqeueibigqwxcizhvdty.supabase.co";
+        const SUPABASE_ANON_KEY = "sb_publishable_oXBtC1VgBlO07oEmqpcFpw_gBtVMpvT"; 
         const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        // --- 2. GOOGLE GEMINI API KEY ---
-        // Paste the key you created in Google AI Studio here
+        // --- GOOGLE GEMINI CONFIGURATION ---
+        // Securely paste the API Key generated from Google AI Studio here
         const GEMINI_API_KEY = "AQ.Ab8RN6KNylqlIovrOTx5niUx5Iznwcmx7O6-Y854EaKkj6VA3g";
     </script>
     
     <style>
-        body { font-family: 'Roboto', sans-serif; background-color: #F3F4F6; color: #1F2937; }
-        .loader { border-top-color: #D4AF37; -webkit-animation: spinner 1.5s linear infinite; animation: spinner 1.5s linear infinite; }
-        @keyframes spinner { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        body { font-family: 'Roboto', sans-serif; background-color: #F9FAFB; color: #1F2937; }
+        .data-input { transition: all 0.2s ease-in-out; }
+        .data-input:focus { border-color: #003811; ring: 2px; ring-color: #D4AF37; }
+        .spinner { border-top-color: #D4AF37; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
-<body class="p-6 md:p-10 flex justify-center">
+<body class="min-h-screen p-4 md:p-8 flex items-center justify-center">
 
-    <div class="w-full max-w-4xl bg-white p-8 rounded-lg shadow-xl border-t-8 border-[#003811]">
-        <div class="flex justify-between items-center mb-6 border-b pb-4">
+    <div class="w-full max-w-4xl bg-white rounded-xl shadow-xl border-t-8 border-[#003811] overflow-hidden">
+        <div class="bg-gray-50 px-6 py-4 border-b border-gray-200 flex justify-between items-center">
             <div>
-                <h1 class="text-2xl font-black text-[#003811] uppercase">AI Affidavit Extractor</h1>
-                <p class="text-sm text-gray-500">Capture or upload an Affidavit to auto-fill land records.</p>
+                <h1 class="text-xl font-black text-[#003811] tracking-tight uppercase">AI EXTRACTOR (Beta)</h1>
+                <p class="text-xs text-gray-500">Automated legal affidavit ingestion and data record validation</p>
             </div>
-            <a href="index.html" class="text-sm font-bold text-blue-600 hover:underline">← Back to Dashboard</a>
+            <a href="index.html" class="text-xs font-bold text-[#003811] hover:text-[#006400] transition-colors">← Return to Dashboard</a>
         </div>
 
-        <div id="upload-section" class="mb-8">
-            <label class="block text-xs font-bold text-gray-700 uppercase mb-2">Upload Document (Image or PDF)</label>
-            <input type="file" id="file-input" accept="image/*,application/pdf" capture="environment" class="w-full p-4 border-2 border-dashed border-gray-300 rounded bg-gray-50 text-sm focus:outline-none mb-4 cursor-pointer">
-            
-            <button id="btn-extract" onclick="startExtraction()" class="w-full bg-[#003811] text-white font-black py-4 rounded uppercase tracking-wider hover:bg-[#00220a] transition-colors flex justify-center items-center gap-2 shadow-lg">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd" /></svg>
-                Extract Data with AI
-            </button>
-        </div>
-
-        <div id="loading-section" class="hidden flex-col items-center justify-center py-10">
-            <div class="loader ease-linear rounded-full border-4 border-t-4 border-gray-200 h-12 w-12 mb-4"></div>
-            <p class="text-sm font-bold text-[#003811] uppercase tracking-widest animate-pulse">AI is reading the document...</p>
-        </div>
-
-        <div id="validation-section" class="hidden">
-            <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6">
-                <p class="text-sm text-yellow-800 font-bold uppercase">Extraction Complete</p>
-                <p class="text-xs text-yellow-700">Please review and correct the extracted fields below before saving.</p>
+        <div class="p-6">
+            <div id="upload-zone" class="mb-6">
+                <label class="block text-xs font-bold text-gray-700 uppercase mb-2">Select or Snap Affidavit Source Document (Image / PDF)</label>
+                <div class="relative border-2 border-dashed border-gray-300 rounded-lg p-6 bg-gray-50 hover:bg-gray-100 transition-colors flex flex-col items-center justify-center cursor-pointer">
+                    <input type="file" id="file-selector" accept="image/*,application/pdf" capture="environment" class="absolute inset-0 opacity-0 cursor-pointer" onchange="handleFileSelection(this)">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-gray-400 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 002-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                    <span id="file-status-text" class="text-sm font-medium text-gray-600">Click to capture image or attach file</span>
+                    <span class="text-xs text-gray-400 mt-1">Supports PDF, PNG, JPEG</span>
+                </div>
+                
+                <button id="btn-process" onclick="executeAIExtraction()" class="w-full mt-4 bg-[#003811] hover:bg-[#00220a] text-white font-bold py-3.5 rounded-lg uppercase tracking-wider transition-colors shadow flex items-center justify-center gap-2">
+                    ⚡ Extract Parameters via AI
+                </button>
             </div>
 
-            <form id="ai-form" class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                </form>
+            <div id="processing-loader" class="hidden flex-col items-center justify-center py-12">
+                <div class="spinner ease-linear rounded-full border-4 border-t-4 border-gray-100 h-12 w-12 mb-4"></div>
+                <p class="text-xs font-bold text-[#003811] uppercase tracking-widest animate-pulse">Gemini LLM Engine Extracting Text Fields...</p>
+            </div>
 
-            <div class="mt-8 flex gap-4 border-t pt-6">
-                <button type="button" onclick="resetPage()" class="w-1/3 bg-gray-200 text-gray-800 font-bold py-3 rounded uppercase hover:bg-gray-300 transition-colors">Discard</button>
-                <button type="button" onclick="saveToDatabase()" id="btn-save" class="w-2/3 bg-[#D4AF37] text-[#003811] font-black py-3 rounded uppercase hover:bg-yellow-500 transition-colors shadow-md">Confirm & Save Record</button>
+            <div id="validation-matrix" class="hidden space-y-6">
+                <div class="bg-amber-50 border-l-4 border-[#D4AF37] p-4 rounded-r shadow-sm flex items-start gap-3">
+                    <span class="text-amber-600 font-bold text-lg leading-none">⚠️</span>
+                    <div>
+                        <h4 class="text-xs font-bold text-amber-800 uppercase tracking-wide">Validation Layer Active</h4>
+                        <p class="text-xs text-amber-700 mt-0.5">AI-generated extractions require rigorous human verification. Review highlighted database columns prior to commitment.</p>
+                    </div>
+                </div>
+
+                <form id="extraction-form" class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4 bg-gray-50 p-4 rounded-lg border border-gray-200">
+                    </form>
+
+                <div class="flex gap-4 pt-4 border-t border-gray-200">
+                    <button type="button" onclick="resetExtractionContext()" class="w-1/3 bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-3 rounded-lg uppercase tracking-wide transition-colors">Discard Ingestion</button>
+                    <button type="button" onclick="commitRecordToDatabase()" id="btn-commit" class="w-2/3 bg-[#D4AF37] hover:bg-yellow-500 text-[#003811] font-black py-3 rounded-lg uppercase tracking-wide transition-colors shadow-md text-center">Commit Document to Database</button>
+                </div>
             </div>
         </div>
     </div>
 
     <script>
-        // Mapping exactly to your Supabase land_records table columns
-        const dbFields = [
-            'lot_no', 'owner_name', 'registered_under', 'area', 'td_no', 'location', 
-            'deed_type', 'executed_by', 'in_favor_of', 'doc_no', 'page_no', 
-            'book_no', 'series_of', 'dated', 'notary_public', 'retention_area_n'
+        // Mapped Database targets exactly conforming to schema parameters
+        const targetedSchemaFields = [
+            'LTC_ID_NUMBER', 'lot_no', 'owner_name', 'registered_under', 'area', 'td_no', 
+            'location', 'deed_type', 'executed_by', 'in_favor_of', 'doc_no', 'page_no', 
+            'book_no', 'series_of', 'dated', 'notary_public', 'retention_area_n', 'clearance_type'
         ];
 
-        async function startExtraction() {
-            const fileInput = document.getElementById('file-input');
-            const file = fileInput.files[0];
-            
-            if (!file) return alert("Please select an Image or PDF file first.");
-            if (GEMINI_API_KEY === "PASTE_YOUR_GEMINI_API_KEY_HERE") return alert("Please paste your Google Gemini API Key in the code first.");
+        let bufferedExtractionPayload = null;
 
-            // UI transitions
-            document.getElementById('upload-section').classList.add('hidden');
-            document.getElementById('loading-section').classList.remove('hidden');
-            document.getElementById('validation-section').classList.add('hidden');
-
-            try {
-                // 1. Read file as base64
-                const fileData = await convertFileToBase64(file);
-                const mimeType = file.type;
-                const base64String = fileData.split(',')[1]; // Remove data:image/jpeg;base64, prefix
-
-                // 2. Send directly to Gemini API
-                const extractedData = await callGeminiAPI(base64String, mimeType);
-
-                // 3. Render the form with extracted data
-                renderValidationForm(extractedData);
-                
-                // UI transitions
-                document.getElementById('loading-section').classList.add('hidden');
-                document.getElementById('validation-section').classList.remove('hidden');
-
-            } catch (err) {
-                console.error(err);
-                alert("AI Extraction Failed: " + err.message);
-                resetPage();
+        function handleFileSelection(element) {
+            const fileText = document.getElementById('file-status-text');
+            if(element.files && element.files[0]) {
+                fileText.innerText = `Selected document: ${element.files[0].name}`;
+                fileText.classList.add('text-green-700', 'font-bold');
             }
         }
 
-        async function callGeminiAPI(base64String, mimeType) {
-            const promptText = `
-                You are an expert legal document parser for the Department of Agrarian Reform.
-                Analyze the attached Affidavit or Land Transfer document.
-                Extract the following fields exactly as they appear. 
-                Respond ONLY with a valid, raw JSON object containing these exact keys. Do not include markdown formatting like \`\`\`json.
-                If a field cannot be found, leave it as an empty string "".
+        async function executeAIExtraction() {
+            const inputElement = document.getElementById('file-selector');
+            const targetFile = inputElement.files[0];
+            if(!targetFile) return alert("System requires a file path context before extraction execution.");
+            if(GEMINI_API_KEY === "PASTE_YOUR_GEMINI_API_KEY_HERE") return alert("Configuration mismatch: Paste public Gemini key framework context into standard parameters.");
 
-                Keys required:
-                "lot_no", "owner_name", "registered_under", "area", "td_no", "location", 
-                "deed_type", "executed_by", "in_favor_of", "doc_no", "page_no", 
-                "book_no", "series_of", "dated", "notary_public", "retention_area_n"
+            // UI Switch Transitions
+            document.getElementById('upload-zone').classList.add('hidden');
+            document.getElementById('processing-loader').classList.remove('hidden');
+
+            try {
+                const standardBase64Data = await convertFileContextToBase64(targetFile);
+                const rawBase64Payload = standardBase64Data.split(',')[1];
+                const mimeTypeContext = targetFile.type;
+
+                const responseData = await postToGeminiVisionEngine(rawBase64Payload, mimeTypeContext);
+                bufferedExtractionPayload = responseData;
+
+                renderValidationInterface(responseData);
+
+                document.getElementById('processing-loader').classList.add('hidden');
+                document.getElementById('validation-matrix').classList.remove('hidden');
+            } catch(error) {
+                console.error(error);
+                alert(`Analysis Pipeline Interrupted: ${error.message}`);
+                resetExtractionContext();
+            }
+        }
+
+        async function postToGeminiVisionEngine(base64Data, mimeType) {
+            const promptDirectives = `
+                You are a highly calibrated legal clerk assistant for the Department of Agrarian Reform (DAR).
+                Analyze the provided raw snapshot file context (Affidavit, Deed, or Legal Clearance document).
+                Accurately extract explicit string target values to construct an database entry.
+                Respond with a single raw unformatted stringified JSON matching the strict dictionary schema below.
+                Exclude markdown backticks like \`\`\`json. If metadata parameter targets are completely missing, explicitly assign empty string "".
+
+                Required Dictionary Mapping Specifications:
+                {
+                    "LTC_ID_NUMBER": "Extract Land Transfer Clearance Number context if present, else assign empty string",
+                    "lot_no": "Extract numbers identifying lot allocations explicitly",
+                    "owner_name": "Extract primary land owner entity name context explicitly",
+                    "registered_under": "Extract Title / TCT reference strings explicitly",
+                    "area": "Extract area magnitude explicitly",
+                    "td_no": "Extract Tax Declaration Number explicitly",
+                    "location": "Extract complete address, municipality or provincial designation text",
+                    "deed_type": "Extract structural type of legal execution deed explicitly",
+                    "executed_by": "Extract names of executors/transferors context explicitly",
+                    "in_favor_of": "Extract beneficiary parties context explicitly",
+                    "doc_no": "Extract Document numeric target parameter string",
+                    "page_no": "Extract Page numeric target parameter string",
+                    "book_no": "Extract Book numeric target parameter string",
+                    "series_of": "Extract Year Series parameters string",
+                    "dated": "Extract date string identifying actual timestamp of closing",
+                    "notary_public": "Extract target identity text of handling Notary Public legal representative",
+                    "retention_area_n": "Extract numerical bounds of land retention allocations matching vendor context",
+                    "clearance_type": "Identify categorization explicitly"
+                }
             `;
 
-            const requestBody = {
+            const unifiedPayload = {
                 contents: [{
                     parts: [
-                        { text: promptText },
-                        { inline_data: { mime_type: mimeType, data: base64String } }
+                        { text: promptDirectives },
+                        { inline_data: { mime_type: mimeType, data: base64Data } }
                     ]
                 }],
-                generationConfig: { temperature: 0.1 }
+                generationConfig: { temperature: 0.05, responseMimeType: "application/json" }
             };
 
-            const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
+            const targetEndpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`;
+            const apiRequestOptions = {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(requestBody)
-            });
+                body: JSON.stringify(unifiedPayload)
+            };
 
-            const data = await response.json();
+            const remoteResponse = await fetch(targetEndpoint, apiRequestOptions);
+            const responseBody = await remoteResponse.json();
 
-            if (!response.ok) {
-                throw new Error(data.error?.message || "Failed to process via Gemini");
+            if (!remoteResponse.ok) {
+                throw new Error(responseBody.error?.message || "Remote inference request processing failure.");
             }
 
-            let aiText = data.candidates[0].content.parts[0].text;
-            
-            // Clean markdown blocks if the AI adds them
-            aiText = aiText.replace(/```json/gi, '').replace(/```/g, '').trim();
-            
-            return JSON.parse(aiText);
+            let responseText = responseBody.candidates[0].content.parts[0].text;
+            responseText = responseText.replace(/```json/gi, '').replace(/```/g, '').trim();
+            return JSON.parse(responseText);
         }
 
-        function renderValidationForm(aiData) {
-            const form = document.getElementById('ai-form');
-            form.innerHTML = ''; // Clear previous
+        function renderValidationInterface(data) {
+            const displayForm = document.getElementById('extraction-form');
+            displayForm.innerHTML = '';
 
-            dbFields.forEach(field => {
-                // Formatting label (e.g., owner_name -> Owner Name)
-                const labelText = field.replace(/_/g, ' ').toUpperCase();
-                const value = aiData[field] || '';
+            targetedSchemaFields.forEach(fieldKey => {
+                const humanizedLabelText = fieldKey.replace(/_/g, ' ').toUpperCase();
+                const cleanValue = data[fieldKey] || '';
 
-                const div = document.createElement('div');
-                div.className = "flex flex-col";
-                div.innerHTML = `
-                    <label class="text-[10px] font-bold text-[#003811] mb-1 tracking-wide">${labelText}</label>
-                    <input type="text" id="ai_${field}" name="${field}" value="${value.replace(/"/g, '&quot;')}" class="p-2 border border-gray-300 rounded bg-white focus:outline-none focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37] text-sm font-semibold">
+                const fieldContainer = document.createElement('div');
+                fieldContainer.className = "flex flex-col space-y-1";
+                fieldContainer.innerHTML = `
+                    <label class="text-[10px] font-bold text-gray-500 tracking-wider">${humanizedLabelText}</label>
+                    <input type="text" id="target_${fieldKey}" name="${fieldKey}" value="${cleanValue.replace(/"/g, '&quot;')}" class="data-input w-full p-2.5 border border-gray-300 rounded bg-white text-xs font-semibold focus:outline-none focus:border-[#003811] focus:ring-1 focus:ring-[#003811]">
                 `;
-                form.appendChild(div);
+                displayForm.appendChild(fieldContainer);
             });
         }
 
-        async function saveToDatabase() {
-            const btnSave = document.getElementById('btn-save');
-            btnSave.innerText = "SAVING..."; btnSave.disabled = true;
+        async function commitRecordToDatabase() {
+            const operationCommitBtn = document.getElementById('btn-commit');
+            operationCommitBtn.innerText = "COMMITMENT IN PROGRESS...";
+            operationCommitBtn.disabled = true;
 
             try {
-                // 1. Gather all data from the form
-                const recordData = {
-                    status: 'RECEIVED', // Default status for new records
-                    is_ai_extracted: true // Flag to show it came from the AI analyzer
+                // Initialize insertion context payload dictionary structure
+                const committedPayload = {
+                    status: 'RECEIVED', // Default initial pipeline routing trace
+                    is_ai_extracted: true, // System tag marking source context origin trace
+                    updated_at: new Date().toISOString()
                 };
 
-                dbFields.forEach(field => {
-                    recordData[field] = document.getElementById(`ai_${field}`).value.trim();
+                targetedSchemaFields.forEach(fieldKey => {
+                    const DOMElementVal = document.getElementById(`target_${fieldKey}`).value.trim();
+                    committedPayload[fieldKey] = DOMElementVal === "" ? null : DOMElementVal;
                 });
 
-                // 2. Insert into Supabase table
-                const { error } = await supabase.from('land_records').insert([recordData]);
-
+                // Write operation to land_records target parameters table matching standard client framework configurations
+                const { error } = await supabase.from('land_records').insert([committedPayload]);
                 if (error) throw error;
 
-                alert("Data successfully validated and saved to records!");
-                resetPage(); // Ready for the next scan
-                
-            } catch (err) {
-                alert("Failed to save record: " + err.message);
-                btnSave.innerText = "Confirm & Save Record";
-                btnSave.disabled = false;
+                alert("Database synchronization transaction completed successfully. Document ingested into monitor lifecycle.");
+                resetExtractionContext();
+                window.location.href = 'index.html'; // Fallback redirect targeting home pipeline context Trace
+            } catch(error) {
+                alert(`Commit Failure Encountered: ${error.message}`);
+                operationCommitBtn.innerText = "Commit Document to Database";
+                operationCommitBtn.disabled = false;
             }
         }
 
-        function resetPage() {
-            document.getElementById('file-input').value = '';
-            document.getElementById('upload-section').classList.remove('hidden');
-            document.getElementById('loading-section').classList.add('hidden');
-            document.getElementById('validation-section').classList.add('hidden');
+        function resetExtractionContext() {
+            document.getElementById('file-selector').value = '';
+            const statusText = document.getElementById('file-status-text');
+            statusText.innerText = "Click to capture image or attach file";
+            statusText.className = "text-sm font-medium text-gray-600";
             
-            const btnSave = document.getElementById('btn-save');
-            btnSave.innerText = "Confirm & Save Record";
-            btnSave.disabled = false;
+            document.getElementById('upload-zone').classList.remove('hidden');
+            document.getElementById('processing-loader').classList.add('hidden');
+            document.getElementById('validation-matrix').classList.add('hidden');
+            bufferedExtractionPayload = null;
         }
 
-        function convertFileToBase64(file) {
+        function convertFileContextToBase64(fileContext) {
             return new Promise((resolve, reject) => {
-                const reader = new FileReader();
-                reader.readAsDataURL(file);
-                reader.onload = () => resolve(reader.result);
-                reader.onerror = error => reject(error);
+                const targetReader = new FileReader();
+                targetReader.readAsDataURL(fileContext);
+                targetReader.onload = () => resolve(targetReader.result);
+                targetReader.onerror = error => reject(error);
             });
         }
     </script>
