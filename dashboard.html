@@ -213,8 +213,8 @@
                     </div>
                 </div>
                 <div id="remarksSection" class="bg-gray-50 p-4 rounded border border-gray-300">
-                    <label class="block text-[10px] font-bold text-gray-700 uppercase mb-2">Remarks (Required for Disapproval)</label>
-                    <textarea id="reviewRemarks" class="w-full border border-gray-300 rounded p-3 text-xs focus:outline-none focus:border-[#003811]" rows="3" placeholder="Enter remarks here..."></textarea>
+                    <label class="block text-[10px] font-bold text-gray-700 uppercase mb-2">Remarks (Required for Disapproval / Interlocutory Order Lacking Docs)</label>
+                    <textarea id="reviewRemarks" class="w-full border border-gray-300 rounded p-3 text-xs focus:outline-none focus:border-[#003811]" rows="3" placeholder="Enter remarks or lacking documents here..."></textarea>
                 </div>
             </div>
 
@@ -471,6 +471,67 @@
                 </div>
             </div>
 
+            <div id="docInterlocutoryOrder" class="doc-print-area mx-auto hidden pt-8">
+                <div class="doc-content px-8">
+                    <div class="flex justify-between items-start mb-10 text-[10pt] font-bold uppercase tracking-tight">
+                        <div class="w-[300px] leading-tight">
+                            IN RE: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;APPLICATION FOR LAND TRANSFER CLEARANCE PURSUANT TO DAR A. O. NO. 4, SERIES OF 2021,
+                            <br><br><br>
+                            <span id="io-owner" class="underline underline-offset-4">---</span>,
+                            <br>
+                            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Applicants.
+                            <br>
+                            x - - - - - - - - - - - - - x
+                        </div>
+                        <div class="text-right">
+                            <span class="underline underline-offset-4 font-bold" id="io-header-id">LTC-PENDING</span>
+                        </div>
+                    </div>
+
+                    <div class="text-center mb-8 page-break-avoid">
+                        <div class="font-black text-[13pt] tracking-widest uppercase">INTERLOCUTORY ORDER</div>
+                    </div>
+                    
+                    <p class="mb-4 text-justify indent-12 page-break-avoid leading-relaxed">
+                        For review and resolution by this Office is the above-mentioned application for DAR Land Transfer Clearance involving a parcel of agricultural land declared in the name of <span class="font-bold" id="io-owner-body">---</span>, embraced by TCT No. <span class="font-bold" id="io-tct">---</span>, Lot <span class="font-bold" id="io-lot">---</span>, with an area of <span class="font-bold" id="io-area">---</span> square meters and located at <span class="font-bold" id="io-location">---</span>.
+                    </p>
+
+                    <p class="mb-4 text-justify indent-12 page-break-avoid leading-relaxed">
+                        However, upon evaluation of the submitted documents, the following document is lacking, to wit:
+                    </p>
+
+                    <ul class="mb-6 ml-16 list-disc list-outside text-justify leading-relaxed page-break-avoid pr-8">
+                        <li id="io-remarks" class="font-bold">---</li>
+                    </ul>
+
+                    <p class="mb-8 text-justify indent-12 page-break-avoid leading-relaxed">
+                        <span class="font-bold">IN VIEW OF THE FOREGOING</span>, Order is hereby issued DENYING the instant application without prejudice. Let the entire records be returned to the applicant.
+                    </p>
+
+                    <div class="mb-16 font-bold page-break-avoid">
+                        SO ORDERED. <span class="pdf-today-ordinal">---</span>; Naga City.
+                    </div>
+
+                    <div class="w-full flex justify-end mb-16 page-break-avoid">
+                        <div class="flex flex-col items-center">
+                            <div class="text-center w-60">
+                                <p class="sys-parpo-name font-bold uppercase inline-block text-[11pt]">---</p>
+                                <p class="text-[10pt]">PARPO II</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="w-full mt-10 page-break-avoid text-[8pt] leading-tight italic text-gray-700">
+                        <p class="mb-2">Copy Furnished:</p>
+                        <p class="font-bold uppercase preparedByName">---</p>
+                        <p class="uppercase preparedByPosition">---</p>
+                        <p>DAR Municipal Office</p>
+                        <p>Camarines Sur</p>
+                        <p class="mt-4">File/Records</p>
+                    </div>
+                </div>
+            </div>
+
         </div>
     </div>
 
@@ -652,8 +713,10 @@
                         
                         let recEl = document.getElementById(`rec-${htmlSuffix}`);
                         let certEl = document.getElementById(`cert-${htmlSuffix}`);
+                        let ioEl = document.getElementById(`io-${htmlSuffix}`); // Added for IO
                         if(recEl) recEl.innerText = newVal;
                         if(certEl) certEl.innerText = newVal;
+                        if(ioEl) ioEl.innerText = newVal; // Added for IO
                     }
                 }
             }
@@ -667,6 +730,9 @@
                     updateData[colRemarks] = newRemarks;
                     currentSelection[colRemarks] = newRemarks;
                     hasChanges = true;
+                    
+                    let ioRemEl = document.getElementById('io-remarks');
+                    if(ioRemEl) ioRemEl.innerText = newRemarks;
                 }
             }
 
@@ -683,10 +749,12 @@
                         const certHeaderId = document.getElementById('cert-header-id');
                         const recFooterId = document.getElementById('rec-footer-id');
                         const certFooterId = document.getElementById('cert-footer-id');
+                        const ioHeaderId = document.getElementById('io-header-id'); // Added for IO
                         if(recHeaderId) recHeaderId.innerText = newLtc;
                         if(certHeaderId) certHeaderId.innerText = newLtc;
                         if(recFooterId) recFooterId.innerText = newLtc;
                         if(certFooterId) certFooterId.innerText = newLtc;
+                        if(ioHeaderId) ioHeaderId.innerText = newLtc; // Added for IO
                     }
                 }
             }
@@ -795,6 +863,8 @@
                         } else if (st === 'DISAPPROVED') {
                             if (isChief || isLegal) {
                                 actions += `<button onclick='showReview("${item.id}", "UPDATE")' class="bg-blue-600 text-white w-full py-1.5 rounded shadow text-[10px] font-bold hover:bg-blue-700 uppercase transition-colors text-center mb-1">Update</button>`;
+                                actions += `<button onclick='openPrint("${item.id}", "io")' class="bg-red-600 text-white w-full py-1.5 rounded shadow text-[10px] font-bold hover:bg-red-700 uppercase transition-colors text-center mb-1">Print Interlocutory</button>`;
+                                actions += `<button onclick='processToNext("${item.id}", "REVIEWED", "${st}")' class="bg-green-600 text-white w-full py-1.5 rounded shadow text-[10px] font-bold hover:bg-green-700 uppercase transition-colors text-center mb-1">Compliance Met</button>`;
                             }
                         }
                     }
@@ -1018,32 +1088,50 @@
                 let val = currentSelection[dbCol] || ' ';
                 let recEl = document.getElementById(`rec-${htmlSuffix}`);
                 let certEl = document.getElementById(`cert-${htmlSuffix}`);
+                let ioEl = document.getElementById(`io-${htmlSuffix}`); // Added for IO
                 if(recEl) recEl.innerText = val;
                 if(certEl) certEl.innerText = val;
+                
+                if (ioEl) {
+                    if (htmlSuffix === 'area' && val !== ' ' && val !== '---') {
+                        // Calculate square meters if the user inputs hectares
+                        let sqMeters = parseFloat(val) * 10000;
+                        if (!isNaN(sqMeters)) {
+                            ioEl.innerText = sqMeters.toLocaleString('en-US');
+                        } else {
+                            ioEl.innerText = val;
+                        }
+                    } else {
+                        ioEl.innerText = val;
+                    }
+                } // Added for IO
             }
 
             const recHeaderId = document.getElementById('rec-header-id-top');
             const certHeaderId = document.getElementById('cert-header-id');
             const recFooterId = document.getElementById('rec-footer-id');
             const certFooterId = document.getElementById('cert-footer-id');
+            const ioHeaderId = document.getElementById('io-header-id'); // Added for IO
             const headerVal = currentSelection.LTC_ID_NUMBER || currentSelection.ltc_no || 'LTC-PENDING';
             if(recHeaderId) recHeaderId.innerText = headerVal;
             if(certHeaderId) certHeaderId.innerText = headerVal;
             if(recFooterId) recFooterId.innerText = headerVal;
             if(certFooterId) certFooterId.innerText = headerVal;
+            if(ioHeaderId) ioHeaderId.innerText = headerVal; // Added for IO
 
             document.querySelectorAll('.sys-chief-name').forEach(el => el.innerText = chiefLegalName && chiefLegalName !== "---" ? chiefLegalName : "ATTY. JAIME G. RESOCO, JR.");
             document.querySelectorAll('.sys-parpo-name').forEach(el => el.innerText = parpoName);
 
             const now = new Date();
             const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
-            const dateStrOrdinal = `${now.getDate()}${getOrdinal(now.getDate())} day of ${monthNames[now.getMonth()]}, ${now.getFullYear()}`;
+            const dateStrOrdinal = `${monthNames[now.getMonth()]} ${now.getDate()}, ${now.getFullYear()}`;
             document.querySelectorAll('.pdf-today-ordinal').forEach(el => el.innerText = dateStrOrdinal);
 
             if (currentReviewMode === 'VIEW_CERT') {
                 document.getElementById('modalMainTitle').innerText = "CERTIFICATION VIEW";
                 document.getElementById('reviewSection').classList.add('hidden');
                 document.getElementById('docRecommendation').classList.add('hidden');
+                document.getElementById('docInterlocutoryOrder').classList.add('hidden'); // Ensure IO is hidden
                 document.getElementById('docCertification').classList.remove('hidden');
                 document.getElementById('docCertification').style.display = 'block';
                 document.getElementById('actionButtons').classList.add('hidden');
@@ -1052,6 +1140,7 @@
                 document.getElementById('modalMainTitle').innerText = currentReviewMode.replace('-', ' ').toUpperCase();
                 document.getElementById('docRecommendation').classList.add('hidden');
                 document.getElementById('docCertification').classList.add('hidden');
+                document.getElementById('docInterlocutoryOrder').classList.add('hidden'); // Ensure IO is hidden
                 document.getElementById('docCertification').style.display = 'none';
                 document.getElementById('reviewSection').classList.remove('hidden');
                 document.getElementById('actionButtons').classList.remove('hidden');
@@ -1059,9 +1148,17 @@
             }
             
             let colRemarks = currentSelection.hasOwnProperty('Remarks') ? 'Remarks' : 'remarks';
-            document.getElementById('reviewRemarks').value = currentSelection[colRemarks] || '';
+            let remarksVal = currentSelection[colRemarks] || '';
+            document.getElementById('reviewRemarks').value = remarksVal;
             document.getElementById('reviewRemarks').disabled = !isEditable;
             document.getElementById('reviewRemarks').onblur = () => { if(isEditable) autoSaveEdits(); };
+            
+            let ioRemEl = document.getElementById('io-remarks');
+            if(ioRemEl) ioRemEl.innerText = remarksVal || '---';
+
+            // Specific mapping for IO body text
+            let ioOwnerBody = document.getElementById('io-owner-body');
+            if(ioOwnerBody) ioOwnerBody.innerText = currentSelection['owner_name'] || '---';
             
             refreshDashboard(); 
 
@@ -1082,10 +1179,10 @@
             document.getElementById('editNotice').classList.add('hidden');
             document.getElementById('modalMainTitle').parentElement.classList.add('hidden');
             
-            let sourceId = type === 'rec' ? 'docRecommendation' : 'docCertification';
+            let sourceId = type === 'rec' ? 'docRecommendation' : (type === 'cert' ? 'docCertification' : 'docInterlocutoryOrder');
             let ltcNum = currentSelection.LTC_ID_NUMBER || currentSelection.ltc_no || id;
             ltcNum = ltcNum.replace(/[^a-z0-9]/gi, '_').toLowerCase(); 
-            let filename = type === 'rec' ? `reco_${ltcNum}.pdf` : `cert_${ltcNum}.pdf`;
+            let filename = type === 'rec' ? `reco_${ltcNum}.pdf` : (type === 'cert' ? `cert_${ltcNum}.pdf` : `interlocutory_${ltcNum}.pdf`);
 
             setTimeout(() => { 
                 generateIntelligentPDF(sourceId, filename, type);
@@ -1130,26 +1227,26 @@
                 const page = document.createElement('div');
                 page.style.cssText = 'width: 8.5in; height: 13in; min-height: 13in; max-height: 13in; position: relative; background: white; margin-bottom: 0px; overflow: hidden; flex-shrink: 0;';
                 
-                const bg = document.createElement('img');
-                bg.src = backgroundImageUrl;
-                bg.crossOrigin = "anonymous";
-                bg.style.cssText = 'position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; object-fit: fill; display: block; pointer-events: none;';
-                page.appendChild(bg);
-                
-                // --- SECURITY FEATURE INJECTION START ---
-                // Generating microprinting overlay across the approximate position of the black border line
-                const securityData = `${currentSelection.LTC_ID_NUMBER || 'LTC-PENDING'} | ${currentSelection.owner_name || 'PENDING OWNER'} | ${currentSelection.registered_under || 'PENDING TCT'}`;
-                const microTextString = Array(20).fill(securityData).join(' • ');
-                const securityBorder = document.createElement('div');
-                
-                // Placed at top: 1.08in to overlay directly inside the typical black banner space
-                securityBorder.style.cssText = 'position: absolute; top: 1.08in; left: 0; width: 100%; font-size: 3.5pt; color: rgba(255,255,255,0.7); font-family: monospace; font-weight: bold; white-space: nowrap; overflow: hidden; z-index: 5; text-transform: uppercase; letter-spacing: 1.5px; user-select: none; pointer-events: none;';
-                securityBorder.innerText = microTextString;
-                page.appendChild(securityBorder);
-                // --- SECURITY FEATURE INJECTION END ---
+                // Exclude background image for Interlocutory Order
+                if (type !== 'io') {
+                    const bg = document.createElement('img');
+                    bg.src = backgroundImageUrl;
+                    bg.crossOrigin = "anonymous";
+                    bg.style.cssText = 'position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; object-fit: fill; display: block; pointer-events: none;';
+                    page.appendChild(bg);
+                    
+                    // --- SECURITY FEATURE INJECTION START ---
+                    const securityData = `${currentSelection.LTC_ID_NUMBER || 'LTC-PENDING'} | ${currentSelection.owner_name || 'PENDING OWNER'} | ${currentSelection.registered_under || 'PENDING TCT'}`;
+                    const microTextString = Array(20).fill(securityData).join(' • ');
+                    const securityBorder = document.createElement('div');
+                    securityBorder.style.cssText = 'position: absolute; top: 1.08in; left: 0; width: 100%; font-size: 3.5pt; color: rgba(255,255,255,0.7); font-family: monospace; font-weight: bold; white-space: nowrap; overflow: hidden; z-index: 5; text-transform: uppercase; letter-spacing: 1.5px; user-select: none; pointer-events: none;';
+                    securityBorder.innerText = microTextString;
+                    page.appendChild(securityBorder);
+                    // --- SECURITY FEATURE INJECTION END ---
+                }
 
                 const content = document.createElement('div');
-                content.style.cssText = 'position: absolute; top: 1.15in; left: 1in; right: 1in; bottom: 1.15in; z-index: 10; display: flex; flex-direction: column; font-family: "Roboto", sans-serif; font-size: 9pt; color: black; line-height: 1.5; overflow: hidden;';
+                content.style.cssText = `position: absolute; top: 1.15in; left: 1in; right: 1in; bottom: 1.15in; z-index: 10; display: flex; flex-direction: column; font-family: ${type === 'io' ? 'Arial, sans-serif' : '"Roboto", sans-serif'}; font-size: 9pt; color: black; line-height: 1.5; overflow: hidden;`;
                 page.appendChild(content);
                 
                 wrapper.appendChild(page);
@@ -1193,11 +1290,14 @@
                     totalPages--;
                 }
 
-                for (var i = 1; i <= totalPages; i++) {
-                    pdf.setPage(i);
-                    pdf.setFontSize(10);
-                    pdf.setTextColor(80);
-                    pdf.text(currentSelection.LTC_ID_NUMBER || currentSelection.ltc_no || 'LTC-PENDING', 0.5, 11.5, { angle: 90 });
+                // Add edge tracking number for Rec/Cert, but skip for IO to keep it clean
+                if (type !== 'io') {
+                    for (var i = 1; i <= totalPages; i++) {
+                        pdf.setPage(i);
+                        pdf.setFontSize(10);
+                        pdf.setTextColor(80);
+                        pdf.text(currentSelection.LTC_ID_NUMBER || currentSelection.ltc_no || 'LTC-PENDING', 0.5, 11.5, { angle: 90 });
+                    }
                 }
             }).save().then(async () => {
                 if (type === 'cert' && currentSelection.status === 'REVIEWED') {
@@ -1219,7 +1319,7 @@
 
         async function decideStatus(newSt) {
             const remarks = document.getElementById('reviewRemarks').value;
-            if (newSt === 'DISAPPROVED' && !remarks.trim()) { alert('Please provide remarks for disapproval.'); return; }
+            if (newSt === 'DISAPPROVED' && !remarks.trim()) { alert('Please provide remarks for disapproval / lacking documents.'); return; }
             
             await autoSaveEdits(); 
 
@@ -1261,6 +1361,7 @@
         function closeReviewModalOnly() {
             document.getElementById('reviewModal').classList.add('hidden'); 
             document.getElementById('docCertification').style.display = 'none';
+            document.getElementById('docInterlocutoryOrder').style.display = 'none';
         }
         
         function getOrdinal(d) { if (d > 3 && d < 21) return 'th'; switch (d % 10) { case 1: return "st"; case 2: return "nd"; case 3: return "rd"; default: return "th"; } }
