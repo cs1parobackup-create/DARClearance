@@ -2,277 +2,71 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Extractor - Land Records Validation Portal</title>
+    <title>DAR AI Analyzer</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;900&display=swap" rel="stylesheet">
-    
-    <style>
-        body { font-family: 'Roboto', sans-serif; background-color: #F9FAFB; color: #1F2937; }
-        .data-input { transition: all 0.2s ease-in-out; }
-        .data-input:focus { border-color: #003811; outline: none; box-shadow: 0 0 0 2px #D4AF37; }
-        .spinner { border-top-color: #D4AF37; animation: spin 1s linear infinite; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-    </style>
+    <script src="https://cdn.jsdelivr.net/npm/@google/generative-ai@0.1.3/dist/index.min.js"></script>
 </head>
-<body class="min-h-screen p-4 md:p-8 flex items-center justify-center">
+<body class="bg-gray-100 p-6">
+    <div class="max-w-3xl mx-auto bg-white p-8 rounded-xl shadow-lg border-t-8 border-[#003811]">
+        <h1 class="text-2xl font-black text-[#003811] uppercase mb-4">Affidavit AI Extractor</h1>
+        
+        <input type="file" id="file" accept="image/*" class="w-full p-4 border-2 border-dashed rounded mb-4">
+        <button id="btn-extract" onclick="extract()" class="w-full bg-[#003811] text-white py-4 font-bold rounded shadow hover:bg-green-900 transition">EXTRACT DATA</button>
 
-    <div class="w-full max-w-4xl bg-white rounded-xl shadow-xl border-t-8 border-[#003811] overflow-hidden">
-        <div class="bg-gray-50 px-6 py-4 border-b border-gray-200 flex justify-between items-center">
-            <div>
-                <h1 class="text-xl font-black text-[#003811] tracking-tight uppercase">AI EXTRACTOR (Beta)</h1>
-                <p class="text-xs text-gray-500">Automated legal affidavit ingestion and data record validation</p>
-            </div>
-            <a href="index.html" class="text-xs font-bold text-[#003811] hover:text-[#006400] transition-colors">← Return to Dashboard</a>
-        </div>
+        <div id="loader" class="hidden text-center py-10 font-bold text-[#003811]">Processing...</div>
 
-        <div class="p-6">
-            <div id="upload-zone" class="mb-6">
-                <label class="block text-xs font-bold text-gray-700 uppercase mb-2">Select or Snap Affidavit Source Document (Image / PDF)</label>
-                <div class="relative border-2 border-dashed border-gray-300 rounded-lg p-6 bg-gray-50 hover:bg-gray-100 transition-colors flex flex-col items-center justify-center cursor-pointer">
-                    <input type="file" id="file-selector" accept="image/*,application/pdf" capture="environment" class="absolute inset-0 opacity-0 cursor-pointer" onchange="handleFileSelection(this)">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-gray-400 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 002-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                    </svg>
-                    <span id="file-status-text" class="text-sm font-medium text-gray-600">Click to capture image or attach file</span>
-                    <span class="text-xs text-gray-400 mt-1">Supports PDF, PNG, JPEG</span>
-                </div>
-                
-                <button id="btn-process" onclick="executeAIExtraction()" disabled class="w-full mt-4 bg-gray-400 text-white font-bold py-3.5 rounded-lg uppercase tracking-wider transition-colors shadow flex items-center justify-center gap-2 cursor-not-allowed">
-                    ⚡ Extract Parameters via AI
-                </button>
-            </div>
-
-            <div id="processing-loader" class="hidden flex-col items-center justify-center py-12">
-                <div class="spinner ease-linear rounded-full border-4 border-t-4 border-gray-200 h-12 w-12 mb-4"></div>
-                <p class="text-xs font-bold text-[#003811] uppercase tracking-widest animate-pulse">Gemini LLM Engine Extracting Text Fields...</p>
-            </div>
-
-            <div id="validation-matrix" class="hidden space-y-6">
-                <div class="bg-amber-50 border-l-4 border-[#D4AF37] p-4 rounded-r shadow-sm flex items-start gap-3">
-                    <span class="text-amber-600 font-bold text-lg leading-none">⚠️</span>
-                    <div>
-                        <h4 class="text-xs font-bold text-amber-800 uppercase tracking-wide">Validation Layer Active</h4>
-                        <p class="text-xs text-amber-700 mt-0.5">AI-generated extractions require rigorous human verification. Review and modify the extracted fields below before saving.</p>
-                    </div>
-                </div>
-
-                <form id="extraction-form" class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4 bg-gray-50 p-4 rounded-lg border border-gray-200">
-                    </form>
-
-                <div class="flex gap-4 pt-4 border-t border-gray-200">
-                    <button type="button" onclick="resetExtractionContext()" class="w-1/3 bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-3 rounded-lg uppercase tracking-wide transition-colors">Discard</button>
-                    <button type="button" onclick="commitRecordToDatabase()" id="btn-commit" class="w-2/3 bg-[#D4AF37] hover:bg-yellow-500 text-[#003811] font-black py-3 rounded-lg uppercase tracking-wide transition-colors shadow-md text-center">Save & Commit to Database</button>
-                </div>
-            </div>
+        <div id="form-container" class="hidden mt-8">
+            <h2 class="text-lg font-bold mb-4 border-b pb-2">Review & Edit Extracted Data</h2>
+            <div id="fields" class="grid grid-cols-2 gap-4 text-xs"></div>
+            <button onclick="save()" class="w-full mt-6 bg-[#D4AF37] text-[#003811] py-4 font-black rounded shadow hover:bg-yellow-500 transition">CONFIRM & SAVE TO DATABASE</button>
         </div>
     </div>
 
     <script>
-        // --- 1. CONFIGURATIONS ---
-        const SUPABASE_URL = "https://tqeueibigqwxcizhvdty.supabase.co";
-        const SUPABASE_ANON_KEY = "sb_publishable_oXBtC1VgBlO07oEmqpcFpw_gBtVMpvT"; 
-        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-        
-        const GEMINI_API_KEY = "AQ.Ab8RN6KNylqlIovrOTx5niUx5Iznwcmx7O6-Y854EaKkj6VA3g";
+        const supabase = window.supabase.createClient("YOUR_URL", "YOUR_KEY");
+        const genAI = new window.GoogleGenerativeAI("AQ.Ab8RN6KNylqlIovrOTx5niUx5Iznwcmx7O6-Y854EaKkj6VA3g");
 
-        // --- 2. DATABASE SCHEMA ---
-        const targetedSchemaFields = [
-            'LTC_ID_NUMBER', 'lot_no', 'owner_name', 'registered_under', 'area', 'td_no', 
-            'location', 'deed_type', 'executed_by', 'in_favor_of', 'doc_no', 'page_no', 
-            'book_no', 'series_of', 'dated', 'notary_public', 'retention_area_n', 'clearance_type',
-            'or_number', 'or_date', 'Remarks'
-        ];
+        const fields = ['lot_no', 'owner_name', 'registered_under', 'area', 'td_no', 'location', 'deed_type', 'executed_by', 'in_favor_of', 'doc_no', 'page_no', 'book_no', 'series_of', 'dated', 'notary_public', 'retention_area_n'];
+        let extractedData = {};
 
-        let bufferedExtractionPayload = null;
-
-        // --- 3. APPLICATION LOGIC ---
-        function handleFileSelection(element) {
-            const fileText = document.getElementById('file-status-text');
-            const processBtn = document.getElementById('btn-process');
-
-            if(element.files && element.files[0]) {
-                fileText.innerText = `Selected document: ${element.files[0].name}`;
-                fileText.classList.add('text-green-700', 'font-bold');
+        async function extract() {
+            const file = document.getElementById('file').files[0];
+            if(!file) return alert("Select a file.");
+            
+            document.getElementById('loader').classList.remove('hidden');
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onloadend = async () => {
+                const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+                const base64Data = reader.result.split(',')[1];
                 
-                // Wake up the extraction button
-                processBtn.disabled = false;
-                processBtn.classList.remove('bg-gray-400', 'cursor-not-allowed');
-                processBtn.classList.add('bg-[#003811]', 'hover:bg-[#00220a]');
-            }
-        }
-
-        async function executeAIExtraction() {
-            const inputElement = document.getElementById('file-selector');
-            const targetFile = inputElement.files[0];
-            
-            if(!targetFile) return alert("System requires a file path context before extraction execution.");
-
-            // UI Switch Transitions
-            document.getElementById('upload-zone').classList.add('hidden');
-            document.getElementById('processing-loader').classList.remove('hidden');
-
-            try {
-                const standardBase64Data = await convertFileContextToBase64(targetFile);
-                const rawBase64Payload = standardBase64Data.split(',')[1];
-                const mimeTypeContext = targetFile.type;
-
-                const responseData = await postToGeminiVisionEngine(rawBase64Payload, mimeTypeContext);
-                bufferedExtractionPayload = responseData;
-
-                renderValidationInterface(responseData);
-
-                document.getElementById('processing-loader').classList.add('hidden');
-                document.getElementById('validation-matrix').classList.remove('hidden');
-            } catch(error) {
-                console.error(error);
-                alert(`Analysis Pipeline Interrupted: ${error.message}`);
-                resetExtractionContext();
-            }
-        }
-
-        async function postToGeminiVisionEngine(base64Data, mimeType) {
-            const promptDirectives = `
-                You are a highly calibrated legal clerk assistant for the Department of Agrarian Reform (DAR).
-                Analyze the provided raw snapshot file context (Affidavit, Deed, or Legal Clearance document).
-                Accurately extract explicit string target values to construct a database entry.
-                Respond with a single raw unformatted stringified JSON matching the strict dictionary schema below.
-                Exclude markdown backticks like \`\`\`json. If metadata parameter targets are missing, explicitly assign an empty string "".
-
-                Required Dictionary Mapping Specifications:
-                {
-                    "LTC_ID_NUMBER": "Extract Land Transfer Clearance Number context if present",
-                    "lot_no": "Extract numbers identifying lot allocations",
-                    "owner_name": "Extract primary land owner entity name",
-                    "registered_under": "Extract Title / TCT reference strings",
-                    "area": "Extract area magnitude explicitly",
-                    "td_no": "Extract Tax Declaration Number",
-                    "location": "Extract complete address, municipality or provincial designation text",
-                    "deed_type": "Extract structural type of legal execution deed",
-                    "executed_by": "Extract names of executors/transferors",
-                    "in_favor_of": "Extract beneficiary parties",
-                    "doc_no": "Extract Document numeric target string",
-                    "page_no": "Extract Page numeric target string",
-                    "book_no": "Extract Book numeric target string",
-                    "series_of": "Extract Year Series parameters string",
-                    "dated": "Extract date string identifying actual timestamp of closing",
-                    "notary_public": "Extract handling Notary Public name",
-                    "retention_area_n": "Extract numerical bounds of land retention allocations",
-                    "clearance_type": "Identify clearance categorization",
-                    "or_number": "Extract the Official Receipt (OR) Number if present",
-                    "or_date": "Extract the date of the Official Receipt if present",
-                    "Remarks": "Extract any special notes, annotations, or additional remarks"
-                }
-            `;
-
-            const unifiedPayload = {
-                contents: [{
-                    parts: [
-                        { text: promptDirectives },
-                        { inline_data: { mime_type: mimeType, data: base64Data } }
-                    ]
-                }],
-                generationConfig: { temperature: 0.1, responseMimeType: "application/json" }
+                const prompt = `Extract these fields from this affidavit: ${fields.join(', ')}. Return pure JSON only.`;
+                const result = await model.generateContent([prompt, { inlineData: { data: base64Data, mimeType: file.type } }]);
+                
+                extractedData = JSON.parse(result.response.text().replace(/```json|```/g, ''));
+                
+                // Show form
+                const container = document.getElementById('fields');
+                container.innerHTML = fields.map(f => `
+                    <div>
+                        <label class="block font-bold text-[10px] uppercase text-gray-500">${f}</label>
+                        <input id="${f}" value="${extractedData[f] || ''}" class="w-full border p-2 rounded">
+                    </div>
+                `).join('');
+                
+                document.getElementById('loader').classList.add('hidden');
+                document.getElementById('form-container').classList.remove('hidden');
             };
+        }
 
-            const targetEndpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`;
-            const apiRequestOptions = {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(unifiedPayload)
-            };
-
-            const remoteResponse = await fetch(targetEndpoint, apiRequestOptions);
-            const responseBody = await remoteResponse.json();
-
-            if (!remoteResponse.ok) {
-                throw new Error(responseBody.error?.message || "Remote inference request processing failure.");
-            }
-
-            let responseText = responseBody.candidates[0].content.parts[0].text;
+        async function save() {
+            const payload = { status: 'RECEIVED', is_ai_extracted: true };
+            fields.forEach(f => payload[f] = document.getElementById(f).value);
             
-            // Clean up possible markdown code blocks to ensure safe parsing
-            responseText = responseText.replace(/^```json/mi, '').replace(/```$/m, '').trim();
-            return JSON.parse(responseText);
-        }
-
-        function renderValidationInterface(data) {
-            const displayForm = document.getElementById('extraction-form');
-            displayForm.innerHTML = '';
-
-            targetedSchemaFields.forEach(fieldKey => {
-                const humanizedLabelText = fieldKey.replace(/_/g, ' ').toUpperCase();
-                const cleanValue = data[fieldKey] || '';
-
-                const fieldContainer = document.createElement('div');
-                fieldContainer.className = "flex flex-col space-y-1";
-                fieldContainer.innerHTML = `
-                    <label class="text-[10px] font-bold text-gray-500 tracking-wider">${humanizedLabelText}</label>
-                    <input type="text" id="target_${fieldKey}" name="${fieldKey}" value="${cleanValue.replace(/"/g, '&quot;')}" class="data-input w-full p-2.5 border border-gray-300 rounded bg-white text-xs font-semibold">
-                `;
-                displayForm.appendChild(fieldContainer);
-            });
-        }
-
-        async function commitRecordToDatabase() {
-            const operationCommitBtn = document.getElementById('btn-commit');
-            operationCommitBtn.innerText = "SAVING...";
-            operationCommitBtn.disabled = true;
-
-            try {
-                // Initialize payload
-                const committedPayload = {
-                    status: 'RECEIVED',
-                    is_ai_extracted: true, 
-                    updated_at: new Date().toISOString()
-                };
-
-                // Pull values from user-edited inputs
-                targetedSchemaFields.forEach(fieldKey => {
-                    const DOMElementVal = document.getElementById(`target_${fieldKey}`).value.trim();
-                    committedPayload[fieldKey] = DOMElementVal === "" ? null : DOMElementVal;
-                });
-
-                // Write operation to land_records table
-                const { error } = await supabase.from('land_records').insert([committedPayload]);
-                if (error) throw error;
-
-                alert("Successfully extracted, verified, and saved to database!");
-                resetExtractionContext();
-            } catch(error) {
-                alert(`Commit Failure: ${error.message}`);
-                operationCommitBtn.innerText = "Save & Commit to Database";
-                operationCommitBtn.disabled = false;
-            }
-        }
-
-        function resetExtractionContext() {
-            document.getElementById('file-selector').value = '';
-            
-            const statusText = document.getElementById('file-status-text');
-            statusText.innerText = "Click to capture image or attach file";
-            statusText.className = "text-sm font-medium text-gray-600";
-            
-            document.getElementById('upload-zone').classList.remove('hidden');
-            document.getElementById('processing-loader').classList.add('hidden');
-            document.getElementById('validation-matrix').classList.add('hidden');
-            bufferedExtractionPayload = null;
-
-            // Reset the extraction button back to disabled state
-            const processBtn = document.getElementById('btn-process');
-            processBtn.disabled = true;
-            processBtn.classList.remove('bg-[#003811]', 'hover:bg-[#00220a]');
-            processBtn.classList.add('bg-gray-400', 'cursor-not-allowed');
-        }
-
-        function convertFileContextToBase64(fileContext) {
-            return new Promise((resolve, reject) => {
-                const targetReader = new FileReader();
-                targetReader.readAsDataURL(fileContext);
-                targetReader.onload = () => resolve(targetReader.result);
-                targetReader.onerror = error => reject(error);
-            });
+            const { error } = await supabase.from('land_records').insert([payload]);
+            if(error) alert("Error: " + error.message);
+            else { alert("Saved!"); location.reload(); }
         }
     </script>
 </body>
