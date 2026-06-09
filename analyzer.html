@@ -194,7 +194,7 @@
             } catch (err) { console.error("Menu loading error:", err); }
         }
 
-        // --- THE INTELLIGENT AI ENGINE ---
+        // --- THE INTELLIGENT AI ENGINE (WITH US PROXY) ---
         async function startAIExtraction() {
             const fileInput = document.getElementById('fileInput');
             const file = fileInput.files[0];
@@ -205,19 +205,18 @@
             const progressText = document.getElementById('progressText');
             const progressBar = document.getElementById('progressBar');
 
-            // UI Loading State
             btn.innerHTML = `<span class="loader-ring"></span> Processing...`;
             btn.disabled = true;
             progressContainer.classList.remove('hidden');
             clearAIHighlights();
 
             try {
-                // Step 1: Format the file for the AI
+                // Step 1: Format the file for the AI (With reduced size to prevent crashes)
                 progressText.innerText = "Formatting document for AI analysis...";
                 progressBar.style.width = "25%";
                 const base64Data = await prepareDocumentForAI(file);
 
-                // Step 2: Define the strict instructions for the AI
+                // Step 2: Define the strict instructions
                 progressText.innerText = "Transmitting to OpenAI Engine...";
                 progressBar.style.width = "50%";
                 
@@ -240,13 +239,16 @@
                     Analyze the attached document carefully. Extract the relevant information to populate the provided JSON schema.
                     Instructions:
                     - If a field is not explicitly found, leave it as an empty string "".
-                    - For 'executed_by' and 'in_favor_of', remove legal fluff like "of legal age, married to" if possible, just provide the primary names.
+                    - For 'executed_by' and 'in_favor_of', remove legal fluff like "of legal age, married to" if possible.
                     - Respond ONLY with a valid JSON object matching the exact keys below.
                     Schema: ${JSON.stringify(schema)}
                 `;
 
-                // Step 3: Call OpenAI API (Direct Connection - No Proxy)
-                const response = await fetch('https://api.openai.com/v1/chat/completions', {
+                // Step 3: Call OpenAI API (Using corsproxy.org to bypass region locks)
+                const targetUrl = encodeURIComponent("https://api.openai.com/v1/chat/completions");
+                const proxyUrl = `https://corsproxy.org/?${targetUrl}`;
+
+                const response = await fetch(proxyUrl, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -268,9 +270,13 @@
                 progressText.innerText = "Applying intelligent mapping to form...";
                 progressBar.style.width = "85%";
 
-                const responseData = await response.json();
-                if (responseData.error) throw new Error(responseData.error.message);
+                if (!response.ok) {
+                    const errorDetails = await response.text();
+                    throw new Error(`API Error: ${response.status} - ${errorDetails}`);
+                }
 
+                const responseData = await response.json();
+                
                 // Step 4: Parse AI response and fill the form
                 const extractedJSON = JSON.parse(responseData.choices[0].message.content);
                 let filledCount = 0;
@@ -290,8 +296,8 @@
                 progressText.innerText = `Success: Extracted and mapped ${filledCount} fields automatically.`;
 
             } catch (error) {
-                console.error(error);
-                alert("AI Extraction Failed: " + error.message);
+                console.error("Full Error Details:", error);
+                alert("AI Extraction Failed: " + error.message + "\n\n(Tip: Subukan mong i-refresh ang page o paliitin ang size ng picture)");
                 progressText.innerText = "Operation Failed.";
                 progressBar.style.backgroundColor = "red";
             } finally {
@@ -300,7 +306,7 @@
             }
         }
 
-        // --- UTILITY: PDF TO IMAGE CONVERTER FOR AI ---
+        // --- UTILITY: PDF TO IMAGE CONVERTER (OPTIMIZED FOR LOWER FILE SIZE) ---
         async function prepareDocumentForAI(file) {
             return new Promise(async (resolve, reject) => {
                 try {
@@ -310,7 +316,9 @@
                         const arrayBuffer = await file.arrayBuffer();
                         const pdf = await pdfjsLib.getDocument(arrayBuffer).promise;
                         const page = await pdf.getPage(1);
-                        const viewport = page.getViewport({ scale: 2.0 }); 
+                        
+                        // Reduced scale to 1.2 to prevent browser crash/timeout
+                        const viewport = page.getViewport({ scale: 1.2 }); 
                         
                         const canvas = document.createElement('canvas');
                         canvas.height = viewport.height;
@@ -318,7 +326,8 @@
                         
                         await page.render({ canvasContext: canvas.getContext('2d'), viewport: viewport }).promise;
                         
-                        const base64Data = canvas.toDataURL('image/jpeg').split(',')[1];
+                        // Set quality to 0.8 for smaller payload
+                        const base64Data = canvas.toDataURL('image/jpeg', 0.8).split(',')[1];
                         resolve(base64Data);
                     } else {
                         reader.onloadend = () => resolve(reader.result.split(',')[1]);
