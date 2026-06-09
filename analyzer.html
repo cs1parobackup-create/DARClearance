@@ -20,7 +20,27 @@
             <textarea id="outputText" class="w-full h-60 p-4 border rounded text-xs" readonly></textarea>
         </div>
     </div>
+<script>
+    // Idagdag mo ito sa loob ng <script> tag mo
+    function analyzeSimpleData() {
+        const fullText = document.getElementById('outputText').value;
+        
+        // Simple analysis: Hahanap siya ng mga pattern (keywords)
+        // Halimbawa: Hahanap ng text pagkatapos ng "Lot No."
+        const lotMatch = fullText.match(/Lot No\.?\s*([0-9\-A-Z]+)/i);
+        const areaMatch = fullText.match(/Area\s*([0-9\.]+\s*(sq\.?m\.?|hectares))/i);
+        
+        // I-fill ang mga box base sa nahanap
+        if (lotMatch) document.getElementById('lot_no').value = lotMatch[1];
+        if (areaMatch) document.getElementById('area').value = areaMatch[1];
+        
+        alert("Simple analysis complete! Check the fields.");
+    }
+</script>
 
+<button onclick="analyzeSimpleData()" class="mt-2 w-full bg-blue-600 text-white py-2 rounded font-bold">
+    AUTO-ANALYZE FIELDS
+</button>
     <script>
         async function processFile() {
             const file = document.getElementById('fileInput').files[0];
