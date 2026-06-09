@@ -2,42 +2,55 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>DAR Scanner (GitHub Pages Ready)</title>
+    <title>Free Scanner - No AI Key Needed</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Tesseract.js directly from CDN -->
+    <!-- Tesseract.js para sa OCR -->
     <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 </head>
 <body class="bg-gray-100 p-6">
     <div class="max-w-2xl mx-auto bg-white p-8 rounded-xl shadow-lg border-t-8 border-green-800">
-        <h1 class="text-xl font-black text-green-900 mb-4">FREE DOCUMENT SCANNER</h1>
+        <h1 class="text-xl font-black text-green-900 mb-4 uppercase">DAR Record Scanner</h1>
         
-        <input type="file" id="file" class="w-full p-4 border rounded mb-4">
-        <button onclick="scanDocument()" id="btn" class="w-full bg-green-900 text-white py-3 rounded font-bold">SCAN DOCUMENT</button>
+        <input type="file" id="fileInput" class="w-full p-4 border-2 border-dashed rounded mb-4">
+        <button onclick="startOCR()" id="scanBtn" class="w-full bg-green-900 text-white py-3 rounded font-bold hover:bg-green-700">SCAN DOCUMENT (FREE)</button>
 
-        <div id="loader" class="hidden text-center py-10 font-bold text-green-800">Processing locally...</div>
-
-        <!-- This form is what you will use to save to Supabase -->
-        <div id="form-fields" class="mt-6 hidden grid grid-cols-2 gap-4">
-            <div><label class="text-[10px] font-bold">LOT NO</label><input id="lot_no" class="w-full border p-2"></div>
-            <div><label class="text-[10px] font-bold">OWNER</label><input id="owner_name" class="w-full border p-2"></div>
-            <button onclick="saveToSupabase()" class="col-span-2 bg-yellow-600 py-3 text-white font-bold rounded">SAVE TO DATABASE</button>
+        <!-- Dito lalabas ang resulta -->
+        <div id="resultArea" class="mt-6 hidden">
+            <h2 class="font-bold text-sm mb-2">Scanned Result:</h2>
+            <textarea id="outputText" class="w-full h-60 p-4 border rounded text-xs" readonly></textarea>
+            <button onclick="copyToClipboard()" class="mt-2 w-full bg-gray-200 py-2 text-xs font-bold rounded">COPY TEXT</button>
         </div>
     </div>
 
     <script>
-        async function scanDocument() {
-            const file = document.getElementById('file').files[0];
-            document.getElementById('loader').classList.remove('hidden');
+        async function startOCR() {
+            const file = document.getElementById('fileInput').files[0];
+            const btn = document.getElementById('scanBtn');
+            const resultArea = document.getElementById('resultArea');
+            const outputText = document.getElementById('outputText');
 
-            const { data: { text } } = await Tesseract.recognize(file, 'eng');
-            
-            // Basic logic: If you can't have AI, we manually pull the text
-            // You can refine this by searching the 'text' variable for keywords
-            alert("Scan Complete! Look at the console to see full text.");
-            console.log(text); 
-            
-            document.getElementById('loader').classList.add('hidden');
-            document.getElementById('form-fields').classList.remove('hidden');
+            if(!file) return alert("Please select an image.");
+
+            btn.innerText = "Scanning... (Wait lang)";
+            btn.disabled = true;
+
+            try {
+                // Ito ay gagana nang offline sa browser mo
+                const { data: { text } } = await Tesseract.recognize(file, 'eng');
+                outputText.value = text;
+                resultArea.classList.remove('hidden');
+            } catch (err) {
+                alert("Error sa pag-scan: " + err.message);
+            } finally {
+                btn.innerText = "SCAN DOCUMENT (FREE)";
+                btn.disabled = false;
+            }
+        }
+
+        function copyToClipboard() {
+            document.getElementById('outputText').select();
+            document.execCommand('copy');
+            alert("Copied to clipboard!");
         }
     </script>
 </body>
