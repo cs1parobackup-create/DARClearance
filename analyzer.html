@@ -2,55 +2,58 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Free Scanner - No AI Key Needed</title>
+    <title>DAR Scanner (PDF & Image)</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Tesseract.js para sa OCR -->
+    <!-- Tesseract para sa OCR -->
     <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+    <!-- PDF.js para mabasa ang PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 </head>
 <body class="bg-gray-100 p-6">
     <div class="max-w-2xl mx-auto bg-white p-8 rounded-xl shadow-lg border-t-8 border-green-800">
-        <h1 class="text-xl font-black text-green-900 mb-4 uppercase">DAR Record Scanner</h1>
+        <h1 class="text-xl font-black text-green-900 mb-4 uppercase">DAR PDF & Image Scanner</h1>
         
-        <input type="file" id="fileInput" class="w-full p-4 border-2 border-dashed rounded mb-4">
-        <button onclick="startOCR()" id="scanBtn" class="w-full bg-green-900 text-white py-3 rounded font-bold hover:bg-green-700">SCAN DOCUMENT (FREE)</button>
+        <input type="file" id="fileInput" accept="image/*,application/pdf" class="w-full p-4 border-2 border-dashed rounded mb-4">
+        <button onclick="processFile()" id="scanBtn" class="w-full bg-green-900 text-white py-3 rounded font-bold hover:bg-green-700">SCAN PDF/IMAGE (FREE)</button>
 
-        <!-- Dito lalabas ang resulta -->
         <div id="resultArea" class="mt-6 hidden">
-            <h2 class="font-bold text-sm mb-2">Scanned Result:</h2>
             <textarea id="outputText" class="w-full h-60 p-4 border rounded text-xs" readonly></textarea>
-            <button onclick="copyToClipboard()" class="mt-2 w-full bg-gray-200 py-2 text-xs font-bold rounded">COPY TEXT</button>
         </div>
     </div>
 
     <script>
-        async function startOCR() {
+        async function processFile() {
             const file = document.getElementById('fileInput').files[0];
+            if(!file) return alert("Pumili ng file.");
+            
             const btn = document.getElementById('scanBtn');
-            const resultArea = document.getElementById('resultArea');
-            const outputText = document.getElementById('outputText');
-
-            if(!file) return alert("Please select an image.");
-
-            btn.innerText = "Scanning... (Wait lang)";
-            btn.disabled = true;
-
+            btn.innerText = "Processing...";
+            
             try {
-                // Ito ay gagana nang offline sa browser mo
-                const { data: { text } } = await Tesseract.recognize(file, 'eng');
-                outputText.value = text;
-                resultArea.classList.remove('hidden');
-            } catch (err) {
-                alert("Error sa pag-scan: " + err.message);
+                let text = "";
+                if (file.type === "application/pdf") {
+                    // Logic para sa PDF
+                    const pdf = await pdfjsLib.getDocument(await file.arrayBuffer()).promise;
+                    const page = await pdf.getPage(1); // Unang page lang muna
+                    const viewport = page.getViewport({ scale: 2 });
+                    const canvas = document.createElement('canvas');
+                    canvas.height = viewport.height;
+                    canvas.width = viewport.width;
+                    await page.render({ canvasContext: canvas.getContext('2d'), viewport: viewport }).promise;
+                    const { data: { text: ocrText } } = await Tesseract.recognize(canvas, 'eng');
+                    text = ocrText;
+                } else {
+                    // Logic para sa Image
+                    const { data: { text: ocrText } } = await Tesseract.recognize(file, 'eng');
+                    text = ocrText;
+                }
+                document.getElementById('outputText').value = text;
+                document.getElementById('resultArea').classList.remove('hidden');
+            } catch (e) {
+                alert("Error: " + e.message);
             } finally {
-                btn.innerText = "SCAN DOCUMENT (FREE)";
-                btn.disabled = false;
+                btn.innerText = "SCAN PDF/IMAGE (FREE)";
             }
-        }
-
-        function copyToClipboard() {
-            document.getElementById('outputText').select();
-            document.execCommand('copy');
-            alert("Copied to clipboard!");
         }
     </script>
 </body>
