@@ -29,13 +29,13 @@
     <script type="module">
         import { GoogleGenerativeAI } from "https://esm.run/@google/generative-ai";
 
-        // 1. SUPABASE CONNECTION (Using the URL and KEY you provided earlier)
+        // 1. SUPABASE CONNECTION
         const supabaseUrl = 'https://tqeueibigqwxcizhvdty.supabase.co';
         const supabaseKey = 'sb_publishable_oXBtC1VgBlO07oEmqpcFpw_gBtVMpvT';
         const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
 
-        // 2. GOOGLE GEMINI CONNECTION (Using the key from your screenshot)
-        const GEMINI_API_KEY = "AIzaSyC...VA3g"; // Note: Using the end from your screenshot, you must replace this string with your full copied key.
+        // 2. GOOGLE GEMINI CONNECTION (Updated with your key)
+        const GEMINI_API_KEY = "AQ.Ab8RN6KNylqlIovrOTx5niUx5Iznwcmx7O6-Y854EaKkj6VA3g"; 
         const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
 
         const fields = ['lot_no', 'owner_name', 'registered_under', 'area', 'td_no', 'location', 'deed_type', 'executed_by', 'in_favor_of', 'doc_no', 'page_no', 'book_no', 'series_of', 'dated', 'notary_public', 'retention_area_n'];
@@ -45,11 +45,6 @@
             const fileInput = document.getElementById('file');
             const file = fileInput.files[0];
             if(!file) return alert("Select a file first.");
-            
-            // Check if user actually pasted the full key
-            if(GEMINI_API_KEY.includes("...")) {
-                return alert("ERROR: You must paste the FULL Gemini API key into the code on line 43. I could only see the last 4 digits in your screenshot!");
-            }
 
             document.getElementById('btn-extract').disabled = true;
             document.getElementById('loader').classList.remove('hidden');
