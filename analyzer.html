@@ -2,59 +2,184 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>DAR Scanner (PDF & Image)</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>New DAR Clearance - DARPO-CS</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Tesseract para sa OCR -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-config.js"></script>
+    
+    <!-- OCR and PDF readers for Auto-Fill -->
     <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
-    <!-- PDF.js para mabasa ang PDF -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+
+    <style>
+        :root { --color-primary: #003811; --color-secondary: #D4AF37; }
+        body { font-family: 'Segoe UI', sans-serif; background-color: #F3F4F6; color: #1F2937; }
+        .card { background: #FFFFFF; border-radius: 0.5rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1); border: 1px solid #E5E7EB; }
+        .form-label { display: block; font-size: 0.75rem; font-weight: 700; color: var(--color-primary); margin-bottom: 0.25rem; text-transform: uppercase; }
+        .form-input { width: 100%; background: #F9FAFB; border: 1px solid #D1D5DB; border-radius: 0.375rem; padding: 0.6rem; font-size: 0.875rem; transition: border-color 0.2s; }
+        .form-input:focus { outline: none; border-color: var(--color-primary); ring: 1px solid var(--color-primary); }
+        textarea { font-family: inherit; resize: vertical; min-height: 70px; background-color: #fffdf5 !important; }
+        .hint { font-size: 0.7rem; color: #6B7280; font-style: italic; margin-top: 2px; }
+        .scroll-area::-webkit-scrollbar { width: 4px; }
+        .scroll-area::-webkit-scrollbar-track { background: #f1f1f1; }
+        .scroll-area::-webkit-scrollbar-thumb { background: #c1c1c1; border-radius: 4px; }
+        
+        /* Highlight for auto-filled fields */
+        .auto-filled { border-color: #D4AF37 !important; background-color: #FFFdf0 !important; font-weight: bold; color: #003811; }
+    </style>
 </head>
-<body class="bg-gray-100 p-6">
-    <div class="max-w-2xl mx-auto bg-white p-8 rounded-xl shadow-lg border-t-8 border-green-800">
-        <h1 class="text-xl font-black text-green-900 mb-4 uppercase">DAR PDF & Image Scanner</h1>
-        
-        <input type="file" id="fileInput" accept="image/*,application/pdf" class="w-full p-4 border-2 border-dashed rounded mb-4">
-        <button onclick="processFile()" id="scanBtn" class="w-full bg-green-900 text-white py-3 rounded font-bold hover:bg-green-700">SCAN PDF/IMAGE (FREE)</button>
+<body class="flex h-screen overflow-hidden text-[#1F2937]">
 
-        <div id="resultArea" class="mt-6 hidden">
-            <textarea id="outputText" class="w-full h-60 p-4 border rounded text-xs" readonly></textarea>
+    <nav class="bg-[#003811] md:w-64 flex flex-col text-white flex-shrink-0 shadow-xl z-20">
+        <div class="p-6 border-b border-[#006400]">
+            <h2 class="text-xl font-bold text-[#D4AF37]">DARPO-CS</h2>
+            <p id="userRoleBadge" class="text-[10px] text-gray-300 uppercase tracking-widest mt-1 font-bold">---</p>
         </div>
-    </div>
-<script>
-    // Idagdag mo ito sa loob ng <script> tag mo
-    function analyzeSimpleData() {
-        const fullText = document.getElementById('outputText').value;
-        
-        // Simple analysis: Hahanap siya ng mga pattern (keywords)
-        // Halimbawa: Hahanap ng text pagkatapos ng "Lot No."
-        const lotMatch = fullText.match(/Lot No\.?\s*([0-9\-A-Z]+)/i);
-        const areaMatch = fullText.match(/Area\s*([0-9\.]+\s*(sq\.?m\.?|hectares))/i);
-        
-        // I-fill ang mga box base sa nahanap
-        if (lotMatch) document.getElementById('lot_no').value = lotMatch[1];
-        if (areaMatch) document.getElementById('area').value = areaMatch[1];
-        
-        alert("Simple analysis complete! Check the fields.");
-    }
-</script>
+        <div id="dynamicMenu" class="flex-1 overflow-y-auto py-2"></div>
+        <div class="p-4 bg-black/20">
+            <p id="activeUser" class="text-xs text-gray-300 truncate mb-2 font-bold"></p>
+            <button onclick="logout()" class="w-full bg-red-800 py-2 text-xs font-bold rounded shadow hover:bg-red-700 transition-colors uppercase">Logout</button>
+        </div>
+    </nav>
 
-<button onclick="analyzeSimpleData()" class="mt-2 w-full bg-blue-600 text-white py-2 rounded font-bold">
-    AUTO-ANALYZE FIELDS
-</button>
+    <main class="flex-1 flex flex-col overflow-hidden">
+        <header class="bg-white shadow-sm border-b px-8 py-4 flex justify-between items-center">
+            <h1 class="text-lg font-bold text-[#003811] uppercase tracking-tight">New DAR Clearance Application</h1>
+            <div class="text-[10px] font-bold text-gray-400 uppercase">Document Entry Phase</div>
+        </header>
+
+        <div class="flex-1 overflow-y-auto p-8 scroll-area">
+            <div class="max-w-4xl mx-auto card p-8">
+                <div id="encoderNotice" class="hidden bg-blue-50 text-blue-800 p-4 rounded-lg border border-blue-200 mb-6 text-sm">
+                    <strong>Routing Desk Mode:</strong> As an ODTS Encoder, you only need to assign the LTC Number and Legal Officer.
+                </div>
+
+                <!-- Document Scanner Section -->
+                <div id="scannerSection" class="bg-[#f0f9f4] p-5 rounded-lg border border-[#c6e6d3] mb-6">
+                    <h3 class="text-sm font-bold text-[#003811] mb-2 uppercase flex items-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                        Auto-Fill from Legal Document (Free OCR)
+                    </h3>
+                    <div class="flex flex-col md:flex-row gap-4 items-center">
+                        <input type="file" id="fileInput" accept="image/*,application/pdf" class="flex-1 bg-white p-2 border border-gray-300 rounded text-sm w-full">
+                        <button type="button" onclick="scanAndFill()" id="scanBtn" class="w-full md:w-auto bg-[#003811] text-white px-6 py-2.5 rounded text-sm font-bold shadow hover:bg-green-800 transition uppercase tracking-wider">Scan & Extract Data</button>
+                    </div>
+                    <p id="scanStatus" class="text-xs text-green-700 mt-3 font-bold hidden animate-pulse"></p>
+                </div>
+
+                <form id="documentForm" class="space-y-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 bg-green-50 p-4 rounded-lg border border-green-100">
+                        <div class="md:col-span-2">
+                            <label class="form-label">Clearance Type</label>
+                            <div class="flex items-center gap-6 mt-1">
+                                <label class="flex items-center gap-2 cursor-pointer text-sm font-bold text-[#1F2937]">
+                                    <input type="radio" name="clearance_type" value="AO4" required class="w-4 h-4 text-[#003811] focus:ring-[#003811]">
+                                    AO4
+                                </label>
+                                <label class="flex items-center gap-2 cursor-pointer text-sm font-bold text-[#1F2937]">
+                                    <input type="radio" name="clearance_type" value="AO8" required class="w-4 h-4 text-[#003811] focus:ring-[#003811]">
+                                    AO8
+                                </label>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="form-label">LTC Number</label>
+                            <input type="text" name="LTC_ID_NUMBER" class="form-input text-lg font-black text-red-800 bg-white border-red-200 shadow-sm" placeholder="e.g. 2026-LTC-001" required>
+                        </div>
+                        <div>
+                            <label class="form-label">Assigned Legal Officer</label>
+                            <input type="text" id="legalOfficerSelect" name="legalOfficer" list="legalOfficersList" class="form-input text-lg font-bold text-[#003811] bg-white shadow-sm" placeholder="Select or type name..." required>
+                            <datalist id="legalOfficersList"></datalist>
+                        </div>
+                    </div>
+
+                    <div id="extendedDetails" class="space-y-6">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div><label class="form-label">Lot No/s</label><input type="text" name="lot_no" class="form-input" placeholder="Extracted Lot No."></div>
+                            <div><label class="form-label">Registered under</label><input type="text" name="registered_under" class="form-input" placeholder="e.g. TCT No. / OCT No."></div>
+                        </div>
+                        <div><label class="form-label">In the Name of</label><textarea name="owner_name" class="form-input" placeholder="Extracted Registered Owner"></textarea></div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div><label class="form-label">Area (in has.)</label><input type="text" name="area" class="form-input" placeholder="Extracted Area"></div>
+                            <div><label class="form-label">Declared under T.D. No.</label><input type="text" name="td_no" class="form-input" placeholder="Extracted Tax Dec No."></div>
+                        </div>
+                        <div><label class="form-label">Located at</label><textarea name="location" class="form-input" placeholder="Extracted Location"></textarea></div>
+                        <div><label class="form-label">Subjected of the Deed of</label><textarea name="deed_type" class="form-input" placeholder="e.g. Absolute Sale, Donation"></textarea></div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div><label class="form-label">Executed by</label><textarea name="executed_by" class="form-input" placeholder="Extracted Vendor/Donor"></textarea></div>
+                            <div><label class="form-label">In favor of</label><textarea name="in_favor_of" class="form-input" placeholder="Extracted Vendee/Donee"></textarea></div>
+                        </div>
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 pt-4 border-t">
+                            <div><label class="form-label">Doc. No.</label><input type="text" name="doc_no" class="form-input"></div>
+                            <div><label class="form-label">Page No.</label><input type="text" name="page_no" class="form-input"></div>
+                            <div><label class="form-label">Book No.</label><input type="text" name="book_no" class="form-input"></div>
+                            <div><label class="form-label">Series of</label><input type="text" name="series_of" class="form-input"></div>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div><label class="form-label">Date Executed</label><input type="text" name="dated" class="form-input"></div>
+                            <div><label class="form-label">Notary Public</label><input type="text" name="notary_public" class="form-input"></div>
+                        </div>
+                        <div>
+                            <label class="form-label">Retention area of vendor/transferor</label>
+                            <textarea name="retention_area_n" class="form-input" placeholder="List names..."></textarea>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 border-t pt-4">
+                            <div><label class="form-label">O.R. No.</label><input type="text" name="or_number" class="form-input"></div>
+                            <div><label class="form-label">O.R. Date</label><input type="text" name="or_date" class="form-input"></div>
+                        </div>
+                    </div> 
+
+                    <div class="flex justify-end gap-4 border-t pt-6">
+                        <button type="reset" class="px-6 py-2 border border-gray-300 rounded text-sm font-bold hover:bg-gray-50 uppercase">Clear Form</button>
+                        <button type="submit" id="btnSubmit" class="px-8 py-2 bg-[#003811] text-white rounded text-sm font-bold shadow hover:bg-[#006400] transition-colors uppercase">Save Application</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </main>
+
     <script>
-        async function processFile() {
-            const file = document.getElementById('fileInput').files[0];
-            if(!file) return alert("Pumili ng file.");
+        // --- 1. USER AUTH & SETUP ---
+        const userData = sessionStorage.getItem('currentUser');
+        if (!userData) { window.location.href = 'index.html'; }
+        const currentUser = JSON.parse(userData);
+        document.getElementById('activeUser').innerText = currentUser.full_name;
+        document.getElementById('userRoleBadge').innerText = currentUser.role;
+
+        const userRole = currentUser.role.toUpperCase().trim();
+        const isEncoder = userRole.includes('ENCODER');
+
+        if (userRole.includes('RECORDS') || userRole.includes('PARPO')) {
+            alert("Access Denied: Your role is not authorized to create new clearances.");
+            window.location.href = 'dashboard.html';
+        }
+
+        if (isEncoder) {
+            document.getElementById('extendedDetails').classList.add('hidden');
+            document.getElementById('encoderNotice').classList.remove('hidden');
+            document.getElementById('scannerSection').classList.add('hidden'); 
+        }
+
+        // --- 2. ADVANCED OCR & AUTO-FILL LOGIC ---
+        async function scanAndFill() {
+            const fileInput = document.getElementById('fileInput');
+            const file = fileInput.files[0];
+            if(!file) return alert("Please select a document first.");
             
             const btn = document.getElementById('scanBtn');
-            btn.innerText = "Processing...";
+            const status = document.getElementById('scanStatus');
             
+            btn.disabled = true;
+            status.classList.remove('hidden');
+            status.innerText = "Extracting document text... Please wait.";
+
             try {
                 let text = "";
+                // Handle PDF or Image
                 if (file.type === "application/pdf") {
-                    // Logic para sa PDF
                     const pdf = await pdfjsLib.getDocument(await file.arrayBuffer()).promise;
-                    const page = await pdf.getPage(1); // Unang page lang muna
+                    const page = await pdf.getPage(1); // Scans the first page
                     const viewport = page.getViewport({ scale: 2 });
                     const canvas = document.createElement('canvas');
                     canvas.height = viewport.height;
@@ -63,18 +188,162 @@
                     const { data: { text: ocrText } } = await Tesseract.recognize(canvas, 'eng');
                     text = ocrText;
                 } else {
-                    // Logic para sa Image
                     const { data: { text: ocrText } } = await Tesseract.recognize(file, 'eng');
                     text = ocrText;
                 }
-                document.getElementById('outputText').value = text;
-                document.getElementById('resultArea').classList.remove('hidden');
-            } catch (e) {
-                alert("Error: " + e.message);
+                
+                status.innerText = "Analyzing Philippine legal document phrasing...";
+
+                // ADVANCED PATTERNS: Designed specifically for DAR Clearances & Deeds of Sale
+                const patterns = {
+                    deed_type: /(Deed of Absolute Sale|Deed of Sale|Deed of Donation|Extrajudicial Settlement|Waiver of Rights)/i,
+                    registered_under: /(?:TCT|OCT|Title|Registered under)\s*(?:No\.?)?\s*([0-9\-A-Z]+)/i,
+                    owner_name: /(?:in the name of|owned by)\s*([A-Za-z\s,Ññ]+?)(?:\s+of legal age|\.|,|and)/i,
+                    executed_by: /(?:executed by|Vendor(?:s)?|Donor(?:s)?|Heirs of)\s*([A-Za-z\s,Ññ]+?)(?:\s+of legal age|\s+married to|,)/i,
+                    in_favor_of: /(?:in favor of|to|Vendee(?:s)?|Donee(?:s)?)\s*([A-Za-z\s,Ññ]+?)(?:\s+of legal age|\s+married to|,|\.)/i,
+                    lot_no: /(?:Lot|Lot No\.?|Lots)\s*([0-9\-A-Z\s,]+)/i,
+                    area: /(?:Area|containing an area of|area of)\s*([0-9.,]+\s*(?:sq\.?\s*m\.?|hectares|has\.?))/i,
+                    td_no: /(?:T\.?D\.?|Tax Declaration|ARP)\s*(?:No\.?)?\s*([0-9\-]+)/i,
+                    location: /(?:located at|situated in|situated at)(?: the)?\s*([A-Za-z\s,Ññ]+?)(?:\.|;|, bounded|, containing)/i,
+                    doc_no: /Doc(?:ument)?\.?\s*(?:No\.?)?\s*([0-9]+)/i,
+                    page_no: /Page\s*(?:No\.?)?\s*([0-9]+)/i,
+                    book_no: /Book\s*(?:No\.?)?\s*([0-9IVX]+)/i,
+                    series_of: /Series\s*of\s*([0-9]{4})/i,
+                    dated: /(?:dated|executed this)\s*([A-Za-z0-9\s,]+(?:20[0-9]{2}))/i,
+                    notary_public: /(?:Notary Public|BEFORE ME.*?Atty\.?)\s*([A-Za-z\s,\.Ññ]+)(?:Doc|until|,)/i
+                };
+
+                // Remove previous highlights
+                document.querySelectorAll('.form-input').forEach(el => el.classList.remove('auto-filled'));
+
+                // Extract and Map Data
+                let foundFields = 0;
+                for (const [fieldName, regex] of Object.entries(patterns)) {
+                    const match = text.match(regex);
+                    if (match && match[1]) {
+                        const inputField = document.querySelector(`[name="${fieldName}"]`);
+                        if (inputField) {
+                            // Clean up text format before inserting
+                            let cleanText = match[1].replace(/\n/g, ' ').replace(/\s+/g, ' ').trim();
+                            
+                            // Specific fix for Deed Type where match[1] is the whole phrase
+                            if(fieldName === 'deed_type') cleanText = match[0].toUpperCase();
+
+                            inputField.value = cleanText;
+                            inputField.classList.add('auto-filled');
+                            foundFields++;
+                        }
+                    }
+                }
+                
+                status.innerText = `Success! Auto-filled ${foundFields} fields based on the document. Please review.`;
+            } catch(e) {
+                alert("Scan Error: " + e.message);
+                status.classList.add('hidden');
             } finally {
-                btn.innerText = "SCAN PDF/IMAGE (FREE)";
+                btn.disabled = false;
+                btn.innerText = "SCAN & EXTRACT DATA";
             }
         }
+
+        // --- 3. STANDARD FORM FUNCTIONS ---
+        async function fetchLegalOfficers() {
+            try {
+                const { data, error } = await supabaseClient.from('users').select('full_name').in('role', ['CHIEF, LEGAL DIVISION', 'ATTORNEY IV', 'SARPO', 'ARPO II', 'ARPT']);
+                if (error) throw error;
+                const datalist = document.getElementById('legalOfficersList');
+                datalist.innerHTML = data.map(u => `<option value="${u.full_name}">`).join('');
+                if (!isEncoder) { document.getElementById('legalOfficerSelect').value = currentUser.full_name; }
+            } catch (err) { console.error("Officer fetch error:", err); }
+        }
+
+        async function renderMenu() {
+            const menuContainer = document.getElementById('dynamicMenu');
+            try {
+                const { data: menuItems, error } = await supabaseClient
+                    .from('clearance_menu')
+                    .select('*')
+                    .order('sort_order', { ascending: true });
+
+                if (error) throw error;
+
+                menuContainer.innerHTML = '';
+                menuItems.forEach(item => {
+                    if (item.is_active === false || item.is_active === 'FALSE') return;
+                    
+                    let roles = [];
+                    if (item.required_roles) {
+                        if (Array.isArray(item.required_roles)) { roles = item.required_roles; } 
+                        else {
+                            try { roles = JSON.parse(item.required_roles); } 
+                            catch(e) { roles = item.required_roles.replace(/[\[\]"']/g, '').split(',').map(r => r.trim()); }
+                        }
+                    }
+
+                    const hasRole = roles.length === 0 || roles.some(r => userRole.includes(String(r).toUpperCase().trim()));
+                    
+                    if (hasRole) {
+                        const isCurrent = window.location.pathname.includes(item.url);
+                        const link = document.createElement('a');
+                        link.href = item.url;
+                        link.className = `block px-6 py-4 text-[11px] font-black uppercase border-l-4 transition-all ${isCurrent ? 'bg-[#006400] border-[#D4AF37]' : 'border-transparent hover:bg-[#006400]'}`;
+                        link.innerText = item.label;
+                        menuContainer.appendChild(link);
+                    }
+                });
+            } catch (err) { console.error("Menu loading error:", err); }
+        }
+
+        document.getElementById('documentForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const btn = document.getElementById('btnSubmit');
+            btn.innerText = "SAVING..."; btn.disabled = true;
+
+            const formData = new FormData(this);
+            let payload = {};
+
+            if (isEncoder) {
+                payload = {
+                    clearance_type: formData.get('clearance_type'),
+                    LTC_ID_NUMBER: formData.get('LTC_ID_NUMBER'),
+                    legalOfficer: formData.get('legalOfficer'),
+                    status: 'RECEIVED'
+                };
+            } else {
+                payload = Object.fromEntries(formData.entries());
+                payload.status = 'RECEIVED';
+            }
+
+            try {
+                const { data, error } = await supabaseClient.from('land_records').insert([payload]).select();
+                if (error) throw error;
+                
+                if (data && data[0]) {
+                    await supabaseClient.from('status_logs').insert([{
+                        record_id: data[0].id,
+                        previous_status: 'CREATED',
+                        new_status: 'RECEIVED',
+                        changed_by: currentUser.full_name,
+                        changed_at: new Date().toISOString()
+                    }]);
+                }
+
+                alert("Application Recorded Successfully.");
+                this.reset();
+                document.querySelectorAll('.form-input').forEach(el => el.classList.remove('auto-filled'));
+                document.getElementById('scanStatus').classList.add('hidden');
+                document.getElementById('fileInput').value = '';
+                
+                if (!isEncoder) { document.getElementById('legalOfficerSelect').value = currentUser.full_name; }
+            } catch (err) {
+                alert("System Error: " + err.message);
+            } finally {
+                btn.innerText = "SAVE APPLICATION"; btn.disabled = false;
+            }
+        });
+
+        function logout() { sessionStorage.removeItem('currentUser'); window.location.href = 'index.html'; }
+        window.onload = () => { renderMenu(); fetchLegalOfficers(); };
     </script>
 </body>
 </html>
