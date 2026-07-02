@@ -7,6 +7,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.4.21/mammoth.browser.min.js"></script>
 
     <style>
         :root { --color-primary: #003811; --color-secondary: #D4AF37; }
@@ -58,10 +59,10 @@
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd" /></svg>
                         Intelligent Document Extraction
                     </h3>
-                    <p class="text-xs text-gray-300 mb-4">Upload a Legal Document (PDF or Image). The AI will read and analyze the context to automatically fill out the form below.</p>
+                    <p class="text-xs text-gray-300 mb-4">Upload a Legal Document (PDF, Image, DOC, or DOCX). The AI will read and analyze the context to automatically fill out the form below.</p>
                     
                     <div class="flex flex-col md:flex-row gap-4 items-center">
-                        <input type="file" id="fileInput" accept="image/*,application/pdf" class="flex-1 bg-white p-3 border-0 rounded text-sm w-full cursor-pointer text-[#003811] font-bold">
+                        <input type="file" id="fileInput" accept="image/*,application/pdf,.doc,.docx,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document" class="flex-1 bg-white p-3 border-0 rounded text-sm w-full cursor-pointer text-[#003811] font-bold">
                         <button type="button" onclick="startAIExtraction()" id="btnExtract" class="w-full md:w-auto bg-[#D4AF37] text-[#003811] px-8 py-3 rounded text-sm font-black shadow-lg hover:bg-yellow-500 transition-colors uppercase tracking-wider flex items-center justify-center gap-2">
                             Analyze Document
                         </button>
@@ -198,7 +199,7 @@
         async function startAIExtraction() {
             const fileInput = document.getElementById('fileInput');
             const file = fileInput.files[0];
-            if (!file) return alert("Please select a Legal Document (PDF or Image) first.");
+            if (!file) return alert("Please select a Legal Document (PDF, Image, DOC, or DOCX) first.");
             
             const btn = document.getElementById('btnExtract');
             const progressContainer = document.getElementById('progressContainer');
@@ -211,16 +212,20 @@
             clearAIHighlights();
 
             try {
-                // Step 1: Format the file for the AI (With reduced size to prevent crashes)
+                // Step 1: Format the file for the AI
                 progressText.innerText = "Formatting document for AI analysis...";
                 progressBar.style.width = "25%";
-                const base64Data = await prepareDocumentForAI(file);
+                const docData = await prepareDocumentForAI(file);
 
                 // Step 2: Define the strict instructions
                 progressText.innerText = "Transmitting to OpenAI Engine...";
                 progressBar.style.width = "50%";
                 
+                // Expanded schema to extract ALL form fields
                 const schema = {
+                    clearance_type: "string - Check document if 'AO4' or 'AO8' is indicated, else blank",
+                    LTC_ID_NUMBER: "string - e.g. LTC tracking number if explicitly stated, else blank",
+                    legalOfficer: "string - Assigned attorney or legal officer mentioned, else blank",
                     lot_no: "string - e.g. Lot 1-A",
                     registered_under: "string - e.g. TCT No. 12345",
                     owner_name: "string - The Registered Owner",
@@ -244,6 +249,28 @@
                     Schema: ${JSON.stringify(schema)}
                 `;
 
+                // Build Message payload based on document capability (Image vs Text)
+                let messagePayload = [
+                    { role: "system", content: "You are a specialized legal document parser. Output only pure JSON." }
+                ];
+
+                if (docData.type === 'image') {
+                    messagePayload.push({
+                        role: "user", 
+                        content: [
+                            { type: "text", text: prompt },
+                            { type: "image_url", image_url: { url: `data:${docData.mime};base64,${docData.content}` } }
+                        ]
+                    });
+                } else {
+                    messagePayload.push({
+                        role: "user", 
+                        content: [
+                            { type: "text", text: prompt + `\n\n--- DOCUMENT CONTENT ---\n${docData.content}\n--- END OF DOCUMENT ---` }
+                        ]
+                    });
+                }
+
                 // Step 3: Call OpenAI API (Using corsproxy.org to bypass region locks)
                 const targetUrl = encodeURIComponent("https://api.openai.com/v1/chat/completions");
                 const proxyUrl = `https://corsproxy.org/?${targetUrl}`;
@@ -257,13 +284,7 @@
                     body: JSON.stringify({
                         model: "gpt-4o-mini",
                         response_format: { type: "json_object" },
-                        messages: [
-                            { role: "system", content: "You are a specialized legal document parser. Output only pure JSON." },
-                            { role: "user", content: [
-                                { type: "text", text: prompt },
-                                { type: "image_url", image_url: { url: `data:${file.type === 'application/pdf' ? 'image/jpeg' : file.type};base64,${base64Data}` } }
-                            ]}
-                        ]
+                        messages: messagePayload
                     })
                 });
 
@@ -283,12 +304,26 @@
 
                 Object.keys(extractedJSON).forEach(key => {
                     const value = extractedJSON[key];
-                    const inputField = document.getElementById(key);
-                    
-                    if (inputField && value && value.trim() !== "") {
-                        inputField.value = value;
-                        inputField.classList.add('ai-filled'); 
-                        filledCount++;
+                    if (!value || value.trim() === "") return;
+
+                    // Handle Radio Buttons (e.g. clearance_type)
+                    const radioGroup = document.querySelectorAll(`input[name="${key}"]`);
+                    if (radioGroup.length > 0 && radioGroup[0].type === 'radio') {
+                        radioGroup.forEach(radio => {
+                            if (radio.value.toUpperCase() === value.toUpperCase()) {
+                                radio.checked = true;
+                                radio.parentElement.classList.add('ai-filled'); 
+                                filledCount++;
+                            }
+                        });
+                    } else {
+                        // Handle standard inputs and textareas (Find by ID or by Name)
+                        const inputField = document.getElementById(key) || document.querySelector(`[name="${key}"]`);
+                        if (inputField) {
+                            inputField.value = value;
+                            inputField.classList.add('ai-filled'); 
+                            filledCount++;
+                        }
                     }
                 });
 
@@ -306,31 +341,47 @@
             }
         }
 
-        // --- UTILITY: PDF TO IMAGE CONVERTER (OPTIMIZED FOR LOWER FILE SIZE) ---
+        // --- UTILITY: MULTI-FORMAT DOCUMENT CONVERTER (PDF, IMAGE, DOCX, DOC) ---
         async function prepareDocumentForAI(file) {
             return new Promise(async (resolve, reject) => {
                 try {
-                    const reader = new FileReader();
-                    
-                    if (file.type === "application/pdf") {
+                    const fileType = file.type;
+                    const fileName = file.name.toLowerCase();
+
+                    // 1. Handle PDF via PDF.js
+                    if (fileType === "application/pdf") {
                         const arrayBuffer = await file.arrayBuffer();
                         const pdf = await pdfjsLib.getDocument(arrayBuffer).promise;
                         const page = await pdf.getPage(1);
                         
-                        // Reduced scale to 1.2 to prevent browser crash/timeout
                         const viewport = page.getViewport({ scale: 1.2 }); 
-                        
                         const canvas = document.createElement('canvas');
                         canvas.height = viewport.height;
                         canvas.width = viewport.width;
                         
                         await page.render({ canvasContext: canvas.getContext('2d'), viewport: viewport }).promise;
-                        
-                        // Set quality to 0.8 for smaller payload
                         const base64Data = canvas.toDataURL('image/jpeg', 0.8).split(',')[1];
-                        resolve(base64Data);
+                        resolve({ type: 'image', mime: 'image/jpeg', content: base64Data });
+
+                    // 2. Handle DOCX via Mammoth.js
+                    } else if (fileType === "application/vnd.openxmlformats-officedocument.wordprocessingml.document" || fileName.endsWith('.docx')) {
+                        const arrayBuffer = await file.arrayBuffer();
+                        mammoth.extractRawText({ arrayBuffer: arrayBuffer })
+                            .then(function(result) {
+                                resolve({ type: 'text', content: result.value });
+                            }).catch(reject);
+                            
+                    // 3. Handle older DOC files via raw text parsing (Fallback)
+                    } else if (fileType === "application/msword" || fileName.endsWith('.doc')) {
+                        console.warn("Legacy .doc format detected. Text extraction may be incomplete.");
+                        const reader = new FileReader();
+                        reader.onloadend = () => resolve({ type: 'text', content: reader.result });
+                        reader.readAsText(file);
+                        
+                    // 4. Handle Standard Images
                     } else {
-                        reader.onloadend = () => resolve(reader.result.split(',')[1]);
+                        const reader = new FileReader();
+                        reader.onloadend = () => resolve({ type: 'image', mime: fileType, content: reader.result.split(',')[1] });
                         reader.readAsDataURL(file);
                     }
                 } catch (err) {
