@@ -812,6 +812,8 @@
                     else if (st === 'FORWARDED TO RECORDS' || st === 'TO RECORDS') { stats.recd++; st = 'FORWARDED TO RECORDS'; }
                     else if (st === 'RELEASED TO CLIENT' || st === 'RELEASED - CLIENT' || st === 'RELEASE TO CLIENT') { stats.rel++; st = 'RELEASED TO CLIENT'; }
                     else if (st === 'DISAPPROVED') { stats.dis++; st = 'DISAPPROVED'; }
+                    else if (st === 'CORRECTED') { st = 'CORRECTED'; }
+                    else if (st === 'RE-ISSUED') { st = 'RE-ISSUED'; }
 
                     let daysPassed = item.updated_at ? getWorkingDays(new Date(item.updated_at), new Date()) : 0;
                     let warningHTML = daysPassed > 5 ? `<span class="text-red-600 font-black ml-2 text-[12px]" title="Exceeded 5 working days!">⚠️</span>` : '';
@@ -877,6 +879,9 @@
                                 actions += `<button onclick='openPrint("${item.id}", "io")' class="bg-red-600 text-white w-full py-1.5 rounded shadow text-[10px] font-bold hover:bg-red-700 uppercase transition-colors text-center mb-1">Print Interlocutory</button>`;
                                 actions += `<button onclick='processToNext("${item.id}", "REVIEWED", "${st}")' class="bg-green-600 text-white w-full py-1.5 rounded shadow text-[10px] font-bold hover:bg-green-700 uppercase transition-colors text-center mb-1">Compliance Met</button>`;
                             }
+                        } else if (st === 'CORRECTED' || st === 'RE-ISSUED') {
+                            // Allow viewing the archived/superseded record
+                            actions += `<button onclick='showReview("${item.id}", "VIEW_CERT")' class="bg-gray-500 text-white w-full py-1.5 rounded shadow text-[10px] font-bold hover:bg-gray-600 uppercase transition-colors text-center mb-1">View</button>`;
                         }
                     }
                     actions += `</div>`;
@@ -1018,6 +1023,17 @@
             if (error) {
                 alert(`Error processing ${mode}: ` + error.message);
             } else {
+                // Update the original record's status to reflect the action taken
+                const oldStatusUpdate = mode === 'CORRECTION' ? 'CORRECTED' : 'RE-ISSUED';
+                const { error: oldUpdateError } = await supabaseClient.from('land_records').update({ 
+                    status: oldStatusUpdate, 
+                    updated_at: new Date().toISOString() 
+                }).eq('id', oldId);
+                
+                if (!oldUpdateError) {
+                    await logStatusChange(oldId, record.status, oldStatusUpdate);
+                }
+
                 await fetchClearanceData();
                 await logStatusChange(data[0].id, 'CREATED', newRecordData.status);
                 showReview(data[0].id, mode);
@@ -1034,7 +1050,9 @@
                 'RETURNED TO LEGAL': 'bg-red-100 text-red-800 border border-red-200', 
                 'FORWARDED TO RECORDS': 'bg-green-100 text-green-800 border border-green-200', 
                 'RELEASED TO CLIENT': 'bg-teal-100 text-teal-800 border border-teal-200',
-                'DISAPPROVED': 'bg-gray-200 text-gray-800 border border-gray-300'
+                'DISAPPROVED': 'bg-gray-200 text-gray-800 border border-gray-300',
+                'CORRECTED': 'bg-yellow-100 text-yellow-800 border border-yellow-300',
+                'RE-ISSUED': 'bg-blue-100 text-blue-800 border border-blue-300'
             };
             return colors[s] || 'bg-gray-100 text-gray-800';
         }
