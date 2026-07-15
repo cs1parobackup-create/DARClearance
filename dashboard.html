@@ -826,7 +826,6 @@
                                 actions += `<button onclick='showReview("${item.id}", "REVIEW")' class="bg-[#003811] text-white w-full py-1.5 rounded shadow text-[10px] font-bold tracking-wide hover:bg-black uppercase transition-colors text-center">Review</button>`;
                                 actions += `<button onclick='processToNext("${item.id}", "FORWARDED TO LTSP", "${st}")' class="bg-indigo-600 text-white w-full py-1 mt-1 rounded shadow text-[9px] font-bold hover:bg-indigo-800 uppercase transition-colors text-center">Forward to LTSP</button>`;
                                 actions += `<button onclick='createVariant("${item.id}")' class="bg-white text-gray-800 border border-gray-300 w-full py-1 mt-1 rounded shadow text-[9px] font-bold hover:bg-gray-100 uppercase transition-colors text-center">+ Variant</button>`;
-                                actions += `<button onclick='deleteRecord("${item.id}")' class="bg-red-600 text-white w-full py-1 mt-1 rounded shadow text-[9px] font-bold hover:bg-red-800 uppercase transition-colors text-center">Delete</button>`;
                             }
                         } else if (st === 'FORWARDED TO LTSP') {
                             if (isLTSP) {
@@ -884,6 +883,12 @@
                             actions += `<button onclick='showReview("${item.id}", "VIEW_CERT")' class="bg-gray-500 text-white w-full py-1.5 rounded shadow text-[10px] font-bold hover:bg-gray-600 uppercase transition-colors text-center mb-1">View</button>`;
                         }
                     }
+                    
+                    // Global Delete Button for Authorized Personnel Across All Statuses
+                    if (isChief || isLegal) {
+                        actions += `<button onclick='deleteRecord("${item.id}")' class="bg-red-700 text-white w-full py-1 rounded shadow text-[9px] font-bold hover:bg-red-900 uppercase transition-colors text-center mt-1">Delete</button>`;
+                    }
+
                     actions += `</div>`;
 
                     let legalOfficerName = item.legalOfficer || item.legalofficer || item.encoded_by || item.created_by || '---'; 
