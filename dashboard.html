@@ -576,6 +576,17 @@
             'or_date': 'or_date'
         };
 
+        // NEW HELPER: Determine initial status dynamically based on the encoder's role.
+        function getInitialStatus(role) {
+            const userRole = (role || '').toUpperCase();
+            // If the encoder is LCMS (or standard encoder), start at Step 1
+            if (userRole.includes('LCMS') || userRole.includes('ENCODER')) {
+                return 'RECEIVED';
+            }
+            // Otherwise (Legal Officer, Chief, etc.), jump straight to REVIEWED
+            return 'REVIEWED';
+        }
+
         async function loadMenu() {
             const menuContainer = document.getElementById('dynamicMenu');
             if (!currentUser || !currentUser.role) return;
@@ -970,7 +981,7 @@
             if(newRecordData.ltc_no !== undefined) delete newRecordData.ltc_no;
 
             newRecordData.LTC_ID_NUMBER = newNo;
-            newRecordData.status = 'RECEIVED'; 
+            newRecordData.status = getInitialStatus(currentUser.role); 
 
             const { error } = await supabaseClient.from('land_records').insert([newRecordData]);
             if (error) {
@@ -1000,7 +1011,7 @@
 
             let colLtc = record.hasOwnProperty('LTC_ID_NUMBER') ? 'LTC_ID_NUMBER' : 'ltc_no';
             newRecordData[colLtc] = newLtc; 
-            newRecordData.status = 'RECEIVED'; 
+            newRecordData.status = getInitialStatus(currentUser.role); 
             newRecordData.Remarks = ''; // Clear remarks for the new document
 
             const { data, error } = await supabaseClient.from('land_records').insert([newRecordData]).select();
@@ -1008,7 +1019,7 @@
                 alert(`Error processing ${mode}: ` + error.message);
             } else {
                 await fetchClearanceData();
-                await logStatusChange(data[0].id, 'CREATED', 'RECEIVED');
+                await logStatusChange(data[0].id, 'CREATED', newRecordData.status);
                 showReview(data[0].id, mode);
             }
         }
