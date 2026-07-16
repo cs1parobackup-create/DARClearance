@@ -222,6 +222,7 @@
             </div>
 
             <div id="docRecommendation" class="doc-print-area mx-auto hidden pt-8">
+                <!-- DOCUMENT CONTENT REMAINS UNCHANGED -->
                 <div class="doc-content">
                     <div class="relative w-full mb-6 page-break-avoid">
                         <div class="absolute right-0 top-0 text-right font-bold flex flex-col items-end">
@@ -346,7 +347,7 @@
 
             <div id="docCertification" class="doc-print-area mx-auto hidden pt-8">
                 <div class="doc-content">
-                    
+                    <!-- CERTIFICATION CONTENT REMAINS UNCHANGED -->
                     <div class="relative w-full mb-6 page-break-avoid">
                         <div class="absolute right-0 top-0 text-right font-bold flex flex-col items-end">
                             <span class="font-bold text-[10pt]">LTC Form No. 5</span>
@@ -472,6 +473,7 @@
             </div>
 
             <div id="docInterlocutoryOrder" class="doc-print-area mx-auto hidden pt-8">
+                <!-- IO CONTENT REMAINS UNCHANGED -->
                 <div class="doc-content px-8">
                     <div class="flex justify-between items-start mb-10 text-[10pt] font-bold uppercase tracking-tight">
                         <div class="w-[300px] leading-tight">
@@ -724,10 +726,10 @@
                         
                         let recEl = document.getElementById(`rec-${htmlSuffix}`);
                         let certEl = document.getElementById(`cert-${htmlSuffix}`);
-                        let ioEl = document.getElementById(`io-${htmlSuffix}`); // Added for IO
+                        let ioEl = document.getElementById(`io-${htmlSuffix}`); 
                         if(recEl) recEl.innerText = newVal;
                         if(certEl) certEl.innerText = newVal;
-                        if(ioEl) ioEl.innerText = newVal; // Added for IO
+                        if(ioEl) ioEl.innerText = newVal; 
                     }
                 }
             }
@@ -760,12 +762,12 @@
                         const certHeaderId = document.getElementById('cert-header-id');
                         const recFooterId = document.getElementById('rec-footer-id');
                         const certFooterId = document.getElementById('cert-footer-id');
-                        const ioHeaderId = document.getElementById('io-header-id'); // Added for IO
+                        const ioHeaderId = document.getElementById('io-header-id');
                         if(recHeaderId) recHeaderId.innerText = newLtc;
                         if(certHeaderId) certHeaderId.innerText = newLtc;
                         if(recFooterId) recFooterId.innerText = newLtc;
                         if(certFooterId) certFooterId.innerText = newLtc;
-                        if(ioHeaderId) ioHeaderId.innerText = newLtc; // Added for IO
+                        if(ioHeaderId) ioHeaderId.innerText = newLtc;
                     }
                 }
             }
@@ -884,8 +886,9 @@
                         }
                     }
                     
-                    // Global Delete Button for Authorized Personnel Across All Statuses
-                    if (isChief || isLegal) {
+                    // Global Delete Button for Authorized Personnel - restricted to unsigned statuses
+                    const postSignStatuses = ['SIGNED BY PARPO', 'RETURNED TO LEGAL', 'FORWARDED TO RECORDS', 'RELEASED TO CLIENT', 'CORRECTED', 'RE-ISSUED'];
+                    if ((isChief || isLegal) && !postSignStatuses.includes(st)) {
                         actions += `<button onclick='deleteRecord("${item.id}")' class="bg-red-700 text-white w-full py-1 rounded shadow text-[9px] font-bold hover:bg-red-900 uppercase transition-colors text-center mt-1">Delete</button>`;
                     }
 
@@ -1122,7 +1125,7 @@
                 let val = currentSelection[dbCol] || ' ';
                 let recEl = document.getElementById(`rec-${htmlSuffix}`);
                 let certEl = document.getElementById(`cert-${htmlSuffix}`);
-                let ioEl = document.getElementById(`io-${htmlSuffix}`); // Added for IO
+                let ioEl = document.getElementById(`io-${htmlSuffix}`); 
                 if(recEl) recEl.innerText = val;
                 if(certEl) certEl.innerText = val;
                 
@@ -1138,20 +1141,20 @@
                     } else {
                         ioEl.innerText = val;
                     }
-                } // Added for IO
+                } 
             }
 
             const recHeaderId = document.getElementById('rec-header-id-top');
             const certHeaderId = document.getElementById('cert-header-id');
             const recFooterId = document.getElementById('rec-footer-id');
             const certFooterId = document.getElementById('cert-footer-id');
-            const ioHeaderId = document.getElementById('io-header-id'); // Added for IO
+            const ioHeaderId = document.getElementById('io-header-id');
             const headerVal = currentSelection.LTC_ID_NUMBER || currentSelection.ltc_no || 'LTC-PENDING';
             if(recHeaderId) recHeaderId.innerText = headerVal;
             if(certHeaderId) certHeaderId.innerText = headerVal;
             if(recFooterId) recFooterId.innerText = headerVal;
             if(certFooterId) certFooterId.innerText = headerVal;
-            if(ioHeaderId) ioHeaderId.innerText = headerVal; // Added for IO
+            if(ioHeaderId) ioHeaderId.innerText = headerVal;
 
             document.querySelectorAll('.sys-chief-name').forEach(el => el.innerText = chiefLegalName && chiefLegalName !== "---" ? chiefLegalName : "ATTY. JAIME G. RESOCO, JR.");
             document.querySelectorAll('.sys-parpo-name').forEach(el => el.innerText = parpoName);
@@ -1165,7 +1168,7 @@
                 document.getElementById('modalMainTitle').innerText = "CERTIFICATION VIEW";
                 document.getElementById('reviewSection').classList.add('hidden');
                 document.getElementById('docRecommendation').classList.add('hidden');
-                document.getElementById('docInterlocutoryOrder').classList.add('hidden'); // Ensure IO is hidden
+                document.getElementById('docInterlocutoryOrder').classList.add('hidden');
                 document.getElementById('docCertification').classList.remove('hidden');
                 document.getElementById('docCertification').style.display = 'block';
                 document.getElementById('actionButtons').classList.add('hidden');
@@ -1174,7 +1177,7 @@
                 document.getElementById('modalMainTitle').innerText = currentReviewMode.replace('-', ' ').toUpperCase();
                 document.getElementById('docRecommendation').classList.add('hidden');
                 document.getElementById('docCertification').classList.add('hidden');
-                document.getElementById('docInterlocutoryOrder').classList.add('hidden'); // Ensure IO is hidden
+                document.getElementById('docInterlocutoryOrder').classList.add('hidden'); 
                 document.getElementById('docCertification').style.display = 'none';
                 document.getElementById('reviewSection').classList.remove('hidden');
                 document.getElementById('actionButtons').classList.remove('hidden');
