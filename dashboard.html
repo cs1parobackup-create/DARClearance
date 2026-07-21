@@ -59,6 +59,10 @@
             text-transform: uppercase; outline: none; transition: all 0.2s;
         }
         .edit-big:focus { background-color: #fef08a !important; border-bottom: 3px solid #eab308 !important; }
+        
+        .form-label { display: block; font-size: 0.75rem; font-weight: 700; color: var(--dar-green); margin-bottom: 0.25rem; text-transform: uppercase; }
+        .form-input { width: 100%; background: #F9FAFB; border: 1px solid #D1D5DB; border-radius: 0.375rem; padding: 0.6rem; font-size: 0.875rem; transition: border-color 0.2s; }
+        .form-input:focus { outline: none; border-color: var(--dar-green); ring: 1px solid var(--dar-green); }
     </style>
 </head>
 <body class="flex h-screen overflow-hidden text-[#1F2937]">
@@ -211,6 +215,23 @@
                         <div class="font-bold text-gray-600 uppercase text-sm">O.R. Date:</div>
                         <div id="edit-or_date" class="edit-big">---</div>
                     </div>
+
+                    <!-- AFFIDAVIT UI SECTION -->
+                    <div id="affidavitSection" class="mt-8 pt-4 border-t border-blue-200">
+                        <div class="flex justify-between items-center mb-2">
+                            <p class="text-xs font-bold text-gray-500 uppercase tracking-widest">Affidavit / Undertaking</p>
+                            <button id="btnGenericAddAffidavit" onclick="openAffidavitModal()" class="bg-gray-200 text-gray-800 px-3 py-1 rounded text-[10px] font-bold uppercase hover:bg-gray-300">Add/Edit Affidavit</button>
+                        </div>
+                        <div id="affidavitAlert" class="p-3 bg-yellow-50 border border-yellow-200 rounded flex justify-between items-center hidden">
+                            <span class="text-xs font-bold text-yellow-800">Area > 5 hectares. Affidavit of Undertaking is recommended.</span>
+                            <button onclick="openAffidavitModal()" class="bg-yellow-600 text-white px-3 py-1 rounded text-[10px] font-bold uppercase hover:bg-yellow-700">Add Now</button>
+                        </div>
+                        <div id="affidavitSuccess" class="p-3 bg-green-50 border border-green-200 rounded flex justify-between items-center hidden">
+                            <span class="text-xs font-bold text-green-800">Affidavit Attached: <span id="affidavitTypeText" class="font-black"></span></span>
+                            <button onclick="openAffidavitModal()" class="bg-green-600 text-white px-3 py-1 rounded text-[10px] font-bold uppercase hover:bg-green-700">Edit Details</button>
+                        </div>
+                    </div>
+
                 </div>
                 <div id="remarksSection" class="bg-gray-50 p-4 rounded border border-gray-300">
                     <label class="block text-[10px] font-bold text-gray-700 uppercase mb-2">Remarks (Required for Disapproval / Interlocutory Order Lacking Docs)</label>
@@ -430,6 +451,9 @@
                         based on the Attestation of the CARPO-LTS/FOD and from the report and recommendation of the Chief Legal Division/Authorized Legal Officer pursuant to Administrative Order (AO) No. 4 Series of 2021.
                     </p>
 
+                    <!-- DYNAMIC AFFIDAVIT TEXT PLACEMENT -->
+                    <p id="cert-affidavit-para" class="mb-3 text-justify leading-relaxed indent-12 page-break-avoid hidden"></p>
+
                     <p class="mb-3 text-justify leading-relaxed indent-12 page-break-avoid">
                         Any actual change in the use of the land and/or development over the subject land, requires a prior Order of Conversion or Exemption/Exclusion from the Office of the DAR Regional Director.
                     </p>
@@ -537,6 +561,41 @@
         </div>
     </div>
 
+    <!-- Modal: Affidavit Details -->
+    <div id="affidavitDetailsModal" class="fixed inset-0 bg-black/60 hidden flex items-center justify-center z-[60] no-print">
+        <div class="bg-white p-8 rounded-lg shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto border-t-4 border-[#003811]">
+            <h3 class="text-xl font-bold text-[#003811] mb-6 border-b pb-2">Affidavit Details</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <div class="md:col-span-2">
+                    <label class="form-label">Executed By</label>
+                    <input type="text" id="m_executed_by" class="form-input" placeholder="e.g. JOEL BERMEJO CARCIDO">
+                </div>
+                <div class="md:col-span-2">
+                    <label class="form-label">Document Type</label>
+                    <div class="flex gap-6 mt-1">
+                        <label class="flex items-center gap-2 cursor-pointer font-bold text-sm">
+                            <input type="radio" name="m_doc_type" value="Affidavit of Undertaking" class="w-4 h-4 text-[#003811]" checked> Affidavit of Undertaking
+                        </label>
+                        <label class="flex items-center gap-2 cursor-pointer font-bold text-sm">
+                            <input type="radio" name="m_doc_type" value="Affidavit of No Opposition" class="w-4 h-4 text-[#003811]"> Affidavit of No Opposition
+                        </label>
+                    </div>
+                </div>
+                <div><label class="form-label">Excess Area</label><input type="text" id="m_excess_area" class="form-input" placeholder="e.g. 1,273 square meters"></div>
+                <div><label class="form-label">Series of (Year)</label><input type="text" id="m_series" class="form-input" placeholder="e.g. 2026"></div>
+                <div><label class="form-label">Doc. No.</label><input type="text" id="m_doc_no" class="form-input" placeholder="e.g. 405"></div>
+                <div><label class="form-label">Page No.</label><input type="text" id="m_page_no" class="form-input" placeholder="e.g. 82"></div>
+                <div><label class="form-label">Book No.</label><input type="text" id="m_book_no" class="form-input" placeholder="e.g. V"></div>
+                <div><label class="form-label">Date Executed</label><input type="text" id="m_date" class="form-input" placeholder="e.g. May 11, 2026"></div>
+                <div class="md:col-span-2"><label class="form-label">Notary Public</label><input type="text" id="m_notary" class="form-input" placeholder="e.g. Atty. Chelsea Audrey P. Masuhay, RPh."></div>
+            </div>
+            <div class="flex justify-end gap-3 mt-8 pt-4 border-t">
+                <button type="button" onclick="closeAffidavitModal()" class="px-5 py-2 bg-gray-200 text-gray-800 rounded font-bold text-sm hover:bg-gray-300 transition-colors">CANCEL</button>
+                <button type="button" onclick="saveAffidavitModal()" id="btnSaveAffidavit" class="px-5 py-2 bg-[#D4AF37] text-white rounded font-bold text-sm hover:bg-yellow-600 transition-colors shadow-md">SAVE & APPEND</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         const userData = sessionStorage.getItem('currentUser');
         if (!userData) { window.location.href = 'index.html'; }
@@ -545,6 +604,7 @@
         document.getElementById('userRoleBadge').innerText = currentUser.role;
 
         let currentSelection = null;
+        let currentAffidavit = null;
         let rawData = [];
         let currentNavList = [];
         let currentNavIndex = -1;
@@ -578,14 +638,11 @@
             'or_date': 'or_date'
         };
 
-        // NEW HELPER: Determine initial status dynamically based on the encoder's role.
         function getInitialStatus(role) {
             const userRole = (role || '').toUpperCase();
-            // If the encoder is LCMS (or standard encoder), start at Step 1
             if (userRole.includes('LCMS') || userRole.includes('ENCODER')) {
                 return 'RECEIVED';
             }
-            // Otherwise (Legal Officer, Chief, etc.), jump straight to REVIEWED
             return 'REVIEWED';
         }
 
@@ -684,10 +741,125 @@
                 if (error) {
                     console.error("Status Log Error:", error.message);
                     if(error.message.includes('row-level security')) {
-                        alert("CRITICAL WARNING: The 'status_logs' table has RLS enabled but no policy to allow inserts. Supabase blocked the log creation. Please disable RLS or add a policy.");
+                        console.warn("CRITICAL WARNING: Supabase RLS blocked status log insert.");
                     }
                 }
             } catch (err) { console.error("Status Log Catch:", err); }
+        }
+
+        function updateAffidavitUI() {
+            const alertEl = document.getElementById('affidavitAlert');
+            const successEl = document.getElementById('affidavitSuccess');
+            const certAff = document.getElementById('cert-affidavit-para');
+            
+            let areaVal = parseFloat(currentSelection.area) || 0;
+            let elArea = document.getElementById('edit-area');
+            if(elArea && elArea.innerText !== '---') {
+                areaVal = parseFloat(elArea.innerText.replace(/,/g, '')) || 0;
+            }
+
+            if (currentAffidavit && currentAffidavit.id) {
+                alertEl.classList.add('hidden');
+                successEl.classList.remove('hidden');
+                document.getElementById('affidavitTypeText').innerText = currentAffidavit.document_type || 'Affidavit';
+                
+                if(certAff) {
+                    certAff.innerText = currentAffidavit.generated_text;
+                    certAff.classList.remove('hidden');
+                }
+            } else {
+                successEl.classList.add('hidden');
+                if(certAff) {
+                    certAff.innerText = '';
+                    certAff.classList.add('hidden');
+                }
+                
+                if (areaVal > 5) {
+                    alertEl.classList.remove('hidden');
+                } else {
+                    alertEl.classList.add('hidden');
+                }
+            }
+        }
+
+        function openAffidavitModal() {
+            if (!currentSelection) return;
+            if (currentAffidavit) {
+                document.getElementById('m_executed_by').value = currentAffidavit.executed_by || '';
+                let radios = document.getElementsByName('m_doc_type');
+                for(let i=0; i<radios.length; i++){
+                    if(radios[i].value === currentAffidavit.document_type) radios[i].checked = true;
+                }
+                document.getElementById('m_excess_area').value = currentAffidavit.excess_area || '';
+                document.getElementById('m_series').value = currentAffidavit.series_year || '';
+                document.getElementById('m_doc_no').value = currentAffidavit.doc_no || '';
+                document.getElementById('m_page_no').value = currentAffidavit.page_no || '';
+                document.getElementById('m_book_no').value = currentAffidavit.book_no || '';
+                document.getElementById('m_date').value = currentAffidavit.date_executed || '';
+                document.getElementById('m_notary').value = currentAffidavit.notary_public || '';
+            } else {
+                document.getElementById('m_executed_by').value = currentSelection.owner_name || '';
+                document.getElementById('m_excess_area').value = '';
+                document.getElementById('m_series').value = new Date().getFullYear();
+                document.getElementById('m_doc_no').value = '';
+                document.getElementById('m_page_no').value = '';
+                document.getElementById('m_book_no').value = '';
+                document.getElementById('m_date').value = '';
+                document.getElementById('m_notary').value = '';
+            }
+            document.getElementById('affidavitDetailsModal').classList.remove('hidden');
+        }
+
+        function closeAffidavitModal() {
+            document.getElementById('affidavitDetailsModal').classList.add('hidden');
+        }
+
+        async function saveAffidavitModal() {
+            const btn = document.getElementById('btnSaveAffidavit');
+            const originalText = btn.innerText;
+            btn.innerText = 'SAVING...';
+            btn.disabled = true;
+
+            const executed_by = document.getElementById('m_executed_by').value;
+            const document_type = document.querySelector('input[name="m_doc_type"]:checked').value;
+            const excess_area = document.getElementById('m_excess_area').value;
+            const series_year = document.getElementById('m_series').value;
+            const doc_no = document.getElementById('m_doc_no').value;
+            const page_no = document.getElementById('m_page_no').value;
+            const book_no = document.getElementById('m_book_no').value;
+            const date_executed = document.getElementById('m_date').value;
+            const notary_public = document.getElementById('m_notary').value;
+
+            const generated_text = `Further, the transferee, ${executed_by} executed an ${document_type}, and manifested that he does not have Objection and no Opposition to future action by any person, entity or government agency to include, cover, process, or recognize the excess of ${excess_area}, as contained in the ${document_type} under Doc. No. ${doc_no}, Page No. ${page_no}, Book No. ${book_no}, Series of ${series_year} executed on ${date_executed} and notarized by ${notary_public}.`;
+
+            const payload = {
+                land_record_id: currentSelection.id,
+                executed_by, document_type, excess_area, series_year,
+                doc_no, page_no, book_no, date_executed, notary_public,
+                generated_text
+            };
+
+            let op;
+            if (currentAffidavit && currentAffidavit.id) {
+                op = supabaseClient.from('affidavit_details').update(payload).eq('id', currentAffidavit.id).select();
+            } else {
+                op = supabaseClient.from('affidavit_details').insert([payload]).select();
+            }
+
+            const { data, error } = await op;
+
+            if (error) {
+                alert("Error saving affidavit: " + error.message);
+            } else {
+                if (data && data.length > 0) {
+                    currentAffidavit = data[0];
+                    updateAffidavitUI();
+                }
+                closeAffidavitModal();
+            }
+
+            btn.innerText = originalText;
+            btn.disabled = false;
         }
 
         window.manualSave = async function(event) {
@@ -711,6 +883,7 @@
 
             const updateData = {};
             let hasChanges = false;
+            let areaChanged = false;
             
             for (let dbCol in DB_FIELD_MAP) {
                 let htmlSuffix = DB_FIELD_MAP[dbCol];
@@ -723,6 +896,7 @@
                         updateData[dbCol] = newVal;
                         currentSelection[dbCol] = newVal;
                         hasChanges = true;
+                        if(dbCol === 'area') areaChanged = true;
                         
                         let recEl = document.getElementById(`rec-${htmlSuffix}`);
                         let certEl = document.getElementById(`cert-${htmlSuffix}`);
@@ -769,6 +943,7 @@
                         if(certFooterId) certFooterId.innerText = newLtc;
                         if(ioHeaderId) ioHeaderId.innerText = newLtc;
                     }
+                    if (areaChanged) updateAffidavitUI();
                 }
             }
             return hasChanges;
@@ -881,12 +1056,10 @@
                                 actions += `<button onclick='processToNext("${item.id}", "REVIEWED", "${st}")' class="bg-green-600 text-white w-full py-1.5 rounded shadow text-[10px] font-bold hover:bg-green-700 uppercase transition-colors text-center mb-1">Compliance Met</button>`;
                             }
                         } else if (st === 'CORRECTED' || st === 'RE-ISSUED') {
-                            // Allow viewing the archived/superseded record
                             actions += `<button onclick='showReview("${item.id}", "VIEW_CERT")' class="bg-gray-500 text-white w-full py-1.5 rounded shadow text-[10px] font-bold hover:bg-gray-600 uppercase transition-colors text-center mb-1">View</button>`;
                         }
                     }
                     
-                    // Global Delete Button for Authorized Personnel - restricted to unsigned statuses
                     const postSignStatuses = ['SIGNED BY PARPO', 'RETURNED TO LEGAL', 'FORWARDED TO RECORDS', 'RELEASED TO CLIENT', 'CORRECTED', 'RE-ISSUED'];
                     if ((isChief || isLegal) && !postSignStatuses.includes(st)) {
                         actions += `<button onclick='deleteRecord("${item.id}")' class="bg-red-700 text-white w-full py-1 rounded shadow text-[9px] font-bold hover:bg-red-900 uppercase transition-colors text-center mt-1">Delete</button>`;
@@ -1025,13 +1198,12 @@
             let colLtc = record.hasOwnProperty('LTC_ID_NUMBER') ? 'LTC_ID_NUMBER' : 'ltc_no';
             newRecordData[colLtc] = newLtc; 
             newRecordData.status = getInitialStatus(currentUser.role); 
-            newRecordData.Remarks = ''; // Clear remarks for the new document
+            newRecordData.Remarks = '';
 
             const { data, error } = await supabaseClient.from('land_records').insert([newRecordData]).select();
             if (error) {
                 alert(`Error processing ${mode}: ` + error.message);
             } else {
-                // Update the original record's status to reflect the action taken
                 const oldStatusUpdate = mode === 'CORRECTION' ? 'CORRECTED' : 'RE-ISSUED';
                 const { error: oldUpdateError } = await supabaseClient.from('land_records').update({ 
                     status: oldStatusUpdate, 
@@ -1101,6 +1273,14 @@
             currentNavIndex = currentNavList.findIndex(r => r.id === id);
             currentSelection = currentNavList[currentNavIndex];
 
+            // Fetch current affidavit if exists
+            const { data: affData, error: affError } = await supabaseClient.from('affidavit_details').select('*').eq('land_record_id', currentSelection.id).maybeSingle();
+            if (!affError && affData) {
+                currentAffidavit = affData;
+            } else {
+                currentAffidavit = null;
+            }
+
             const qrIdentifier = currentSelection.LTC_ID_NUMBER || currentSelection.ltc_no || 'PENDING';
             generateQRs(qrIdentifier);
 
@@ -1131,7 +1311,6 @@
                 
                 if (ioEl) {
                     if (htmlSuffix === 'area' && val !== ' ' && val !== '---') {
-                        // Calculate square meters if the user inputs hectares
                         let sqMeters = parseFloat(val) * 10000;
                         if (!isNaN(sqMeters)) {
                             ioEl.innerText = sqMeters.toLocaleString('en-US');
@@ -1193,10 +1372,10 @@
             let ioRemEl = document.getElementById('io-remarks');
             if(ioRemEl) ioRemEl.innerText = remarksVal || '---';
 
-            // Specific mapping for IO body text
             let ioOwnerBody = document.getElementById('io-owner-body');
             if(ioOwnerBody) ioOwnerBody.innerText = currentSelection['owner_name'] || '---';
             
+            updateAffidavitUI();
             refreshDashboard(); 
 
             document.getElementById('reviewModal').classList.remove('hidden');
@@ -1254,7 +1433,10 @@
                         blocks.push(clone);
                     });
                 } else {
-                    blocks.push(child.cloneNode(true));
+                    // Do not append hidden components
+                    if (!child.classList.contains('hidden')) {
+                        blocks.push(child.cloneNode(true));
+                    }
                 }
             });
 
@@ -1264,7 +1446,6 @@
                 const page = document.createElement('div');
                 page.style.cssText = 'width: 8.5in; height: 13in; min-height: 13in; max-height: 13in; position: relative; background: white; margin-bottom: 0px; overflow: hidden; flex-shrink: 0;';
                 
-                // Exclude background image for Interlocutory Order
                 if (type !== 'io') {
                     const bg = document.createElement('img');
                     bg.src = backgroundImageUrl;
@@ -1272,14 +1453,12 @@
                     bg.style.cssText = 'position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; object-fit: fill; display: block; pointer-events: none;';
                     page.appendChild(bg);
                     
-                    // --- SECURITY FEATURE INJECTION START ---
                     const securityData = `${currentSelection.LTC_ID_NUMBER || 'LTC-PENDING'} | ${currentSelection.owner_name || 'PENDING OWNER'} | ${currentSelection.registered_under || 'PENDING TCT'}`;
                     const microTextString = Array(20).fill(securityData).join(' • ');
                     const securityBorder = document.createElement('div');
                     securityBorder.style.cssText = 'position: absolute; top: 1.08in; left: 0; width: 100%; font-size: 3.5pt; color: rgba(255,255,255,0.7); font-family: monospace; font-weight: bold; white-space: nowrap; overflow: hidden; z-index: 5; text-transform: uppercase; letter-spacing: 1.5px; user-select: none; pointer-events: none;';
                     securityBorder.innerText = microTextString;
                     page.appendChild(securityBorder);
-                    // --- SECURITY FEATURE INJECTION END ---
                 }
 
                 const content = document.createElement('div');
@@ -1327,7 +1506,6 @@
                     totalPages--;
                 }
 
-                // Add edge tracking number for Rec/Cert, but skip for IO to keep it clean
                 if (type !== 'io') {
                     for (var i = 1; i <= totalPages; i++) {
                         pdf.setPage(i);
