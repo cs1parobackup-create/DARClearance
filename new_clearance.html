@@ -57,10 +57,7 @@
                                     <input type="radio" name="clearance_type" value="AO4" required class="w-4 h-4 text-[#003811] focus:ring-[#003811]">
                                     AO4
                                 </label>
-                                <label class="flex items-center gap-2 cursor-pointer text-sm font-bold text-[#1F2937]">
-                                    <input type="radio" name="clearance_type" value="AO8" required class="w-4 h-4 text-[#003811] focus:ring-[#003811]">
-                                    AO8
-                                </label>
+                                <!-- AO8 Removed per instructions -->
                             </div>
                         </div>
                         <div>
@@ -81,7 +78,8 @@
                         </div>
                         <div><label class="form-label">In the Name of</label><textarea name="owner_name" class="form-input"></textarea></div>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div><label class="form-label">Area (in has.)</label><input type="text" name="area" class="form-input"></div>
+                            <!-- Area Input has event listener attached below -->
+                            <div><label class="form-label">Area (in has.)</label><input type="text" id="areaInput" name="area" class="form-input"></div>
                             <div><label class="form-label">Declared under T.D. No.</label><input type="text" name="td_no" class="form-input"></div>
                         </div>
                         <div><label class="form-label">Located at</label><textarea name="location" class="form-input"></textarea></div>
@@ -108,6 +106,12 @@
                             <div><label class="form-label">O.R. No.</label><input type="text" name="or_number" class="form-input"></div>
                             <div><label class="form-label">O.R. Date</label><input type="text" name="or_date" class="form-input"></div>
                         </div>
+
+                        <!-- Certification Preview output container -->
+                        <div id="certPreviewContainer" class="hidden mt-6 bg-[#fffdf5] p-4 border border-[#D4AF37] rounded-lg">
+                            <label class="form-label text-[#D4AF37]">Affidavit Certification Note Attached</label>
+                            <p id="certPreviewText" class="text-sm font-medium text-justify mt-2"></p>
+                        </div>
                     </div> 
 
                     <div class="flex justify-end gap-4 border-t pt-6">
@@ -119,6 +123,53 @@
         </div>
     </main>
 
+    <!-- Modal 1: Affidavit Prompt -->
+    <div id="areaPromptModal" class="fixed inset-0 bg-black/60 hidden flex items-center justify-center z-50">
+        <div class="bg-white p-8 rounded-lg shadow-2xl max-w-sm w-full border-t-4 border-[#D4AF37]">
+            <h3 class="text-xl font-bold text-[#003811] mb-2">Notice</h3>
+            <p id="areaPromptText" class="text-sm text-gray-700 mb-6">Do you have an Undertaking or Affidavit of No Opposition?</p>
+            <div class="flex justify-end gap-3">
+                <button type="button" onclick="handleAreaPrompt(false)" class="px-5 py-2 bg-gray-200 text-gray-800 rounded font-bold text-sm hover:bg-gray-300 transition-colors">NO</button>
+                <button type="button" onclick="handleAreaPrompt(true)" class="px-5 py-2 bg-[#003811] text-white rounded font-bold text-sm hover:bg-[#006400] transition-colors shadow-md">YES</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal 2: Affidavit Details -->
+    <div id="affidavitDetailsModal" class="fixed inset-0 bg-black/60 hidden flex items-center justify-center z-50">
+        <div class="bg-white p-8 rounded-lg shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto border-t-4 border-[#003811]">
+            <h3 class="text-xl font-bold text-[#003811] mb-6 border-b pb-2">Affidavit Details</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <div class="md:col-span-2">
+                    <label class="form-label">Executed By</label>
+                    <input type="text" id="m_executed_by" class="form-input" placeholder="e.g. JOEL BERMEJO CARCIDO">
+                </div>
+                <div class="md:col-span-2">
+                    <label class="form-label">Document Type (Toggle)</label>
+                    <div class="flex gap-6 mt-1">
+                        <label class="flex items-center gap-2 cursor-pointer font-bold text-sm">
+                            <input type="radio" name="m_doc_type" value="Affidavit of Undertaking" class="w-4 h-4 text-[#003811]" checked> Affidavit of Undertaking
+                        </label>
+                        <label class="flex items-center gap-2 cursor-pointer font-bold text-sm">
+                            <input type="radio" name="m_doc_type" value="Affidavit of No Opposition" class="w-4 h-4 text-[#003811]"> Affidavit of No Opposition
+                        </label>
+                    </div>
+                </div>
+                <div><label class="form-label">Excess Area</label><input type="text" id="m_excess_area" class="form-input" placeholder="e.g. 1,273 square meters"></div>
+                <div><label class="form-label">Series of (Year)</label><input type="text" id="m_series" class="form-input" placeholder="e.g. 2026"></div>
+                <div><label class="form-label">Doc. No.</label><input type="text" id="m_doc_no" class="form-input" placeholder="e.g. 405"></div>
+                <div><label class="form-label">Page No.</label><input type="text" id="m_page_no" class="form-input" placeholder="e.g. 82"></div>
+                <div><label class="form-label">Book No.</label><input type="text" id="m_book_no" class="form-input" placeholder="e.g. V"></div>
+                <div><label class="form-label">Date Executed</label><input type="text" id="m_date" class="form-input" placeholder="e.g. May 11, 2026"></div>
+                <div class="md:col-span-2"><label class="form-label">Notary Public</label><input type="text" id="m_notary" class="form-input" placeholder="e.g. Atty. Chelsea Audrey P. Masuhay, RPh."></div>
+            </div>
+            <div class="flex justify-end gap-3 mt-8 pt-4 border-t">
+                <button type="button" onclick="closeAffidavitModal()" class="px-5 py-2 bg-gray-200 text-gray-800 rounded font-bold text-sm hover:bg-gray-300 transition-colors">CANCEL</button>
+                <button type="button" onclick="saveAffidavitModal()" class="px-5 py-2 bg-[#D4AF37] text-white rounded font-bold text-sm hover:bg-yellow-600 transition-colors shadow-md">GENERATE & APPEND</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         const userData = sessionStorage.getItem('currentUser');
         if (!userData) { window.location.href = 'index.html'; }
@@ -129,7 +180,6 @@
         const userRole = currentUser.role.toUpperCase().trim();
         const isEncoder = userRole.includes('ENCODER');
 
-        // Security check for unauthorized roles
         if (userRole.includes('RECORDS') || userRole.includes('PARPO')) {
             alert("Access Denied: Your role is not authorized to create new clearances.");
             window.location.href = 'dashboard.html';
@@ -166,7 +216,6 @@
                     
                     let roles = [];
                     if (item.required_roles) {
-                        // Fix for Supabase jsonb/array handling
                         if (Array.isArray(item.required_roles)) {
                             roles = item.required_roles;
                         } else {
@@ -191,6 +240,70 @@
                 });
             } catch (err) { console.error("Menu loading error:", err); }
         }
+
+        /* --- UPDATED FEATURE: Trigger Affidavit on ANY valid area input --- */
+        let hasPromptedForAffidavit = false;
+        const affidavitData = { has_affidavit: false }; 
+
+        document.getElementById('areaInput').addEventListener('blur', function() {
+            const val = parseFloat(this.value);
+            // Modified to trigger if area is greater than 0 (handling both < 5 and > 5 scenarios)
+            if (!isNaN(val) && val > 0 && !hasPromptedForAffidavit) {
+                // Dynamic prompt text based on area
+                const promptText = val > 5 
+                    ? "The area entered is greater than 5 hectares. Do you have an Undertaking or Affidavit of No Opposition?" 
+                    : "The area entered is less than or equal to 5 hectares. Do you have an Undertaking or Affidavit of No Opposition?";
+                
+                document.getElementById('areaPromptText').innerText = promptText;
+                document.getElementById('areaPromptModal').classList.remove('hidden');
+                hasPromptedForAffidavit = true; 
+            }
+        });
+        
+        // Reset logic if input is cleared or drops to an invalid number
+        document.getElementById('areaInput').addEventListener('input', function() {
+            const val = parseFloat(this.value);
+            if (isNaN(val) || val <= 0) {
+                hasPromptedForAffidavit = false;
+                affidavitData.has_affidavit = false;
+                document.getElementById('certPreviewContainer').classList.add('hidden');
+            }
+        });
+
+        function handleAreaPrompt(hasAffidavit) {
+            document.getElementById('areaPromptModal').classList.add('hidden');
+            if (hasAffidavit) {
+                document.getElementById('affidavitDetailsModal').classList.remove('hidden');
+            } else {
+                affidavitData.has_affidavit = false;
+            }
+        }
+
+        function closeAffidavitModal() {
+            document.getElementById('affidavitDetailsModal').classList.add('hidden');
+        }
+
+        function saveAffidavitModal() {
+            affidavitData.has_affidavit = true;
+            affidavitData.executed_by = document.getElementById('m_executed_by').value;
+            affidavitData.document_type = document.querySelector('input[name="m_doc_type"]:checked').value;
+            affidavitData.excess_area = document.getElementById('m_excess_area').value;
+            affidavitData.series_year = document.getElementById('m_series').value;
+            affidavitData.doc_no = document.getElementById('m_doc_no').value;
+            affidavitData.page_no = document.getElementById('m_page_no').value;
+            affidavitData.book_no = document.getElementById('m_book_no').value;
+            affidavitData.date_executed = document.getElementById('m_date').value;
+            affidavitData.notary_public = document.getElementById('m_notary').value;
+
+            affidavitData.generated_text = `Further, the transferee, ${affidavitData.executed_by} executed an ${affidavitData.document_type}, and manifested that he does not have Objection and no Opposition to future action by any person, entity or government agency to include, cover, process, or recognize the excess of ${affidavitData.excess_area}, as contained in the ${affidavitData.document_type} under Doc. No. ${affidavitData.doc_no}, Page No. ${affidavitData.page_no}, Book No. ${affidavitData.book_no}, Series of ${affidavitData.series_year} executed on ${affidavitData.date_executed} and notarized by ${affidavitData.notary_public}.`;
+
+            document.getElementById('certPreviewText').innerText = affidavitData.generated_text;
+            document.getElementById('certPreviewContainer').classList.remove('hidden');
+            
+            closeAffidavitModal();
+        }
+
+        /* --- END UPDATED FEATURE --- */
 
         document.getElementById('documentForm').addEventListener('submit', async function(e) {
             e.preventDefault();
@@ -217,17 +330,40 @@
                 if (error) throw error;
                 
                 if (data && data[0]) {
+                    const recordId = data[0].id;
+
                     await supabaseClient.from('status_logs').insert([{
-                        record_id: data[0].id,
+                        record_id: recordId,
                         previous_status: 'CREATED',
                         new_status: 'RECEIVED',
                         changed_by: currentUser.full_name,
                         changed_at: new Date().toISOString()
                     }]);
+
+                    if (affidavitData.has_affidavit) {
+                        const { error: affError } = await supabaseClient.from('affidavit_details').insert([{
+                            land_record_id: recordId,
+                            executed_by: affidavitData.executed_by,
+                            document_type: affidavitData.document_type,
+                            excess_area: affidavitData.excess_area,
+                            doc_no: affidavitData.doc_no,
+                            page_no: affidavitData.page_no,
+                            book_no: affidavitData.book_no,
+                            series_year: affidavitData.series_year,
+                            date_executed: affidavitData.date_executed,
+                            notary_public: affidavitData.notary_public,
+                            generated_text: affidavitData.generated_text
+                        }]);
+
+                        if (affError) console.error("Error saving affidavit details:", affError);
+                    }
                 }
 
                 alert("Application Recorded Successfully.");
                 this.reset();
+                hasPromptedForAffidavit = false;
+                document.getElementById('certPreviewContainer').classList.add('hidden');
+                
                 if (!isEncoder) { document.getElementById('legalOfficerSelect').value = currentUser.full_name; }
             } catch (err) {
                 alert("System Error: " + err.message);
