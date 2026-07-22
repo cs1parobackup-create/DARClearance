@@ -155,6 +155,9 @@
         // 2. OpenAI API Configuration
         const OPENAI_API_KEY = "sk-ijklmnop1234qrstijklmnop1234qrstijklmnop"; 
 
+        // 3. PDF.js Worker Configuration (CRITICAL FOR PDF EXTRACTION)
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
         // --- AUTH & UI INITIALIZATION ---
         const userData = sessionStorage.getItem('currentUser');
         if (!userData) window.location.href = 'index.html';
@@ -259,7 +262,9 @@
                     // 1. Handle PDF via PDF.js (Extract Pure Text instead of Base64 Image)
                     if (fileType === "application/pdf") {
                         const arrayBuffer = await file.arrayBuffer();
-                        const pdf = await pdfjsLib.getDocument(arrayBuffer).promise;
+                        // REQUIRED FIX: PDF.js requires Uint8Array
+                        const typedArray = new Uint8Array(arrayBuffer); 
+                        const pdf = await pdfjsLib.getDocument(typedArray).promise;
                         let extractedText = "";
                         
                         for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
@@ -286,10 +291,12 @@
                         reader.readAsText(file);
                         
                     // 4. Handle Standard Images
-                    } else {
+                    } else if (fileType.startsWith("image/")) {
                         const reader = new FileReader();
                         reader.onloadend = () => resolve({ type: 'image', mime: fileType, content: reader.result.split(',')[1] });
                         reader.readAsDataURL(file);
+                    } else {
+                        reject(new Error("Unsupported file format. Please upload a PDF, DOCX, DOC, or Image file."));
                     }
                 } catch (err) {
                     reject(err);
