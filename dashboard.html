@@ -95,19 +95,19 @@
         <div class="flex-1 overflow-y-auto p-6 space-y-4 no-print scroll-area">
             <div class="grid grid-cols-3 lg:grid-cols-9 gap-3">
                 <div class="bg-white p-3 rounded border-l-4 border-blue-500 text-center shadow-sm">
-                    <p class="text-[8px] font-bold text-gray-400 uppercase">Received</p>
+                    <p class="text-[8px] font-bold text-gray-400 uppercase">Received / Assigned</p>
                     <h3 id="stat-received" class="text-lg font-black text-blue-600">0</h3>
                 </div>
                 <div class="bg-white p-3 rounded border-l-4 border-indigo-500 text-center shadow-sm">
-                    <p class="text-[8px] font-bold text-gray-400 uppercase">Fwd to LTSP</p>
+                    <p class="text-[8px] font-bold text-gray-400 uppercase">LTSP Processing</p>
                     <h3 id="stat-ltsp" class="text-lg font-black text-indigo-600">0</h3>
                 </div>
                 <div class="bg-white p-3 rounded border-l-4 border-purple-500 text-center shadow-sm">
-                    <p class="text-[8px] font-bold text-gray-400 uppercase">Reviewed</p>
+                    <p class="text-[8px] font-bold text-gray-400 uppercase">Reviewed / Draft</p>
                     <h3 id="stat-recommended" class="text-lg font-black text-purple-600">0</h3>
                 </div>
                 <div class="bg-white p-3 rounded border-l-4 border-cyan-500 text-center shadow-sm">
-                    <p class="text-[8px] font-bold text-gray-400 uppercase">Printed LTC</p>
+                    <p class="text-[8px] font-bold text-gray-400 uppercase">Fwd to PARPO</p>
                     <h3 id="stat-certified" class="text-lg font-black text-cyan-600">0</h3>
                 </div>
                 <div class="bg-white p-3 rounded border-l-4 border-orange-500 text-center shadow-sm">
@@ -119,7 +119,7 @@
                     <h3 id="stat-legal" class="text-lg font-black text-red-600">0</h3>
                 </div>
                 <div class="bg-white p-3 rounded border-l-4 border-green-500 text-center shadow-sm">
-                    <p class="text-[8px] font-bold text-gray-400 uppercase">Forwarded to Records</p>
+                    <p class="text-[8px] font-bold text-gray-400 uppercase">Fwd to Records</p>
                     <h3 id="stat-records" class="text-lg font-black text-green-600">0</h3>
                 </div>
                 <div class="bg-white p-3 rounded border-l-4 border-teal-500 text-center shadow-sm">
@@ -162,7 +162,7 @@
                 </div>
                 <div class="flex gap-2 items-center">
                     <button onclick="checkPreviousRecords()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded text-xs font-black uppercase transition-colors mr-2 shadow">🔍 Check Previous</button>
-                    <button onclick="manualSave(event)" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded text-xs font-black uppercase transition-colors mr-4 shadow">💾 Save Details</button>
+                    <button onclick="manualSave(event)" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded text-xs font-black uppercase transition-colors mr-4 shadow">💾 Quick Save</button>
                     <button id="btnPrev" onclick="navigateReview(-1)" class="bg-gray-200 hover:bg-gray-300 px-4 py-2 rounded text-xs font-black uppercase transition-colors text-gray-800">&larr; Prev</button>
                     <button id="btnNext" onclick="navigateReview(1)" class="bg-gray-200 hover:bg-gray-300 px-4 py-2 rounded text-xs font-black uppercase transition-colors text-gray-800">Next &rarr;</button>
                     <button onclick="closeReview()" class="text-gray-400 hover:text-black text-3xl ml-4 font-normal leading-none">&times;</button>
@@ -243,9 +243,10 @@
                 </div>
             </div>
 
-            <div id="actionButtons" class="flex justify-between items-center no-print">
+            <div id="actionButtons" class="flex justify-between items-center no-print border-t pt-4 border-gray-200">
             </div>
 
+            <!-- Documents rendering hidden blocks -->
             <div id="docRecommendation" class="doc-print-area mx-auto hidden pt-8">
                 <div class="doc-content">
                     <div class="relative w-full mb-6 page-break-avoid">
@@ -487,7 +488,6 @@
             </div>
 
             <div id="docInterlocutoryOrder" class="doc-print-area mx-auto hidden pt-8">
-                <!-- IO CONTENT REMAINS UNCHANGED -->
                 <div class="doc-content px-8">
                     <div class="flex justify-between items-start mb-10 text-[10pt] font-bold uppercase tracking-tight">
                         <div class="w-[300px] leading-tight">
@@ -549,6 +549,20 @@
                 </div>
             </div>
 
+        </div>
+    </div>
+
+    <!-- Modal: Assign LO (ODTS Encoder Step) -->
+    <div id="assignLoModal" class="fixed inset-0 bg-black/60 hidden flex items-center justify-center z-[80] no-print">
+        <div class="bg-white p-6 rounded shadow-2xl max-w-sm w-full border-t-4 border-[#003811]">
+            <h3 class="font-black tracking-wide uppercase text-lg mb-4 text-[#003811]">Assign Legal Office</h3>
+            <select id="loDropdown" class="w-full border p-2 rounded mb-6 focus:outline-none focus:border-[#003811]">
+                <option value="">Select Legal Officer...</option>
+            </select>
+            <div class="flex justify-end gap-3">
+                <button onclick="document.getElementById('assignLoModal').classList.add('hidden')" class="px-5 py-2 bg-gray-200 text-gray-800 rounded font-bold uppercase text-xs">Cancel</button>
+                <button onclick="confirmAssignLO()" class="px-5 py-2 bg-[#003811] text-white rounded font-bold uppercase shadow text-xs">Assign</button>
+            </div>
         </div>
     </div>
 
@@ -623,12 +637,14 @@
         let currentNavList = [];
         let currentNavIndex = -1;
         let currentReviewMode = 'REVIEW';
-        const statusFlow = ['RECEIVED', 'FORWARDED TO LTSP', 'REVIEWED', 'INTERLOCUTORY ORDER ISSUED', 'PRINTED LTC', 'SIGNED BY PARPO', 'RETURNED TO LEGAL', 'FORWARDED TO RECORDS', 'RELEASED TO CLIENT', 'DISAPPROVED', 'WITHDRAWN'];
+        let allUsers = [];
 
         let chiefLegalName = "---";
         let parpoName = "---";
         let backgroundImageUrl = "";
         let userRolesMap = {};
+        
+        let selectedForAssignment = null;
 
         const DB_FIELD_MAP = {
             'LTC_ID_NUMBER': 'LTC_ID_NUMBER',
@@ -655,10 +671,10 @@
 
         function getInitialStatus(role) {
             const userRole = (role || '').toUpperCase();
-            if (userRole.includes('LCMS') || userRole.includes('ENCODER')) {
+            if (userRole.includes('LCMS') || userRole.includes('ENCODER') || userRole.includes('ODTS')) {
                 return 'RECEIVED';
             }
-            return 'REVIEWED';
+            return 'DRAFT';
         }
 
         async function fetchRequirements() {
@@ -676,40 +692,33 @@
             const userRole = currentUser.role.toUpperCase().trim();
             
             let isEncoder = userRole === 'ODTS ENCODER' || userRole.includes('ODTS') || userRole.includes('LCMS');
-            let isLegal = userRole.includes('LEGAL') || userRole.includes('SARPO') || userRole.includes('ARPT') || userRole.includes('ARPO');
+            let isLegal = userRole.includes('LEGAL') || userRole.includes('SARPO') || userRole.includes('ARPT') || userRole.includes('ARPO') || userRole.includes('ATTORNEY');
             let isLTSP = userRole.includes('LTSP');
             
             if (isEncoder || isLegal || isLTSP) {
-                document.getElementById('btnDocket').classList.remove('hidden');
+                const btnDock = document.getElementById('btnDocket');
+                btnDock.classList.remove('hidden');
+                if (isLegal) btnDock.innerText = "INITIALIZE NEW DAR CLEARANCE";
+                else btnDock.innerText = "DOCKET ENTRY / EDIT";
             }
 
             try {
-                const { data: menuItems, error } = await supabaseClient
-                    .from('clearance_menu')
-                    .select('*')
-                    .order('sort_order', { ascending: true });
-
+                const { data: menuItems, error } = await supabaseClient.from('clearance_menu').select('*').order('sort_order', { ascending: true });
                 if (error) throw error;
 
                 menuContainer.innerHTML = '';
                 menuItems.forEach(item => {
                     if (item.is_active === false || item.is_active === 'FALSE') return;
-                    
                     let roles = [];
                     if (item.required_roles) {
-                        if (Array.isArray(item.required_roles)) {
-                            roles = item.required_roles;
-                        } else {
-                            try {
-                                roles = JSON.parse(item.required_roles);
-                            } catch(e) {
-                                roles = item.required_roles.replace(/[\[\]"']/g, '').split(',').map(r => r.trim());
-                            }
+                        if (Array.isArray(item.required_roles)) { roles = item.required_roles; } 
+                        else {
+                            try { roles = JSON.parse(item.required_roles); } 
+                            catch(e) { roles = item.required_roles.replace(/[\[\]"']/g, '').split(',').map(r => r.trim()); }
                         }
                     }
 
                     const hasRole = roles.length === 0 || roles.some(r => userRole.includes(String(r).toUpperCase().trim()));
-                    
                     if (hasRole) {
                         const isCurrent = window.location.pathname.includes(item.url);
                         const link = document.createElement('a');
@@ -728,6 +737,7 @@
             try {
                 const { data, error } = await supabaseClient.from('users').select('full_name, role');
                 if (data && !error) {
+                    allUsers = data;
                     data.forEach(u => {
                         if(u.full_name) userRolesMap[u.full_name] = u.role;
                         if (u.role && String(u.role).toUpperCase().includes('CHIEF')) chiefLegalName = u.full_name;
@@ -739,9 +749,7 @@
 
         async function fetchBackgroundImage() {
             const { data } = supabaseClient.storage.from('bg').getPublicUrl('ltc_bg.jpg');
-            if (data && data.publicUrl) {
-                backgroundImageUrl = data.publicUrl;
-            }
+            if (data && data.publicUrl) { backgroundImageUrl = data.publicUrl; }
         }
 
         async function fetchClearanceData() {
@@ -770,9 +778,6 @@
                     changed_by: currentUser.full_name || 'SYSTEM',
                     changed_at: new Date().toISOString()
                 }]);
-                if (error) {
-                    console.error("Status Log Error:", error.message);
-                }
             } catch (err) { console.error("Status Log Catch:", err); }
         }
 
@@ -784,9 +789,10 @@
                 showReview(existing.id, 'REVIEW');
             } else {
                 if (confirm("Docket does not exist. Create new DAR Clearance?")) {
+                    const statusInit = getInitialStatus(currentUser.role);
                     const newRecord = { 
                         LTC_ID_NUMBER: docketNo, 
-                        status: getInitialStatus(currentUser.role),
+                        status: statusInit,
                         legalOfficer: currentUser.full_name,
                         encoded_by: currentUser.full_name
                     };
@@ -798,6 +804,35 @@
                         alert("Error creating docket: " + (error ? error.message : 'Unknown error'));
                     }
                 }
+            }
+        }
+
+        window.openAssignLO = function(id) {
+            selectedForAssignment = id;
+            const dropdown = document.getElementById('loDropdown');
+            dropdown.innerHTML = '<option value="">Select Legal Officer...</option>';
+            allUsers.forEach(u => {
+                const upperRole = (u.role || '').toUpperCase();
+                if (upperRole.includes('LEGAL') || upperRole.includes('ATTORNEY') || upperRole.includes('ARPO') || upperRole.includes('ARPT') || upperRole.includes('SARPO')) {
+                    dropdown.innerHTML += `<option value="${u.full_name}">${u.full_name} (${u.role})</option>`;
+                }
+            });
+            document.getElementById('assignLoModal').classList.remove('hidden');
+        }
+
+        window.confirmAssignLO = async function() {
+            const loName = document.getElementById('loDropdown').value;
+            if (!loName) return alert('Please select a Legal Officer');
+            const record = rawData.find(r => r.id === selectedForAssignment);
+            const oldStatus = record ? record.status : 'RECEIVED';
+            
+            const {error} = await supabaseClient.from('land_records').update({ legalOfficer: loName, status: 'ASSIGNED TO LEGAL', updated_at: new Date().toISOString() }).eq('id', selectedForAssignment);
+            
+            if (!error) {
+                await logStatusChange(selectedForAssignment, oldStatus, 'ASSIGNED TO LEGAL');
+                document.getElementById('assignLoModal').classList.add('hidden');
+                alert("DAR Clearance assigned successfully.");
+                fetchClearanceData();
             }
         }
 
@@ -901,7 +936,6 @@
             }
 
             const { data, error } = await op;
-
             if (error) {
                 alert("Error saving affidavit: " + error.message);
             } else {
@@ -911,7 +945,6 @@
                 }
                 closeAffidavitModal();
             }
-
             btn.innerText = originalText;
             btn.disabled = false;
         }
@@ -921,20 +954,14 @@
             const originalText = btn.innerText;
             btn.innerText = 'SAVING...';
             btn.disabled = true;
-
             await autoSaveEdits();
             await fetchClearanceData();
-
             btn.innerText = '✅ SAVED';
-            setTimeout(() => {
-                btn.innerText = originalText;
-                btn.disabled = false;
-            }, 2000);
+            setTimeout(() => { btn.innerText = originalText; btn.disabled = false; }, 2000);
         }
 
         async function autoSaveEdits() {
             if (!currentSelection || currentReviewMode === 'VIEW_CERT') return false;
-
             const updateData = {};
             let hasChanges = false;
             let areaChanged = false;
@@ -983,10 +1010,8 @@
             if (hasChanges) {
                 updateData.updated_at = new Date().toISOString();
                 const { error } = await supabaseClient.from('land_records').update(updateData).eq('id', currentSelection.id);
-                if(error) {
-                    console.error('Auto-save error:', error);
-                    alert("Save Error: " + error.message);
-                } else {
+                if(error) { console.error('Auto-save error:', error); }
+                else {
                     const newLtc = updateData.LTC_ID_NUMBER || currentSelection.LTC_ID_NUMBER;
                     if (newLtc) {
                         const recHeaderId = document.getElementById('rec-header-id-top');
@@ -1009,16 +1034,22 @@
         window.checkPreviousRecords = function() {
             if(!currentSelection) return;
             const owner = (currentSelection.owner_name || '').toLowerCase();
-            const loc = (currentSelection.location || '').toLowerCase();
+            const favor = (currentSelection.in_favor_of || '').toLowerCase();
             
-            if(!owner) return alert('No owner name specified to check previous records.');
+            if(!owner && !favor) return alert('No Owner Name or "In Favor Of" specified to check records.');
             
             let totalArea = 0;
             let prevDocs = [];
             rawData.forEach(r => {
                 if (r.id === currentSelection.id) return;
                 const rOwner = (r.owner_name || '').toLowerCase();
-                if (rOwner && (owner.includes(rOwner) || rOwner.includes(owner))) {
+                const rFavor = (r.in_favor_of || '').toLowerCase();
+                
+                let match = false;
+                if (owner && (rOwner.includes(owner) || rFavor.includes(owner))) match = true;
+                if (favor && (rOwner.includes(favor) || rFavor.includes(favor))) match = true;
+
+                if (match) {
                     let a = parseFloat(r.area) || 0;
                     totalArea += a;
                     prevDocs.push(`LTC No: ${r.LTC_ID_NUMBER || r.ltc_no || 'Pending'} - Area: ${a} has (Loc: ${r.location || 'Unknown'})`);
@@ -1028,29 +1059,14 @@
             if (prevDocs.length > 0) {
                 alert(`PREVIOUS RECORDS FOUND: ${prevDocs.length}\nTOTAL PREVIOUS AREA: ${totalArea.toFixed(4)} has\n\nDetails:\n${prevDocs.join('\n')}`);
             } else {
-                alert(`No previous records found for ${currentSelection.owner_name}.`);
+                alert(`No previous records found for ${owner || favor}.`);
             }
         };
-
-        window.transferLO = async function(id) {
-            const newLO = prompt("Enter new Legal Officer's full name:");
-            if (newLO) {
-                const {error} = await supabaseClient.from('land_records').update({ legalOfficer: newLO, updated_at: new Date().toISOString() }).eq('id', id);
-                if (!error) {
-                    alert("DAR Clearance Transferred.");
-                    fetchClearanceData();
-                } else {
-                    alert("Error transferring: " + error.message);
-                }
-            }
-        }
 
         window.withdrawRecord = async function(id) {
             if (confirm("Are you sure you want to withdraw this application?")) {
                 const {error} = await supabaseClient.from('land_records').update({ status: 'WITHDRAWN', updated_at: new Date().toISOString() }).eq('id', id);
-                if (!error) {
-                    fetchClearanceData();
-                }
+                if (!error) { fetchClearanceData(); }
             }
         }
 
@@ -1084,9 +1100,7 @@
             let missingList = Array.from(checkboxes).map(cb => cb.value);
             
             const other = document.getElementById('otherRequirements').value.trim();
-            if (other) {
-                missingList.push(other);
-            }
+            if (other) { missingList.push(other); }
             
             if (missingList.length === 0) {
                 alert("Please select or specify at least one lacking requirement.");
@@ -1095,14 +1109,21 @@
             
             const plainText = missingList.join('\n');
             document.getElementById('reviewRemarks').value = plainText;
-            
             const htmlList = missingList.map(item => `<li class="mb-1">${item}</li>`).join('');
             document.getElementById('io-remarks').innerHTML = htmlList;
             
             closeInterlocutoryModal();
-            
-            await decideStatus('INTERLOCUTORY ORDER ISSUED');
+            await decideStatus('WITH INTERLOCK');
             openPrint(currentSelection.id, 'io');
+        }
+
+        window.saveFinalAndForward = async function() {
+            await autoSaveEdits();
+            await decideStatus('FORWARDED TO PARPO');
+            setTimeout(() => {
+                alert('Saved Final. Recommendation will now print.');
+                openPrint(currentSelection.id, 'rec');
+            }, 500);
         }
 
         function refreshDashboard() {
@@ -1114,7 +1135,7 @@
             let userRole = currentUser.role.toUpperCase();
             let isParpo = userRole === 'PARPO II' || userRole === 'PARPO';
             let isChief = userRole === 'CHIEF, LEGAL DIVISION' || userRole === 'DIVISION CHIEF' || userRole === 'CHIEF';
-            let isLegal = (userRole.includes('LEGAL') || userRole.includes('SARPO') || userRole.includes('ARPT') || userRole.includes('ARPO')) && !isParpo;
+            let isLegal = (userRole.includes('LEGAL') || userRole.includes('SARPO') || userRole.includes('ARPT') || userRole.includes('ARPO') || userRole.includes('ATTORNEY')) && !isParpo;
             let isEncoder = userRole === 'ODTS ENCODER' || userRole.includes('ODTS') || userRole.includes('LCMS');
             let isRecords = userRole.includes('RECORDS');
             let isLTSP = userRole.includes('LTSP');
@@ -1124,122 +1145,76 @@
 
             rawData.forEach(item => {
                 let matchesSearch = false;
-                if (query === '') {
-                    matchesSearch = true;
-                } else {
-                    matchesSearch = Object.values(item).some(val => 
-                        val !== null && String(val).toLowerCase().includes(query)
-                    );
+                if (query === '') { matchesSearch = true; } 
+                else {
+                    matchesSearch = Object.values(item).some(val => val !== null && String(val).toLowerCase().includes(query));
                 }
 
                 if (isLegal && !isChief) {
                     let loName = (item.legalOfficer || item.legalofficer || item.encoded_by || item.created_by || '').toLowerCase();
-                    if (loName !== userFullName.toLowerCase()) {
-                        matchesSearch = false;
-                    }
+                    if (loName !== userFullName.toLowerCase()) matchesSearch = false;
                 }
 
                 if (matchesSearch) {
-                    
                     let st = (item.status || 'RECEIVED').trim().toUpperCase();
                     
-                    if (st === 'RECEIVED' || st === 'RECEIVED - LEGAL') { stats.rec++; st = 'RECEIVED'; }
-                    else if (st === 'FORWARDED TO LTSP') { stats.ltsp++; st = 'FORWARDED TO LTSP'; }
-                    else if (st === 'REVIEWED' || st === 'REVIEWED AND RECOMMENDED' || st === 'RECOMMENDED') { stats.rev++; st = 'REVIEWED'; }
-                    else if (st === 'INTERLOCUTORY ORDER ISSUED') { stats.rev++; st = 'INTERLOCUTORY ORDER ISSUED'; }
-                    else if (st === 'PRINTED LTC' || st === 'CERTIFIED' || st === 'PROCESSED') { stats.cer++; st = 'PRINTED LTC'; }
-                    else if (st === 'SIGNED BY PARPO' || st === 'SIGNED' || st === 'FOR SIGNATURE - PARPO II') { stats.sig++; st = 'SIGNED BY PARPO'; }
-                    else if (st === 'RETURNED TO LEGAL' || st === 'TO LEGAL' || st === 'FORWARDED - RECORDS') { stats.leg++; st = 'RETURNED TO LEGAL'; }
-                    else if (st === 'FORWARDED TO RECORDS' || st === 'TO RECORDS') { stats.recd++; st = 'FORWARDED TO RECORDS'; }
-                    else if (st === 'RELEASED TO CLIENT' || st === 'RELEASED - CLIENT' || st === 'RELEASE TO CLIENT') { stats.rel++; st = 'RELEASED TO CLIENT'; }
-                    else if (st === 'DISAPPROVED') { stats.dis++; st = 'DISAPPROVED'; }
-                    else if (st === 'WITHDRAWN') { st = 'WITHDRAWN'; }
-                    else if (st === 'CORRECTED') { st = 'CORRECTED'; }
-                    else if (st === 'RE-ISSUED') { st = 'RE-ISSUED'; }
+                    // Stats calculation matching requested mappings
+                    if (st === 'RECEIVED' || st === 'ASSIGNED TO LEGAL') { stats.rec++; }
+                    else if (st === 'FORWARDED TO LTSP' || st === 'RETURNED FROM LTSP') { stats.ltsp++; }
+                    else if (st === 'DRAFT' || st === 'WITH INTERLOCK') { stats.rev++; }
+                    else if (st === 'FORWARDED TO PARPO') { stats.cer++; }
+                    else if (st === 'SIGNED BY PARPO') { stats.sig++; }
+                    else if (st === 'RETURNED TO LEGAL (SIGNED)') { stats.leg++; }
+                    else if (st === 'FORWARDED TO RECORDS') { stats.recd++; }
+                    else if (st === 'RELEASED TO CLIENT') { stats.rel++; }
+                    else if (st === 'DISAPPROVED') { stats.dis++; }
 
                     let daysPassed = item.updated_at ? getWorkingDays(new Date(item.updated_at), new Date()) : 0;
                     let warningHTML = daysPassed > 5 ? `<span class="text-red-600 font-black ml-2 text-[12px]" title="Exceeded 5 working days!">⚠️</span>` : '';
-
                     let actions = '<div class="flex flex-col gap-1 w-full max-w-[120px] mx-auto">';
                     
-                    if (!isEncoder) {
-                        if (st === 'RECEIVED') {
-                            if (isChief || isLegal) {
-                                actions += `<button onclick='showReview("${item.id}", "REVIEW")' class="bg-[#003811] text-white w-full py-1.5 rounded shadow text-[10px] font-bold tracking-wide hover:bg-black uppercase transition-colors text-center">Review</button>`;
-                                actions += `<button onclick='processToNext("${item.id}", "FORWARDED TO LTSP", "${st}")' class="bg-indigo-600 text-white w-full py-1 mt-1 rounded shadow text-[9px] font-bold hover:bg-indigo-800 uppercase transition-colors text-center">Forward to LTSP</button>`;
-                                actions += `<button onclick='createVariant("${item.id}")' class="bg-white text-gray-800 border border-gray-300 w-full py-1 mt-1 rounded shadow text-[9px] font-bold hover:bg-gray-100 uppercase transition-colors text-center">+ Variant</button>`;
-                            }
-                        } else if (st === 'FORWARDED TO LTSP') {
-                            if (isLTSP) {
-                                actions += `<button onclick='processToNext("${item.id}", "RETURNED TO LEGAL", "${st}")' class="bg-indigo-600 text-white w-full py-1.5 rounded shadow text-[10px] font-bold hover:bg-indigo-700 uppercase transition-colors text-center">Forward to Legal</button>`;
-                            }
-                        } else if (st === 'REVIEWED' || st === 'INTERLOCUTORY ORDER ISSUED') {
-                            if (isChief || isLegal) {
-                                actions += `<button onclick='showReview("${item.id}", "REVIEW")' class="bg-[#003811] text-white w-full py-1.5 rounded shadow text-[10px] font-bold tracking-wide hover:bg-black uppercase transition-colors text-center">Review</button>`;
-                                actions += `<button onclick='openPrint("${item.id}", "rec")' class="bg-[#8b5cf6] text-white w-full py-1.5 rounded shadow text-[9px] font-black tracking-wide hover:bg-purple-800 uppercase transition-colors text-center mt-1">Recommendation</button>`;
-                                actions += `<button onclick='openPrint("${item.id}", "cert")' class="bg-[#d97706] text-white w-full py-1.5 rounded shadow text-[9px] font-black tracking-wide hover:bg-amber-700 uppercase transition-colors text-center mt-1">Certification</button>`;
-                                actions += `<button onclick='createVariant("${item.id}")' class="bg-white text-gray-800 border border-gray-300 w-full py-1 rounded shadow text-[9px] font-bold hover:bg-gray-100 uppercase transition-colors text-center mt-1">+ Variant</button>`;
-                            }
-                        } else if (st === 'PRINTED LTC') {
-                            if (isParpo) {
-                                actions += `<button onclick='showReview("${item.id}", "REVIEW")' class="bg-[#003811] text-white w-full py-1.5 rounded shadow text-[9px] font-black tracking-wide hover:bg-black uppercase transition-colors text-center">Edit</button>`;
-                                actions += `<button onclick='openPrint("${item.id}", "rec")' class="bg-[#8b5cf6] text-white w-full py-1.5 rounded shadow text-[9px] font-black tracking-wide hover:bg-purple-800 uppercase transition-colors text-center">Recommendation</button>`;
-                                actions += `<button onclick='openPrint("${item.id}", "cert")' class="bg-[#d97706] text-white w-full py-1.5 rounded shadow text-[9px] font-black tracking-wide hover:bg-amber-700 uppercase transition-colors text-center">Certification</button>`;
-                                actions += `<button onclick='processToNext("${item.id}", "SIGNED BY PARPO", "${st}")' class="bg-cyan-600 text-white w-full py-1.5 rounded shadow text-[10px] font-bold hover:bg-cyan-700 uppercase transition-colors text-center mt-1">Sign</button>`;
-                            } else if (isChief || isLegal) {
-                                actions += `<button onclick='openPrint("${item.id}", "rec")' class="bg-[#8b5cf6] text-white w-full py-1.5 rounded shadow text-[9px] font-black tracking-wide hover:bg-purple-800 uppercase transition-colors text-center">Recommendation</button>`;
-                                actions += `<button onclick='openPrint("${item.id}", "cert")' class="bg-[#d97706] text-white w-full py-1.5 rounded shadow text-[9px] font-black tracking-wide hover:bg-amber-700 uppercase transition-colors text-center">Certification</button>`;
-                            }
-                        } else if (st === 'SIGNED BY PARPO') {
-                            if (isParpo) {
-                                actions += `<button onclick='processToNext("${item.id}", "RETURNED TO LEGAL", "${st}")' class="bg-cyan-600 text-white w-full py-1.5 rounded shadow text-[10px] font-bold hover:bg-cyan-700 uppercase transition-colors text-center">Return to Legal</button>`;
-                            }
-                        } else if (st === 'RETURNED TO LEGAL') {
-                            if (isChief || isLegal) {
-                                actions += `<button onclick='openPrint("${item.id}", "rec")' class="bg-[#8b5cf6] text-white w-full py-1.5 rounded shadow text-[9px] font-black tracking-wide hover:bg-purple-800 uppercase transition-colors text-center mb-1">Recommendation</button>`;
-                                actions += `<button onclick='openPrint("${item.id}", "cert")' class="bg-[#d97706] text-white w-full py-1.5 rounded shadow text-[9px] font-black tracking-wide hover:bg-amber-700 uppercase transition-colors text-center mb-1">Certification</button>`;
-                                actions += `<button onclick='processToNext("${item.id}", "FORWARDED TO RECORDS", "${st}")' class="bg-cyan-600 text-white w-full py-1.5 rounded shadow text-[10px] font-bold hover:bg-cyan-700 uppercase transition-colors text-center">TO RECORDS</button>`;
-                            }
-                        } else if (st === 'FORWARDED TO RECORDS') {
-                            if (isRecords || isChief) {
-                                actions += `<button onclick='processToNext("${item.id}", "RELEASED TO CLIENT", "${st}")' class="bg-cyan-600 text-white w-full py-1.5 rounded shadow text-[10px] font-bold hover:bg-cyan-700 uppercase transition-colors text-center mb-1">Release</button>`;
-                            }
-                            if (isParpo || isLegal || isRecords || isChief) {
-                                actions += `<button onclick='showReview("${item.id}", "VIEW_CERT")' class="bg-gray-500 text-white w-full py-1.5 rounded shadow text-[10px] font-bold hover:bg-gray-600 uppercase transition-colors text-center mb-1">View</button>`;
-                            }
-                        } else if (st === 'RELEASED TO CLIENT' || st === 'RELEASED - CLIENT' || st === 'RELEASE TO CLIENT') {
-                            if (isChief || isLegal) {
-                                actions += `<button onclick='handleDuplicate("${item.id}", "CORRECTION")' class="bg-yellow-500 text-white w-full py-1.5 rounded shadow text-[10px] font-bold hover:bg-yellow-600 uppercase transition-colors text-center mb-1">Correction</button>`;
-                                actions += `<button onclick='handleDuplicate("${item.id}", "RE-ISSUANCE")' class="bg-blue-500 text-white w-full py-1.5 rounded shadow text-[10px] font-bold hover:bg-blue-600 uppercase transition-colors text-center mb-1">Re-Issue</button>`;
-                            }
-                            if (isParpo || isRecords) {
-                                actions += `<button onclick='showReview("${item.id}", "VIEW_CERT")' class="bg-gray-500 text-white w-full py-1.5 rounded shadow text-[10px] font-bold hover:bg-gray-600 uppercase transition-colors text-center mb-1">View</button>`;
-                            }
-                        } else if (st === 'DISAPPROVED') {
-                            if (isChief || isLegal) {
-                                actions += `<button onclick='showReview("${item.id}", "UPDATE")' class="bg-blue-600 text-white w-full py-1.5 rounded shadow text-[10px] font-bold hover:bg-blue-700 uppercase transition-colors text-center mb-1">Update</button>`;
-                                actions += `<button onclick='openPrint("${item.id}", "io")' class="bg-red-600 text-white w-full py-1.5 rounded shadow text-[10px] font-bold hover:bg-red-700 uppercase transition-colors text-center mb-1">Print Interlocutory</button>`;
-                                actions += `<button onclick='processToNext("${item.id}", "REVIEWED", "${st}")' class="bg-green-600 text-white w-full py-1.5 rounded shadow text-[10px] font-bold hover:bg-green-700 uppercase transition-colors text-center mb-1">Compliance Met</button>`;
-                            }
-                        } else if (st === 'CORRECTED' || st === 'RE-ISSUED') {
-                            actions += `<button onclick='showReview("${item.id}", "VIEW_CERT")' class="bg-gray-500 text-white w-full py-1.5 rounded shadow text-[10px] font-bold hover:bg-gray-600 uppercase transition-colors text-center mb-1">View</button>`;
+                    if (isEncoder) {
+                        if (st === 'RECEIVED' || st === 'ASSIGNED TO LEGAL') {
+                            actions += `<button onclick='showReview("${item.id}", "REVIEW")' class="bg-[#003811] text-white w-full py-1.5 rounded shadow text-[9px] font-bold tracking-wide hover:bg-black uppercase transition-colors text-center">Update Details</button>`;
+                            actions += `<button onclick='openAssignLO("${item.id}")' class="bg-blue-600 text-white w-full py-1 mt-1 rounded shadow text-[9px] font-bold hover:bg-blue-800 uppercase transition-colors text-center">Assign LO</button>`;
+                            actions += `<button onclick='processToNext("${item.id}", "FORWARDED TO LTSP", "${st}")' class="bg-indigo-600 text-white w-full py-1 mt-1 rounded shadow text-[9px] font-bold hover:bg-indigo-800 uppercase transition-colors text-center">Forward to LTSP</button>`;
                         }
-                    } else if (isEncoder) {
-                        actions += `<button onclick='showReview("${item.id}", "REVIEW")' class="bg-[#003811] text-white w-full py-1.5 rounded shadow text-[10px] font-bold tracking-wide hover:bg-black uppercase transition-colors text-center">Update Details</button>`;
-                        actions += `<button onclick='processToNext("${item.id}", "FORWARDED TO LTSP", "${st}")' class="bg-indigo-600 text-white w-full py-1 mt-1 rounded shadow text-[9px] font-bold hover:bg-indigo-800 uppercase transition-colors text-center">Forward to LTSP</button>`;
                     }
-
-                    if (isChief) {
-                        actions += `<button onclick='transferLO("${item.id}")' class="bg-blue-500 text-white w-full py-1 mt-1 rounded shadow text-[9px] font-bold hover:bg-blue-700 uppercase transition-colors text-center">Transfer</button>`;
+                    if (isLTSP) {
+                        if (st === 'FORWARDED TO LTSP') {
+                            actions += `<button onclick='processToNext("${item.id}", "RETURNED FROM LTSP", "${st}")' class="bg-indigo-600 text-white w-full py-1.5 rounded shadow text-[10px] font-bold hover:bg-indigo-700 uppercase transition-colors text-center">Return to Legal</button>`;
+                        }
+                    }
+                    if (isLegal && !isParpo) {
+                        if (['ASSIGNED TO LEGAL', 'RETURNED FROM LTSP', 'DRAFT', 'WITH INTERLOCK', 'RECEIVED'].includes(st)) {
+                            actions += `<button onclick='showReview("${item.id}", "REVIEW")' class="bg-[#003811] text-white w-full py-1.5 rounded shadow text-[10px] font-bold tracking-wide hover:bg-black uppercase transition-colors text-center">Review / Process</button>`;
+                            actions += `<button onclick='createVariant("${item.id}")' class="bg-white text-gray-800 border border-gray-300 w-full py-1 mt-1 rounded shadow text-[9px] font-bold hover:bg-gray-100 uppercase transition-colors text-center">+ Variant</button>`;
+                        }
+                        if (st === 'RETURNED TO LEGAL (SIGNED)') {
+                            actions += `<button onclick='processToNext("${item.id}", "FORWARDED TO RECORDS", "${st}")' class="bg-cyan-600 text-white w-full py-1.5 rounded shadow text-[10px] font-bold hover:bg-cyan-700 uppercase transition-colors text-center mt-1">Fwd to Records</button>`;
+                        }
+                        if (st === 'RELEASED TO CLIENT') {
+                            actions += `<button onclick='handleDuplicate("${item.id}", "CORRECTION")' class="bg-yellow-500 text-white w-full py-1.5 rounded shadow text-[10px] font-bold hover:bg-yellow-600 uppercase transition-colors text-center mb-1">Correction</button>`;
+                            actions += `<button onclick='handleDuplicate("${item.id}", "RE-ISSUANCE")' class="bg-blue-500 text-white w-full py-1.5 rounded shadow text-[10px] font-bold hover:bg-blue-600 uppercase transition-colors text-center mb-1">Re-Issue</button>`;
+                        }
+                    }
+                    if (isParpo) {
+                        if (st === 'FORWARDED TO PARPO' || st === 'SIGNED BY PARPO') {
+                            actions += `<button onclick='showReview("${item.id}", "REVIEW")' class="bg-[#003811] text-white w-full py-1.5 rounded shadow text-[10px] font-black tracking-wide hover:bg-black uppercase transition-colors text-center">Review & Sign</button>`;
+                        }
+                    }
+                    if (isRecords) {
+                        if (st === 'FORWARDED TO RECORDS') {
+                            actions += `<button onclick='processToNext("${item.id}", "RELEASED TO CLIENT", "${st}")' class="bg-cyan-600 text-white w-full py-1.5 rounded shadow text-[10px] font-bold hover:bg-cyan-700 uppercase transition-colors text-center mb-1">Release to Client</button>`;
+                        }
                     }
                     
-                    if (!['SIGNED BY PARPO', 'RETURNED TO LEGAL', 'FORWARDED TO RECORDS', 'RELEASED TO CLIENT', 'DISAPPROVED', 'WITHDRAWN'].includes(st)) {
+                    if (isChief && st !== 'WITHDRAWN') {
                         actions += `<button onclick='withdrawRecord("${item.id}")' class="bg-gray-400 text-white w-full py-1 mt-1 rounded shadow text-[9px] font-bold hover:bg-gray-600 uppercase transition-colors text-center">Withdraw</button>`;
                     }
-                    
-                    const postSignStatuses = ['SIGNED BY PARPO', 'RETURNED TO LEGAL', 'FORWARDED TO RECORDS', 'RELEASED TO CLIENT', 'CORRECTED', 'RE-ISSUED'];
-                    if ((isChief || isLegal) && !postSignStatuses.includes(st)) {
-                        actions += `<button onclick='deleteRecord("${item.id}")' class="bg-red-700 text-white w-full py-1 rounded shadow text-[9px] font-bold hover:bg-red-900 uppercase transition-colors text-center mt-1">Delete</button>`;
+
+                    if (['FORWARDED TO PARPO', 'SIGNED BY PARPO', 'RETURNED TO LEGAL (SIGNED)', 'FORWARDED TO RECORDS', 'RELEASED TO CLIENT', 'CORRECTED', 'RE-ISSUED'].includes(st)) {
+                        actions += `<button onclick='showReview("${item.id}", "VIEW_CERT")' class="bg-gray-500 text-white w-full py-1.5 mt-1 rounded shadow text-[10px] font-bold hover:bg-gray-600 uppercase transition-colors text-center">View</button>`;
                     }
 
                     actions += `</div>`;
@@ -1265,54 +1240,31 @@
             const actionDiv = document.getElementById('actionButtons');
             if (currentSelection) {
                 let currentSt = (currentSelection.status || 'RECEIVED').trim().toUpperCase();
-                let printButtons = '';
                 
-                if (currentSt === 'REVIEWED' || currentSt === 'PRINTED LTC' || currentSt === 'INTERLOCUTORY ORDER ISSUED') {
-                    if (isChief || isLegal || isParpo) {
-                        printButtons = `
-                            <button onclick='openPrint("${currentSelection.id}", "rec")' class="bg-[#8b5cf6] text-white px-4 py-2 rounded text-xs font-black uppercase shadow hover:bg-purple-800 transition-colors">Print Recommendation</button>
-                            <button onclick='openPrint("${currentSelection.id}", "cert")' class="bg-[#d97706] text-white px-4 py-2 rounded text-xs font-black uppercase shadow hover:bg-amber-700 transition-colors">Print Certification</button>
-                        `;
-                    }
-                }
-
                 if (currentReviewMode === 'VIEW_CERT') {
                     actionDiv.innerHTML = '';
-                } else if (currentReviewMode === 'CORRECTION' || currentReviewMode === 'RE-ISSUANCE' || currentReviewMode === 'UPDATE') {
-                    actionDiv.innerHTML = `
-                        <div class="flex gap-2 w-full justify-end">
-                            <button onclick="decideStatus('PRINTED LTC')" class="bg-yellow-600 text-white px-8 py-3 rounded text-sm font-black uppercase shadow-lg hover:bg-yellow-700 transition-colors">Save & Route to PARPO</button>
-                        </div>
-                    `;
-                } else if (currentSt === 'PRINTED LTC' && (userRole === 'PARPO II' || userRole === 'PARPO')) {
-                    actionDiv.innerHTML = `
-                        <div class="flex gap-2 w-full justify-end">
-                            ${printButtons}
-                            <button onclick="decideStatus('PRINTED LTC')" class="bg-green-700 text-white px-8 py-3 rounded text-sm font-black uppercase shadow-lg hover:bg-green-800 transition-colors">Update Details</button>
-                        </div>
-                    `;
-                } else if (currentSt === 'RECEIVED' || currentSt === 'REVIEWED') {
-                    actionDiv.innerHTML = `
-                        <div class="flex gap-2 w-full justify-end">
-                            ${printButtons}
-                            <button onclick="decideStatus('PRINTED LTC')" class="bg-green-700 text-white px-8 py-3 rounded text-sm font-black uppercase shadow-lg hover:bg-green-800 transition-colors">Save and Print</button>
-                            <button onclick="issueInterlocutory()" class="bg-yellow-700 text-white px-8 py-3 rounded text-sm font-black uppercase shadow-lg hover:bg-yellow-800 transition-colors">Issue Interlocutory Order</button>
-                        </div>
-                    `;
-                } else if (currentSt === 'INTERLOCUTORY ORDER ISSUED') {
-                    actionDiv.innerHTML = `
-                        <div class="flex gap-2 w-full justify-end">
-                            ${printButtons}
-                            <button onclick="decideStatus('PRINTED LTC')" class="bg-green-700 text-white px-8 py-3 rounded text-sm font-black uppercase shadow-lg hover:bg-green-800 transition-colors">Save and Print</button>
-                            <button onclick="decideStatus('DISAPPROVED')" class="bg-red-700 text-white px-8 py-3 rounded text-sm font-black uppercase shadow-lg hover:bg-red-800 transition-colors">Deny</button>
-                        </div>
-                    `;
                 } else {
-                     actionDiv.innerHTML = `
-                        <div class="flex gap-2 w-full justify-end">
-                            ${printButtons}
-                        </div>
-                    `;
+                    let btns = `<div class="flex gap-2 w-full justify-end">`;
+                    
+                    if (isLegal && !isParpo) {
+                        if (['RECEIVED', 'ASSIGNED TO LEGAL', 'RETURNED FROM LTSP', 'DRAFT', 'WITH INTERLOCK'].includes(currentSt)) {
+                            btns += `<button onclick="decideStatus('DRAFT')" class="bg-blue-600 text-white px-6 py-2 rounded text-xs font-black shadow hover:bg-blue-700 transition-colors">SAVE DRAFT</button>`;
+                            btns += `<button onclick="issueInterlocutory()" class="bg-yellow-600 text-white px-6 py-2 rounded text-xs font-black shadow hover:bg-yellow-700 transition-colors">GENERATE INTERLOCUTORY ORDER</button>`;
+                            btns += `<button onclick="saveFinalAndForward()" class="bg-green-700 text-white px-6 py-2 rounded text-xs font-black shadow hover:bg-green-800 transition-colors">SAVE FINAL & FORWARD TO PARPO</button>`;
+                        }
+                    }
+                    if (isParpo) {
+                        if (currentSt === 'FORWARDED TO PARPO') {
+                            btns += `<button onclick='openPrint("${currentSelection.id}", "rec")' class="bg-[#8b5cf6] text-white px-6 py-2 rounded text-xs font-black uppercase shadow hover:bg-purple-800 transition-colors">PRINT RECOMMENDATION</button>`;
+                            btns += `<button onclick='openPrint("${currentSelection.id}", "cert")' class="bg-[#d97706] text-white px-6 py-2 rounded text-xs font-black uppercase shadow hover:bg-amber-700 transition-colors">PRINT CERTIFICATION</button>`;
+                            btns += `<button onclick="decideStatus('SIGNED BY PARPO')" class="bg-orange-600 text-white px-6 py-2 rounded text-xs font-black shadow hover:bg-orange-700 transition-colors">SIGN APPROVAL</button>`;
+                        }
+                        if (currentSt === 'SIGNED BY PARPO') {
+                            btns += `<button onclick="decideStatus('RETURNED TO LEGAL (SIGNED)')" class="bg-red-600 text-white px-6 py-2 rounded text-xs font-black shadow hover:bg-red-700 transition-colors">RETURN TO LEGAL</button>`;
+                        }
+                    }
+                    btns += `</div>`;
+                    actionDiv.innerHTML = btns;
                 }
             }
             updateStats(stats);
@@ -1321,12 +1273,7 @@
         window.deleteRecord = async function(id) {
             if (confirm("Are you sure you want to permanently delete this record? This action cannot be undone.")) {
                 const { error } = await supabaseClient.from('land_records').delete().eq('id', id);
-                if (error) {
-                    alert('Error deleting record: ' + error.message);
-                } else {
-                    alert('Record successfully deleted.');
-                    fetchClearanceData();
-                }
+                if (!error) { fetchClearanceData(); }
             }
         }
 
@@ -1348,19 +1295,13 @@
             if (!confirm(`Create a new variant for this clearance?\nNew LTC No will be: ${newNo}`)) return;
 
             const { id: oldId, created_at, updated_at, ...newRecordData } = record;
-            
             if(newRecordData.ltc_no !== undefined) delete newRecordData.ltc_no;
 
             newRecordData.LTC_ID_NUMBER = newNo;
             newRecordData.status = getInitialStatus(currentUser.role); 
 
             const { error } = await supabaseClient.from('land_records').insert([newRecordData]);
-            if (error) {
-                alert('Error creating variant: ' + error.message);
-            } else {
-                alert('Variant created successfully! You can now edit the "In favor of" details via the Review button.');
-                fetchClearanceData();
-            }
+            if (!error) { fetchClearanceData(); }
         }
 
         window.handleDuplicate = async function(id, mode) {
@@ -1368,39 +1309,22 @@
             if (!record) return;
 
             let newLtc = `NEW (${mode})`;
-
-            if (mode === 'CORRECTION' || mode === 'RE-ISSUANCE') {
-                const proceed = confirm(`Process a ${mode} for this record?\nClick OK to continue.`);
-                if (!proceed) return;
-            } else {
-                if (!confirm(`Are you sure you want to process a ${mode} for this record? A new entry will be created requiring a new LTC Number.`)) return;
-            }
+            if (!confirm(`Process a ${mode} for this record?\nA new entry will be created requiring a new LTC Number.`)) return;
 
             const { id: oldId, created_at, updated_at, ...newRecordData } = record;
-            
             if(newRecordData.ltc_no !== undefined) delete newRecordData.ltc_no;
 
             let colLtc = record.hasOwnProperty('LTC_ID_NUMBER') ? 'LTC_ID_NUMBER' : 'ltc_no';
             newRecordData[colLtc] = newLtc; 
-            newRecordData.status = getInitialStatus(currentUser.role); 
+            newRecordData.status = 'DRAFT'; 
             newRecordData.Remarks = '';
 
             const { data, error } = await supabaseClient.from('land_records').insert([newRecordData]).select();
-            if (error) {
-                alert(`Error processing ${mode}: ` + error.message);
-            } else {
+            if (!error) {
                 const oldStatusUpdate = mode === 'CORRECTION' ? 'CORRECTED' : 'RE-ISSUED';
-                const { error: oldUpdateError } = await supabaseClient.from('land_records').update({ 
-                    status: oldStatusUpdate, 
-                    updated_at: new Date().toISOString() 
-                }).eq('id', oldId);
+                await supabaseClient.from('land_records').update({ status: oldStatusUpdate, updated_at: new Date().toISOString() }).eq('id', oldId);
                 
-                if (!oldUpdateError) {
-                    await logStatusChange(oldId, record.status, oldStatusUpdate);
-                }
-
                 await fetchClearanceData();
-                await logStatusChange(data[0].id, 'CREATED', newRecordData.status);
                 showReview(data[0].id, mode);
             }
         }
@@ -1408,12 +1332,14 @@
         function getStatusStyle(s) {
             const colors = { 
                 'RECEIVED': 'bg-blue-100 text-blue-800 border border-blue-200',
+                'ASSIGNED TO LEGAL': 'bg-indigo-100 text-indigo-800 border border-indigo-200',
                 'FORWARDED TO LTSP': 'bg-indigo-100 text-indigo-800 border border-indigo-200', 
-                'REVIEWED': 'bg-purple-100 text-purple-800 border border-purple-200', 
-                'INTERLOCUTORY ORDER ISSUED': 'bg-yellow-100 text-yellow-800 border border-yellow-400',
-                'PRINTED LTC': 'bg-cyan-100 text-cyan-800 border border-cyan-200', 
+                'RETURNED FROM LTSP': 'bg-pink-100 text-pink-800 border border-pink-200', 
+                'DRAFT': 'bg-purple-100 text-purple-800 border border-purple-200', 
+                'WITH INTERLOCK': 'bg-yellow-100 text-yellow-800 border border-yellow-400',
+                'FORWARDED TO PARPO': 'bg-cyan-100 text-cyan-800 border border-cyan-200', 
                 'SIGNED BY PARPO': 'bg-orange-100 text-orange-800 border border-orange-200', 
-                'RETURNED TO LEGAL': 'bg-red-100 text-red-800 border border-red-200', 
+                'RETURNED TO LEGAL (SIGNED)': 'bg-red-100 text-red-800 border border-red-200', 
                 'FORWARDED TO RECORDS': 'bg-green-100 text-green-800 border border-green-200', 
                 'RELEASED TO CLIENT': 'bg-teal-100 text-teal-800 border border-teal-200',
                 'DISAPPROVED': 'bg-gray-200 text-gray-800 border border-gray-300',
@@ -1448,25 +1374,18 @@
             const query = document.getElementById('searchInput').value.toLowerCase();
             currentNavList = rawData.filter(item => {
                 let matchesSearch = false;
-                if (query === '') {
-                    matchesSearch = true;
-                } else {
-                    matchesSearch = Object.values(item).some(val => 
-                        val !== null && String(val).toLowerCase().includes(query)
-                    );
+                if (query === '') { matchesSearch = true; } 
+                else {
+                    matchesSearch = Object.values(item).some(val => val !== null && String(val).toLowerCase().includes(query));
                 }
                 return matchesSearch;
             });
             currentNavIndex = currentNavList.findIndex(r => r.id === id);
             currentSelection = currentNavList[currentNavIndex];
 
-            // Fetch current affidavit if exists
             const { data: affData, error: affError } = await supabaseClient.from('affidavit_details').select('*').eq('land_record_id', currentSelection.id).maybeSingle();
-            if (!affError && affData) {
-                currentAffidavit = affData;
-            } else {
-                currentAffidavit = null;
-            }
+            if (!affError && affData) { currentAffidavit = affData; } 
+            else { currentAffidavit = null; }
 
             const qrIdentifier = currentSelection.LTC_ID_NUMBER || currentSelection.ltc_no || 'PENDING';
             generateQRs(qrIdentifier);
@@ -1481,7 +1400,6 @@
 
             for (let dbCol in DB_FIELD_MAP) {
                 let htmlSuffix = DB_FIELD_MAP[dbCol];
-                
                 let editEl = document.getElementById(`edit-${htmlSuffix}`);
                 if(editEl) {
                     editEl.innerText = currentSelection[dbCol] || '---';
@@ -1499,11 +1417,7 @@
                 if (ioEl) {
                     if (htmlSuffix === 'area' && val !== ' ' && val !== '---') {
                         let sqMeters = parseFloat(val) * 10000;
-                        if (!isNaN(sqMeters)) {
-                            ioEl.innerText = sqMeters.toLocaleString('en-US');
-                        } else {
-                            ioEl.innerText = val;
-                        }
+                        ioEl.innerText = (!isNaN(sqMeters)) ? sqMeters.toLocaleString('en-US') : val;
                     } else {
                         ioEl.innerText = val;
                     }
@@ -1704,12 +1618,6 @@
                     }
                 }
             }).save().then(async () => {
-                if (type === 'cert' && currentSelection.status === 'REVIEWED') {
-                    const oldStatus = currentSelection.status;
-                    await supabaseClient.from('land_records').update({ status: 'PRINTED LTC', updated_at: new Date().toISOString() }).eq('id', currentSelection.id);
-                    await logStatusChange(currentSelection.id, oldStatus, 'PRINTED LTC');
-                    fetchClearanceData();
-                }
                 document.body.removeChild(overlay);
                 closeReviewModalOnly(); 
                 document.getElementById('modalMainTitle').parentElement.classList.remove('hidden');
