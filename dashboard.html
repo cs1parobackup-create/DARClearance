@@ -516,8 +516,9 @@
                         However, upon evaluation of the submitted documents, the following document is lacking, to wit:
                     </p>
 
-                    <ul class="mb-6 ml-16 list-disc list-outside text-justify leading-relaxed page-break-avoid pr-8">
-                        <li id="io-remarks" class="font-bold">---</li>
+                    <!-- Rendered as a bulleted list for the Interlocutory Order -->
+                    <ul id="io-remarks" class="mb-6 ml-16 list-disc list-outside text-justify leading-relaxed page-break-avoid pr-8 font-bold">
+                        <li>---</li>
                     </ul>
 
                     <p class="mb-8 text-justify indent-12 page-break-avoid leading-relaxed">
@@ -586,6 +587,28 @@
         </div>
     </div>
 
+    <!-- Modal: Interlocutory Checklist -->
+    <div id="interlocutoryModal" class="fixed inset-0 bg-black/60 hidden flex items-center justify-center z-[70] no-print">
+        <div class="bg-white p-6 rounded-lg shadow-2xl max-w-lg w-full border-t-4 border-yellow-600">
+            <h3 class="text-xl font-bold text-[#003811] mb-2 border-b pb-2 uppercase">Lacking Requirements</h3>
+            <p class="text-xs text-gray-500 mb-4">Select the missing documents to be included in the Interlocutory Order.</p>
+            
+            <div id="checklistContainer" class="max-h-60 overflow-y-auto space-y-2 mb-4 border p-3 rounded bg-gray-50 text-sm">
+                <!-- Checkboxes will be injected here via JS -->
+            </div>
+            
+            <div class="mt-2 mb-4">
+                <label class="text-xs font-bold text-gray-700 uppercase block mb-1">Other / Additional Remarks:</label>
+                <input type="text" id="otherRequirements" class="w-full border border-gray-300 rounded p-2 text-sm focus:outline-none focus:border-[#003811]" placeholder="Specify other missing documents...">
+            </div>
+
+            <div class="flex justify-end gap-3 mt-4 pt-4 border-t">
+                <button type="button" onclick="closeInterlocutoryModal()" class="px-4 py-2 bg-gray-200 text-gray-800 rounded font-bold text-xs uppercase hover:bg-gray-300 shadow">CANCEL</button>
+                <button type="button" onclick="submitInterlocutory()" class="px-4 py-2 bg-yellow-600 text-white rounded font-bold text-xs uppercase hover:bg-yellow-700 shadow">GENERATE ORDER</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         const userData = sessionStorage.getItem('currentUser');
         if (!userData) { window.location.href = 'index.html'; }
@@ -596,6 +619,7 @@
         let currentSelection = null;
         let currentAffidavit = null;
         let rawData = [];
+        let checklistItems = [];
         let currentNavList = [];
         let currentNavIndex = -1;
         let currentReviewMode = 'REVIEW';
@@ -635,6 +659,15 @@
                 return 'RECEIVED';
             }
             return 'REVIEWED';
+        }
+
+        async function fetchRequirements() {
+            try {
+                const { data, error } = await supabaseClient.from('ltc_requirements').select('*').eq('is_active', true);
+                if (!error && data) {
+                    checklistItems = data;
+                }
+            } catch(e) { console.error("Checklist Fetch Error:", e); }
         }
 
         async function loadMenu() {
@@ -940,7 +973,10 @@
                     hasChanges = true;
                     
                     let ioRemEl = document.getElementById('io-remarks');
-                    if(ioRemEl) ioRemEl.innerText = newRemarks;
+                    if(ioRemEl) {
+                        let items = newRemarks.split(/\n|,/).map(s => s.trim()).filter(s => s);
+                        ioRemEl.innerHTML = items.length > 0 ? items.map(item => `<li class="mb-1">${item}</li>`).join('') : '<li>---</li>';
+                    }
                 }
             }
 
@@ -1018,13 +1054,55 @@
             }
         }
 
-        window.issueInterlocutory = async function() {
-            const missing = prompt("Checklist of missing requirements (comma separated):");
-            if (missing) {
-                document.getElementById('reviewRemarks').value = missing;
-                await decideStatus('INTERLOCUTORY ORDER ISSUED');
-                openPrint(currentSelection.id, 'io');
+        window.issueInterlocutory = function() {
+            const container = document.getElementById('checklistContainer');
+            container.innerHTML = '';
+            
+            if (checklistItems.length === 0) {
+                container.innerHTML = '<p class="text-sm text-gray-500 italic">No predefined requirements found in database. Use the text box below.</p>';
+            } else {
+                checklistItems.forEach(item => {
+                    container.innerHTML += `
+                        <label class="flex items-start gap-2 cursor-pointer p-1.5 hover:bg-gray-200 rounded transition-colors">
+                            <input type="checkbox" value="${item.requirement_name}" class="mt-0.5 lacking-chk w-4 h-4 text-green-700">
+                            <span class="text-gray-800">${item.requirement_name}</span>
+                        </label>
+                    `;
+                });
             }
+            
+            document.getElementById('otherRequirements').value = '';
+            document.getElementById('interlocutoryModal').classList.remove('hidden');
+        }
+
+        window.closeInterlocutoryModal = function() {
+            document.getElementById('interlocutoryModal').classList.add('hidden');
+        }
+
+        window.submitInterlocutory = async function() {
+            const checkboxes = document.querySelectorAll('.lacking-chk:checked');
+            let missingList = Array.from(checkboxes).map(cb => cb.value);
+            
+            const other = document.getElementById('otherRequirements').value.trim();
+            if (other) {
+                missingList.push(other);
+            }
+            
+            if (missingList.length === 0) {
+                alert("Please select or specify at least one lacking requirement.");
+                return;
+            }
+            
+            const plainText = missingList.join('\n');
+            document.getElementById('reviewRemarks').value = plainText;
+            
+            const htmlList = missingList.map(item => `<li class="mb-1">${item}</li>`).join('');
+            document.getElementById('io-remarks').innerHTML = htmlList;
+            
+            closeInterlocutoryModal();
+            
+            await decideStatus('INTERLOCUTORY ORDER ISSUED');
+            openPrint(currentSelection.id, 'io');
         }
 
         function refreshDashboard() {
@@ -1054,7 +1132,6 @@
                     );
                 }
 
-                // Rule: On the dashboard, only their own DAR Clearance are visible (LO) except chief Legal who can view all
                 if (isLegal && !isChief) {
                     let loName = (item.legalOfficer || item.legalofficer || item.encoded_by || item.created_by || '').toLowerCase();
                     if (loName !== userFullName.toLowerCase()) {
@@ -1190,7 +1267,7 @@
                 let currentSt = (currentSelection.status || 'RECEIVED').trim().toUpperCase();
                 let printButtons = '';
                 
-                if (currentSt === 'REVIEWED' || currentSt === 'PRINTED LTC') {
+                if (currentSt === 'REVIEWED' || currentSt === 'PRINTED LTC' || currentSt === 'INTERLOCUTORY ORDER ISSUED') {
                     if (isChief || isLegal || isParpo) {
                         printButtons = `
                             <button onclick='openPrint("${currentSelection.id}", "rec")' class="bg-[#8b5cf6] text-white px-4 py-2 rounded text-xs font-black uppercase shadow hover:bg-purple-800 transition-colors">Print Recommendation</button>
@@ -1480,7 +1557,10 @@
             document.getElementById('reviewRemarks').onblur = () => { if(isEditable) autoSaveEdits(); };
             
             let ioRemEl = document.getElementById('io-remarks');
-            if(ioRemEl) ioRemEl.innerText = remarksVal || '---';
+            if(ioRemEl) {
+                let items = remarksVal.split(/\n|,/).map(s => s.trim()).filter(s => s);
+                ioRemEl.innerHTML = items.length > 0 ? items.map(item => `<li class="mb-1">${item}</li>`).join('') : '<li>---</li>';
+            }
 
             let ioOwnerBody = document.getElementById('io-owner-body');
             if(ioOwnerBody) ioOwnerBody.innerText = currentSelection['owner_name'] || '---';
@@ -1702,6 +1782,7 @@
         function logout() { sessionStorage.removeItem('currentUser'); window.location.href = 'index.html'; }
         
         window.onload = async () => { 
+            await fetchRequirements();
             await fetchBackgroundImage();
             await fetchDynamicSignatories();
             loadMenu(); 
