@@ -86,6 +86,7 @@
         <header class="bg-white shadow-sm border-b px-6 py-4 flex justify-between items-center no-print">
             <h1 class="text-lg font-bold text-[#003811] uppercase tracking-tight">DAR Clearance Monitoring Dashboard</h1>
             <div class="flex gap-2">
+                <button id="btnDocket" onclick="addDocket()" class="bg-indigo-600 text-white px-4 py-1.5 rounded text-xs font-bold uppercase shadow hover:bg-indigo-800 hidden">Docket Entry / Edit</button>
                 <input type="text" id="searchInput" placeholder="Search any details..." class="border border-gray-300 rounded px-3 py-1.5 text-xs focus:outline-none focus:border-[#003811] w-64" onkeyup="refreshDashboard()">
                 <button onclick="fetchClearanceData()" class="bg-[#003811] text-white px-4 py-1.5 rounded text-xs font-bold uppercase shadow hover:bg-[#006400]">Refresh</button>
             </div>
@@ -160,6 +161,7 @@
                     </div>
                 </div>
                 <div class="flex gap-2 items-center">
+                    <button onclick="checkPreviousRecords()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded text-xs font-black uppercase transition-colors mr-2 shadow">🔍 Check Previous</button>
                     <button onclick="manualSave(event)" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded text-xs font-black uppercase transition-colors mr-4 shadow">💾 Save Details</button>
                     <button id="btnPrev" onclick="navigateReview(-1)" class="bg-gray-200 hover:bg-gray-300 px-4 py-2 rounded text-xs font-black uppercase transition-colors text-gray-800">&larr; Prev</button>
                     <button id="btnNext" onclick="navigateReview(1)" class="bg-gray-200 hover:bg-gray-300 px-4 py-2 rounded text-xs font-black uppercase transition-colors text-gray-800">Next &rarr;</button>
@@ -183,6 +185,8 @@
                         <div id="edit-tct" class="edit-big">---</div>
                         <div class="font-bold text-gray-600 uppercase text-sm">Area (in has.):</div>
                         <div id="edit-area" class="edit-big">---</div>
+                        <div class="font-bold text-gray-600 uppercase text-sm">Portion Area (if any):</div>
+                        <div id="edit-portion_area" class="edit-big">---</div>
                         <div class="font-bold text-gray-600 uppercase text-sm">Declared under T.D. No:</div>
                         <div id="edit-td" class="edit-big">---</div>
                         <div class="font-bold text-gray-600 uppercase text-sm">Located at:</div>
@@ -243,18 +247,11 @@
             </div>
 
             <div id="docRecommendation" class="doc-print-area mx-auto hidden pt-8">
-                <!-- DOCUMENT CONTENT REMAINS UNCHANGED -->
                 <div class="doc-content">
                     <div class="relative w-full mb-6 page-break-avoid">
                         <div class="absolute right-0 top-0 text-right font-bold flex flex-col items-end">
                             <span class="font-bold text-[10pt]">LTC Form No. 5</span>
                             <span class="font-bold text-[10pt] mt-4 underline" id="rec-header-id-top">LTC-PENDING</span>
-                        </div>
-                        <div class="text-center text-[10pt] leading-snug font-bold uppercase">
-                            <p>Republic of the Philippines</p>
-                            <p>DEPARTMENT OF AGRARIAN REFORM</p>
-                            <p>Region V</p>
-                            <p>Province of Camarines Sur I</p>
                         </div>
                     </div>
                     
@@ -368,17 +365,10 @@
 
             <div id="docCertification" class="doc-print-area mx-auto hidden pt-8">
                 <div class="doc-content">
-                    <!-- CERTIFICATION CONTENT REMAINS UNCHANGED -->
                     <div class="relative w-full mb-6 page-break-avoid">
                         <div class="absolute right-0 top-0 text-right font-bold flex flex-col items-end">
                             <span class="font-bold text-[10pt]">LTC Form No. 5</span>
                             <span class="font-bold text-[10pt] mt-4 underline" id="cert-header-id">LTC-PENDING</span>
-                        </div>
-                        <div class="text-center text-[10pt] leading-snug font-bold uppercase">
-                            <p>Republic of the Philippines</p>
-                            <p>DEPARTMENT OF AGRARIAN REFORM</p>
-                            <p>Region V</p>
-                            <p>Province of Camarines Sur I</p>
                         </div>
                     </div>
 
@@ -609,7 +599,7 @@
         let currentNavList = [];
         let currentNavIndex = -1;
         let currentReviewMode = 'REVIEW';
-        const statusFlow = ['RECEIVED', 'FORWARDED TO LTSP', 'REVIEWED', 'PRINTED LTC', 'SIGNED BY PARPO', 'RETURNED TO LEGAL', 'FORWARDED TO RECORDS', 'RELEASED TO CLIENT', 'DISAPPROVED'];
+        const statusFlow = ['RECEIVED', 'FORWARDED TO LTSP', 'REVIEWED', 'INTERLOCUTORY ORDER ISSUED', 'PRINTED LTC', 'SIGNED BY PARPO', 'RETURNED TO LEGAL', 'FORWARDED TO RECORDS', 'RELEASED TO CLIENT', 'DISAPPROVED', 'WITHDRAWN'];
 
         let chiefLegalName = "---";
         let parpoName = "---";
@@ -622,6 +612,7 @@
             'owner_name': 'owner',
             'registered_under': 'tct',
             'area': 'area',
+            'portion_area': 'portion_area',
             'td_no': 'td',
             'location': 'location',
             'deed_type': 'deed',
@@ -651,6 +642,14 @@
             if (!currentUser || !currentUser.role) return;
             const userRole = currentUser.role.toUpperCase().trim();
             
+            let isEncoder = userRole === 'ODTS ENCODER' || userRole.includes('ODTS') || userRole.includes('LCMS');
+            let isLegal = userRole.includes('LEGAL') || userRole.includes('SARPO') || userRole.includes('ARPT') || userRole.includes('ARPO');
+            let isLTSP = userRole.includes('LTSP');
+            
+            if (isEncoder || isLegal || isLTSP) {
+                document.getElementById('btnDocket').classList.remove('hidden');
+            }
+
             try {
                 const { data: menuItems, error } = await supabaseClient
                     .from('clearance_menu')
@@ -740,11 +739,33 @@
                 }]);
                 if (error) {
                     console.error("Status Log Error:", error.message);
-                    if(error.message.includes('row-level security')) {
-                        console.warn("CRITICAL WARNING: Supabase RLS blocked status log insert.");
-                    }
                 }
             } catch (err) { console.error("Status Log Catch:", err); }
+        }
+
+        window.addDocket = async function() {
+            const docketNo = prompt("Enter Docket Number (LTC Number):");
+            if (!docketNo) return;
+            const existing = rawData.find(r => (r.LTC_ID_NUMBER === docketNo || r.ltc_no === docketNo));
+            if (existing) {
+                showReview(existing.id, 'REVIEW');
+            } else {
+                if (confirm("Docket does not exist. Create new DAR Clearance?")) {
+                    const newRecord = { 
+                        LTC_ID_NUMBER: docketNo, 
+                        status: getInitialStatus(currentUser.role),
+                        legalOfficer: currentUser.full_name,
+                        encoded_by: currentUser.full_name
+                    };
+                    const {data, error} = await supabaseClient.from('land_records').insert([newRecord]).select();
+                    if (!error && data) {
+                        await fetchClearanceData();
+                        setTimeout(() => showReview(data[0].id, 'REVIEW'), 1000);
+                    } else {
+                        alert("Error creating docket: " + (error ? error.message : 'Unknown error'));
+                    }
+                }
+            }
         }
 
         function updateAffidavitUI() {
@@ -949,6 +970,63 @@
             return hasChanges;
         }
 
+        window.checkPreviousRecords = function() {
+            if(!currentSelection) return;
+            const owner = (currentSelection.owner_name || '').toLowerCase();
+            const loc = (currentSelection.location || '').toLowerCase();
+            
+            if(!owner) return alert('No owner name specified to check previous records.');
+            
+            let totalArea = 0;
+            let prevDocs = [];
+            rawData.forEach(r => {
+                if (r.id === currentSelection.id) return;
+                const rOwner = (r.owner_name || '').toLowerCase();
+                if (rOwner && (owner.includes(rOwner) || rOwner.includes(owner))) {
+                    let a = parseFloat(r.area) || 0;
+                    totalArea += a;
+                    prevDocs.push(`LTC No: ${r.LTC_ID_NUMBER || r.ltc_no || 'Pending'} - Area: ${a} has (Loc: ${r.location || 'Unknown'})`);
+                }
+            });
+            
+            if (prevDocs.length > 0) {
+                alert(`PREVIOUS RECORDS FOUND: ${prevDocs.length}\nTOTAL PREVIOUS AREA: ${totalArea.toFixed(4)} has\n\nDetails:\n${prevDocs.join('\n')}`);
+            } else {
+                alert(`No previous records found for ${currentSelection.owner_name}.`);
+            }
+        };
+
+        window.transferLO = async function(id) {
+            const newLO = prompt("Enter new Legal Officer's full name:");
+            if (newLO) {
+                const {error} = await supabaseClient.from('land_records').update({ legalOfficer: newLO, updated_at: new Date().toISOString() }).eq('id', id);
+                if (!error) {
+                    alert("DAR Clearance Transferred.");
+                    fetchClearanceData();
+                } else {
+                    alert("Error transferring: " + error.message);
+                }
+            }
+        }
+
+        window.withdrawRecord = async function(id) {
+            if (confirm("Are you sure you want to withdraw this application?")) {
+                const {error} = await supabaseClient.from('land_records').update({ status: 'WITHDRAWN', updated_at: new Date().toISOString() }).eq('id', id);
+                if (!error) {
+                    fetchClearanceData();
+                }
+            }
+        }
+
+        window.issueInterlocutory = async function() {
+            const missing = prompt("Checklist of missing requirements (comma separated):");
+            if (missing) {
+                document.getElementById('reviewRemarks').value = missing;
+                await decideStatus('INTERLOCUTORY ORDER ISSUED');
+                openPrint(currentSelection.id, 'io');
+            }
+        }
+
         function refreshDashboard() {
             const query = document.getElementById('searchInput').value.toLowerCase();
             const tbody = document.getElementById('clearanceTableBody');
@@ -959,7 +1037,7 @@
             let isParpo = userRole === 'PARPO II' || userRole === 'PARPO';
             let isChief = userRole === 'CHIEF, LEGAL DIVISION' || userRole === 'DIVISION CHIEF' || userRole === 'CHIEF';
             let isLegal = (userRole.includes('LEGAL') || userRole.includes('SARPO') || userRole.includes('ARPT') || userRole.includes('ARPO')) && !isParpo;
-            let isEncoder = userRole === 'ODTS ENCODER' || userRole.includes('ODTS');
+            let isEncoder = userRole === 'ODTS ENCODER' || userRole.includes('ODTS') || userRole.includes('LCMS');
             let isRecords = userRole.includes('RECORDS');
             let isLTSP = userRole.includes('LTSP');
             let userFullName = currentUser.full_name;
@@ -976,6 +1054,14 @@
                     );
                 }
 
+                // Rule: On the dashboard, only their own DAR Clearance are visible (LO) except chief Legal who can view all
+                if (isLegal && !isChief) {
+                    let loName = (item.legalOfficer || item.legalofficer || item.encoded_by || item.created_by || '').toLowerCase();
+                    if (loName !== userFullName.toLowerCase()) {
+                        matchesSearch = false;
+                    }
+                }
+
                 if (matchesSearch) {
                     
                     let st = (item.status || 'RECEIVED').trim().toUpperCase();
@@ -983,12 +1069,14 @@
                     if (st === 'RECEIVED' || st === 'RECEIVED - LEGAL') { stats.rec++; st = 'RECEIVED'; }
                     else if (st === 'FORWARDED TO LTSP') { stats.ltsp++; st = 'FORWARDED TO LTSP'; }
                     else if (st === 'REVIEWED' || st === 'REVIEWED AND RECOMMENDED' || st === 'RECOMMENDED') { stats.rev++; st = 'REVIEWED'; }
+                    else if (st === 'INTERLOCUTORY ORDER ISSUED') { stats.rev++; st = 'INTERLOCUTORY ORDER ISSUED'; }
                     else if (st === 'PRINTED LTC' || st === 'CERTIFIED' || st === 'PROCESSED') { stats.cer++; st = 'PRINTED LTC'; }
                     else if (st === 'SIGNED BY PARPO' || st === 'SIGNED' || st === 'FOR SIGNATURE - PARPO II') { stats.sig++; st = 'SIGNED BY PARPO'; }
                     else if (st === 'RETURNED TO LEGAL' || st === 'TO LEGAL' || st === 'FORWARDED - RECORDS') { stats.leg++; st = 'RETURNED TO LEGAL'; }
                     else if (st === 'FORWARDED TO RECORDS' || st === 'TO RECORDS') { stats.recd++; st = 'FORWARDED TO RECORDS'; }
                     else if (st === 'RELEASED TO CLIENT' || st === 'RELEASED - CLIENT' || st === 'RELEASE TO CLIENT') { stats.rel++; st = 'RELEASED TO CLIENT'; }
                     else if (st === 'DISAPPROVED') { stats.dis++; st = 'DISAPPROVED'; }
+                    else if (st === 'WITHDRAWN') { st = 'WITHDRAWN'; }
                     else if (st === 'CORRECTED') { st = 'CORRECTED'; }
                     else if (st === 'RE-ISSUED') { st = 'RE-ISSUED'; }
 
@@ -1008,10 +1096,11 @@
                             if (isLTSP) {
                                 actions += `<button onclick='processToNext("${item.id}", "RETURNED TO LEGAL", "${st}")' class="bg-indigo-600 text-white w-full py-1.5 rounded shadow text-[10px] font-bold hover:bg-indigo-700 uppercase transition-colors text-center">Forward to Legal</button>`;
                             }
-                        } else if (st === 'REVIEWED') {
+                        } else if (st === 'REVIEWED' || st === 'INTERLOCUTORY ORDER ISSUED') {
                             if (isChief || isLegal) {
-                                actions += `<button onclick='openPrint("${item.id}", "rec")' class="bg-[#8b5cf6] text-white w-full py-1.5 rounded shadow text-[9px] font-black tracking-wide hover:bg-purple-800 uppercase transition-colors text-center">Recommendation</button>`;
-                                actions += `<button onclick='openPrint("${item.id}", "cert")' class="bg-[#d97706] text-white w-full py-1.5 rounded shadow text-[9px] font-black tracking-wide hover:bg-amber-700 uppercase transition-colors text-center">Certification</button>`;
+                                actions += `<button onclick='showReview("${item.id}", "REVIEW")' class="bg-[#003811] text-white w-full py-1.5 rounded shadow text-[10px] font-bold tracking-wide hover:bg-black uppercase transition-colors text-center">Review</button>`;
+                                actions += `<button onclick='openPrint("${item.id}", "rec")' class="bg-[#8b5cf6] text-white w-full py-1.5 rounded shadow text-[9px] font-black tracking-wide hover:bg-purple-800 uppercase transition-colors text-center mt-1">Recommendation</button>`;
+                                actions += `<button onclick='openPrint("${item.id}", "cert")' class="bg-[#d97706] text-white w-full py-1.5 rounded shadow text-[9px] font-black tracking-wide hover:bg-amber-700 uppercase transition-colors text-center mt-1">Certification</button>`;
                                 actions += `<button onclick='createVariant("${item.id}")' class="bg-white text-gray-800 border border-gray-300 w-full py-1 rounded shadow text-[9px] font-bold hover:bg-gray-100 uppercase transition-colors text-center mt-1">+ Variant</button>`;
                             }
                         } else if (st === 'PRINTED LTC') {
@@ -1058,6 +1147,17 @@
                         } else if (st === 'CORRECTED' || st === 'RE-ISSUED') {
                             actions += `<button onclick='showReview("${item.id}", "VIEW_CERT")' class="bg-gray-500 text-white w-full py-1.5 rounded shadow text-[10px] font-bold hover:bg-gray-600 uppercase transition-colors text-center mb-1">View</button>`;
                         }
+                    } else if (isEncoder) {
+                        actions += `<button onclick='showReview("${item.id}", "REVIEW")' class="bg-[#003811] text-white w-full py-1.5 rounded shadow text-[10px] font-bold tracking-wide hover:bg-black uppercase transition-colors text-center">Update Details</button>`;
+                        actions += `<button onclick='processToNext("${item.id}", "FORWARDED TO LTSP", "${st}")' class="bg-indigo-600 text-white w-full py-1 mt-1 rounded shadow text-[9px] font-bold hover:bg-indigo-800 uppercase transition-colors text-center">Forward to LTSP</button>`;
+                    }
+
+                    if (isChief) {
+                        actions += `<button onclick='transferLO("${item.id}")' class="bg-blue-500 text-white w-full py-1 mt-1 rounded shadow text-[9px] font-bold hover:bg-blue-700 uppercase transition-colors text-center">Transfer</button>`;
+                    }
+                    
+                    if (!['SIGNED BY PARPO', 'RETURNED TO LEGAL', 'FORWARDED TO RECORDS', 'RELEASED TO CLIENT', 'DISAPPROVED', 'WITHDRAWN'].includes(st)) {
+                        actions += `<button onclick='withdrawRecord("${item.id}")' class="bg-gray-400 text-white w-full py-1 mt-1 rounded shadow text-[9px] font-bold hover:bg-gray-600 uppercase transition-colors text-center">Withdraw</button>`;
                     }
                     
                     const postSignStatuses = ['SIGNED BY PARPO', 'RETURNED TO LEGAL', 'FORWARDED TO RECORDS', 'RELEASED TO CLIENT', 'CORRECTED', 'RE-ISSUED'];
@@ -1118,8 +1218,16 @@
                     actionDiv.innerHTML = `
                         <div class="flex gap-2 w-full justify-end">
                             ${printButtons}
-                            <button onclick="decideStatus('REVIEWED')" class="bg-green-700 text-white px-8 py-3 rounded text-sm font-black uppercase shadow-lg hover:bg-green-800 transition-colors">Approve</button>
-                            <button onclick="decideStatus('DISAPPROVED')" class="bg-red-700 text-white px-8 py-3 rounded text-sm font-black uppercase shadow-lg hover:bg-red-800 transition-colors">Disapprove</button>
+                            <button onclick="decideStatus('PRINTED LTC')" class="bg-green-700 text-white px-8 py-3 rounded text-sm font-black uppercase shadow-lg hover:bg-green-800 transition-colors">Save and Print</button>
+                            <button onclick="issueInterlocutory()" class="bg-yellow-700 text-white px-8 py-3 rounded text-sm font-black uppercase shadow-lg hover:bg-yellow-800 transition-colors">Issue Interlocutory Order</button>
+                        </div>
+                    `;
+                } else if (currentSt === 'INTERLOCUTORY ORDER ISSUED') {
+                    actionDiv.innerHTML = `
+                        <div class="flex gap-2 w-full justify-end">
+                            ${printButtons}
+                            <button onclick="decideStatus('PRINTED LTC')" class="bg-green-700 text-white px-8 py-3 rounded text-sm font-black uppercase shadow-lg hover:bg-green-800 transition-colors">Save and Print</button>
+                            <button onclick="decideStatus('DISAPPROVED')" class="bg-red-700 text-white px-8 py-3 rounded text-sm font-black uppercase shadow-lg hover:bg-red-800 transition-colors">Deny</button>
                         </div>
                     `;
                 } else {
@@ -1225,12 +1333,14 @@
                 'RECEIVED': 'bg-blue-100 text-blue-800 border border-blue-200',
                 'FORWARDED TO LTSP': 'bg-indigo-100 text-indigo-800 border border-indigo-200', 
                 'REVIEWED': 'bg-purple-100 text-purple-800 border border-purple-200', 
+                'INTERLOCUTORY ORDER ISSUED': 'bg-yellow-100 text-yellow-800 border border-yellow-400',
                 'PRINTED LTC': 'bg-cyan-100 text-cyan-800 border border-cyan-200', 
                 'SIGNED BY PARPO': 'bg-orange-100 text-orange-800 border border-orange-200', 
                 'RETURNED TO LEGAL': 'bg-red-100 text-red-800 border border-red-200', 
                 'FORWARDED TO RECORDS': 'bg-green-100 text-green-800 border border-green-200', 
                 'RELEASED TO CLIENT': 'bg-teal-100 text-teal-800 border border-teal-200',
                 'DISAPPROVED': 'bg-gray-200 text-gray-800 border border-gray-300',
+                'WITHDRAWN': 'bg-gray-400 text-white border border-gray-500',
                 'CORRECTED': 'bg-yellow-100 text-yellow-800 border border-yellow-300',
                 'RE-ISSUED': 'bg-blue-100 text-blue-800 border border-blue-300'
             };
@@ -1433,7 +1543,6 @@
                         blocks.push(clone);
                     });
                 } else {
-                    // Do not append hidden components
                     if (!child.classList.contains('hidden')) {
                         blocks.push(child.cloneNode(true));
                     }
