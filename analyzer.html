@@ -59,22 +59,28 @@
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd" /></svg>
                         Intelligent Document Extraction
                     </h3>
-                    <p class="text-xs text-gray-300 mb-4">Upload a Legal Document (PDF, Image, DOC, or DOCX). The AI will read and analyze the context to automatically fill out the form below.</p>
+                    <p class="text-xs text-gray-300 mb-4">Upload a Legal Document (PDF, Image, DOC, or DOCX). The system will extract the raw text for review.</p>
                     
                     <div class="flex flex-col md:flex-row gap-4 items-center">
                         <input type="file" id="fileInput" accept="image/*,application/pdf,.doc,.docx,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document" class="flex-1 bg-white p-3 border-0 rounded text-sm w-full cursor-pointer text-[#003811] font-bold">
                         <button type="button" onclick="startAIExtraction()" id="btnExtract" class="w-full md:w-auto bg-[#D4AF37] text-[#003811] px-8 py-3 rounded text-sm font-black shadow-lg hover:bg-yellow-500 transition-colors uppercase tracking-wider flex items-center justify-center gap-2">
-                            Analyze Document
+                            Extract Text
                         </button>
                     </div>
                     
                     <div id="progressContainer" class="hidden mt-4">
                         <div class="flex justify-between text-[10px] text-gray-300 mb-1 font-bold">
-                            <span id="progressText">Connecting to AI Engine...</span>
+                            <span id="progressText">Extracting Text...</span>
                         </div>
                         <div class="w-full bg-[#00220a] rounded-full h-1.5">
                             <div id="progressBar" class="bg-[#D4AF37] h-1.5 rounded-full" style="width: 10%; transition: width 0.5s;"></div>
                         </div>
+                    </div>
+
+                    <!-- New container to display extracted text -->
+                    <div id="extractedTextContainer" class="hidden mt-4">
+                        <label class="text-xs text-[#D4AF37] font-bold uppercase tracking-wider mb-1 block">Extracted Raw Text Preview:</label>
+                        <textarea id="rawOutput" class="w-full text-xs font-mono p-3 rounded bg-black/50 text-green-300 border border-green-800" rows="8" readonly></textarea>
                     </div>
                 </div>
 
@@ -195,7 +201,7 @@
             } catch (err) { console.error("Menu loading error:", err); }
         }
 
-        // --- THE INTELLIGENT AI ENGINE (WITH US PROXY) ---
+        // --- THE INTELLIGENT AI ENGINE (TEXT EXTRACTION ONLY) ---
         async function startAIExtraction() {
             const fileInput = document.getElementById('fileInput');
             const file = fileInput.files[0];
@@ -205,138 +211,40 @@
             const progressContainer = document.getElementById('progressContainer');
             const progressText = document.getElementById('progressText');
             const progressBar = document.getElementById('progressBar');
+            const extractedTextContainer = document.getElementById('extractedTextContainer');
+            const rawOutput = document.getElementById('rawOutput');
 
             btn.innerHTML = `<span class="loader-ring"></span> Processing...`;
             btn.disabled = true;
             progressContainer.classList.remove('hidden');
+            extractedTextContainer.classList.add('hidden');
             clearAIHighlights();
 
             try {
-                // Step 1: Format the file for the AI
-                progressText.innerText = "Formatting document for AI analysis...";
-                progressBar.style.width = "25%";
+                // Step 1: Format and Extract Text
+                progressText.innerText = "Extracting raw text from document...";
+                progressBar.style.width = "50%";
                 const docData = await prepareDocumentForAI(file);
 
-                // Step 2: Define the strict instructions
-                progressText.innerText = "Transmitting to OpenAI Engine...";
-                progressBar.style.width = "50%";
+                // Step 2: Display Extracted Text
+                extractedTextContainer.classList.remove('hidden');
                 
-                // Expanded schema to extract ALL form fields
-                const schema = {
-                    clearance_type: "string - Check document if 'AO4' or 'AO8' is indicated, else blank",
-                    LTC_ID_NUMBER: "string - e.g. LTC tracking number if explicitly stated, else blank",
-                    legalOfficer: "string - Assigned attorney or legal officer mentioned, else blank",
-                    lot_no: "string - e.g. Lot 1-A",
-                    registered_under: "string - e.g. TCT No. 12345",
-                    owner_name: "string - The Registered Owner",
-                    area: "string - Keep units, e.g. 5,000 sq.m. or 5 has.",
-                    td_no: "string - Tax Declaration Number",
-                    location: "string - Barangay, Municipality, Province",
-                    deed_type: "string - e.g. Deed of Absolute Sale",
-                    executed_by: "string - The Vendor/Donor",
-                    in_favor_of: "string - The Vendee/Donee",
-                    doc_no: "string", page_no: "string", book_no: "string", series_of: "string",
-                    dated: "string", notary_public: "string"
-                };
-
-                const prompt = `
-                    You are a highly intelligent Legal Data Extraction AI for the Philippine Department of Agrarian Reform.
-                    Analyze the attached document carefully. Extract the relevant information to populate the provided JSON schema.
-                    Instructions:
-                    - If a field is not explicitly found, leave it as an empty string "".
-                    - For 'executed_by' and 'in_favor_of', remove legal fluff like "of legal age, married to" if possible.
-                    - Respond ONLY with a valid JSON object matching the exact keys below.
-                    Schema: ${JSON.stringify(schema)}
-                `;
-
-                // Build Message payload based on document capability (Image vs Text)
-                let messagePayload = [
-                    { role: "system", content: "You are a specialized legal document parser. Output only pure JSON." }
-                ];
-
-                if (docData.type === 'image') {
-                    messagePayload.push({
-                        role: "user", 
-                        content: [
-                            { type: "text", text: prompt },
-                            { type: "image_url", image_url: { url: `data:${docData.mime};base64,${docData.content}` } }
-                        ]
-                    });
-                } else {
-                    messagePayload.push({
-                        role: "user", 
-                        content: [
-                            { type: "text", text: prompt + `\n\n--- DOCUMENT CONTENT ---\n${docData.content}\n--- END OF DOCUMENT ---` }
-                        ]
-                    });
+                if (docData.type === 'text') {
+                    rawOutput.value = docData.content;
+                } else if (docData.type === 'image') {
+                    rawOutput.value = `[Image Data Generated: Base64 String Ready for Vision AI Analysis]\n\n${docData.content.substring(0, 150)}... (truncated)`;
                 }
-
-                // Step 3: Call OpenAI API (Using corsproxy.org to bypass region locks)
-                const targetUrl = encodeURIComponent("https://api.openai.com/v1/chat/completions");
-                const proxyUrl = `https://corsproxy.org/?${targetUrl}`;
-
-                const response = await fetch(proxyUrl, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${OPENAI_API_KEY}`
-                    },
-                    body: JSON.stringify({
-                        model: "gpt-4o-mini",
-                        response_format: { type: "json_object" },
-                        messages: messagePayload
-                    })
-                });
-
-                progressText.innerText = "Applying intelligent mapping to form...";
-                progressBar.style.width = "85%";
-
-                if (!response.ok) {
-                    const errorDetails = await response.text();
-                    throw new Error(`API Error: ${response.status} - ${errorDetails}`);
-                }
-
-                const responseData = await response.json();
-                
-                // Step 4: Parse AI response and fill the form
-                const extractedJSON = JSON.parse(responseData.choices[0].message.content);
-                let filledCount = 0;
-
-                Object.keys(extractedJSON).forEach(key => {
-                    const value = extractedJSON[key];
-                    if (!value || value.trim() === "") return;
-
-                    // Handle Radio Buttons (e.g. clearance_type)
-                    const radioGroup = document.querySelectorAll(`input[name="${key}"]`);
-                    if (radioGroup.length > 0 && radioGroup[0].type === 'radio') {
-                        radioGroup.forEach(radio => {
-                            if (radio.value.toUpperCase() === value.toUpperCase()) {
-                                radio.checked = true;
-                                radio.parentElement.classList.add('ai-filled'); 
-                                filledCount++;
-                            }
-                        });
-                    } else {
-                        // Handle standard inputs and textareas (Find by ID or by Name)
-                        const inputField = document.getElementById(key) || document.querySelector(`[name="${key}"]`);
-                        if (inputField) {
-                            inputField.value = value;
-                            inputField.classList.add('ai-filled'); 
-                            filledCount++;
-                        }
-                    }
-                });
 
                 progressBar.style.width = "100%";
-                progressText.innerText = `Success: Extracted and mapped ${filledCount} fields automatically.`;
+                progressText.innerText = `Success: Document text extracted successfully.`;
 
             } catch (error) {
                 console.error("Full Error Details:", error);
-                alert("AI Extraction Failed: " + error.message + "\n\n(Tip: Subukan mong i-refresh ang page o paliitin ang size ng picture)");
+                alert("Extraction Failed: " + error.message + "\n\n(Tip: Try refreshing the page or checking the file type)");
                 progressText.innerText = "Operation Failed.";
                 progressBar.style.backgroundColor = "red";
             } finally {
-                btn.innerHTML = `Analyze Document`;
+                btn.innerHTML = `Extract Text`;
                 btn.disabled = false;
             }
         }
@@ -348,20 +256,19 @@
                     const fileType = file.type;
                     const fileName = file.name.toLowerCase();
 
-                    // 1. Handle PDF via PDF.js
+                    // 1. Handle PDF via PDF.js (Extract Pure Text instead of Base64 Image)
                     if (fileType === "application/pdf") {
                         const arrayBuffer = await file.arrayBuffer();
                         const pdf = await pdfjsLib.getDocument(arrayBuffer).promise;
-                        const page = await pdf.getPage(1);
+                        let extractedText = "";
                         
-                        const viewport = page.getViewport({ scale: 1.2 }); 
-                        const canvas = document.createElement('canvas');
-                        canvas.height = viewport.height;
-                        canvas.width = viewport.width;
-                        
-                        await page.render({ canvasContext: canvas.getContext('2d'), viewport: viewport }).promise;
-                        const base64Data = canvas.toDataURL('image/jpeg', 0.8).split(',')[1];
-                        resolve({ type: 'image', mime: 'image/jpeg', content: base64Data });
+                        for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+                            const page = await pdf.getPage(pageNum);
+                            const textContent = await page.getTextContent();
+                            const textItems = textContent.items.map(item => item.str).join(" ");
+                            extractedText += textItems + "\n\n";
+                        }
+                        resolve({ type: 'text', content: extractedText.trim() });
 
                     // 2. Handle DOCX via Mammoth.js
                     } else if (fileType === "application/vnd.openxmlformats-officedocument.wordprocessingml.document" || fileName.endsWith('.docx')) {
@@ -393,6 +300,7 @@
         function clearAIHighlights() {
             document.querySelectorAll('.ai-filled').forEach(el => el.classList.remove('ai-filled'));
             document.getElementById('progressContainer').classList.add('hidden');
+            document.getElementById('extractedTextContainer').classList.add('hidden');
         }
 
         // --- STANDARD APP LOGIC (Supabase) ---
