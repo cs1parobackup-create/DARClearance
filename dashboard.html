@@ -3,372 +3,1601 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard - DAR Clearance Portal</title>
+    <title>Dashboard - DAR Clearance Monitor</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="supabase-config.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700;900&display=swap" rel="stylesheet">
     <style>
-        /* Print-specific styling */
+        :root { --dar-green: #003811; --dar-gold: #D4AF37; }
+        body { font-family: 'Segoe UI', sans-serif; background-color: #F3F4F6; font-size: 13px; color: #1F2937; }
+        .compact-table td, .compact-table th { padding: 0.5rem 1rem !important; }
+
         @media print {
-            body * { visibility: hidden; }
-            #printArea, #printArea * { visibility: visible; }
-            #printArea { position: absolute; left: 0; top: 0; width: 100%; }
-            .no-print { display: none !important; }
+            @page { size: 8.5in 13in; margin: 0; }
+            body { background: white !important; }
+            nav, header, .no-print, #actionButtons, #remarksSection, .modal-header-actions { display: none !important; }
+            #reviewModal { position: static; display: block; background: transparent; padding: 0; box-shadow: none; }
+            
+            .doc-print-area { 
+                visibility: visible !important;
+                display: block !important;
+                width: 8.5in !important; 
+                height: 13in !important;
+                padding: 0 !important;
+                margin: 0 !important;
+            }
         }
+
+        .doc-print-area { display: none; }
+        
+        .data-value { 
+            font-weight: bold; 
+            border-bottom: 1.5px solid black; 
+            display: inline-block; 
+            min-width: 40px; 
+            text-transform: uppercase; 
+            line-height: 1.1; 
+            padding-bottom: 1px;
+        }
+        
+        .page-break-avoid { 
+            page-break-inside: avoid !important;
+            break-inside: avoid !important;
+        }
+        
+        .scroll-area::-webkit-scrollbar { width: 4px; }
+        .scroll-area::-webkit-scrollbar-track { background: #f1f1f1; }
+        .scroll-area::-webkit-scrollbar-thumb { background: #c1c1c1; border-radius: 4px; }
+
+        .edit-big {
+            font-size: 1.25rem !important; line-height: 1.75rem !important; font-weight: 900 !important;
+            color: #1e3a8a !important; background-color: #fefce8 !important; border-bottom: 3px solid #fde047 !important;
+            padding: 6px 12px !important; border-radius: 4px; display: inline-block; min-width: 200px;
+            text-transform: uppercase; outline: none; transition: all 0.2s;
+        }
+        .edit-big:focus { background-color: #fef08a !important; border-bottom: 3px solid #eab308 !important; }
+        
+        .form-label { display: block; font-size: 0.75rem; font-weight: 700; color: var(--dar-green); margin-bottom: 0.25rem; text-transform: uppercase; }
+        .form-input { width: 100%; background: #F9FAFB; border: 1px solid #D1D5DB; border-radius: 0.375rem; padding: 0.6rem; font-size: 0.875rem; transition: border-color 0.2s; }
+        .form-input:focus { outline: none; border-color: var(--dar-green); ring: 1px solid var(--dar-green); }
     </style>
 </head>
-<body class="bg-gray-100 h-screen flex flex-col font-sans">
+<body class="flex h-screen overflow-hidden text-[#1F2937]">
 
-    <!-- Top Navigation -->
-    <nav class="bg-[#003811] text-white p-4 flex justify-between items-center shadow-md z-10 relative">
-        <div>
-            <h1 class="text-xl font-black uppercase tracking-widest">DARPO-CS Clearance System</h1>
-            <p id="userRoleDisplay" class="text-xs text-[#D4AF37] font-bold uppercase"></p>
+    <nav class="bg-[#003811] md:w-64 flex flex-col text-white flex-shrink-0 shadow-xl z-20 no-print">
+        <div class="p-6 border-b border-[#006400]">
+            <h2 class="text-xl font-bold text-[#D4AF37]">DARPO-CS</h2>
+            <p id="userRoleBadge" class="text-[10px] text-gray-300 uppercase tracking-widest mt-1 font-bold">---</p>
         </div>
-        <button onclick="logout()" class="text-sm font-bold bg-white text-[#003811] px-4 py-2 rounded shadow hover:bg-gray-200 uppercase">Log Out</button>
+        
+        <div id="dynamicMenu" class="flex-1 overflow-y-auto py-2">
+            </div>
+
+        <div class="p-4 bg-black/20">
+            <p id="activeUser" class="text-xs text-gray-300 truncate mb-2 font-bold"></p>
+            <button onclick="logout()" class="w-full bg-red-800 py-2 text-xs font-bold rounded shadow hover:bg-red-700 transition-colors uppercase">Logout</button>
+        </div>
     </nav>
 
-    <!-- Main Workspace -->
-    <div class="flex flex-1 overflow-hidden">
-        
-        <!-- Sidebar / Dashboard List -->
-        <aside class="w-1/3 bg-white border-r border-gray-200 overflow-y-auto p-4 flex flex-col">
-            <div class="flex justify-between items-center mb-4">
-                <h2 class="font-bold text-lg text-[#003811] uppercase">Applications</h2>
-                <!-- Transfer Button (Visible only to Chief Legal) -->
-                <button id="btnTransfer" onclick="openTransferModal()" class="hidden bg-blue-600 text-white text-xs px-3 py-1 rounded font-bold uppercase hover:bg-blue-700">Transfer LO</button>
+    <main class="flex-1 flex flex-col overflow-hidden">
+        <header class="bg-white shadow-sm border-b px-6 py-4 flex justify-between items-center no-print">
+            <h1 class="text-lg font-bold text-[#003811] uppercase tracking-tight">DAR Clearance Monitoring Dashboard</h1>
+            <div class="flex gap-2">
+                <input type="text" id="searchInput" placeholder="Search any details..." class="border border-gray-300 rounded px-3 py-1.5 text-xs focus:outline-none focus:border-[#003811] w-64" onkeyup="refreshDashboard()">
+                <button onclick="fetchClearanceData()" class="bg-[#003811] text-white px-4 py-1.5 rounded text-xs font-bold uppercase shadow hover:bg-[#006400]">Refresh</button>
             </div>
+        </header>
+
+        <div class="flex-1 overflow-y-auto p-6 space-y-4 no-print scroll-area">
+            <div class="grid grid-cols-3 lg:grid-cols-9 gap-3">
+                <div class="bg-white p-3 rounded border-l-4 border-blue-500 text-center shadow-sm">
+                    <p class="text-[8px] font-bold text-gray-400 uppercase">Received</p>
+                    <h3 id="stat-received" class="text-lg font-black text-blue-600">0</h3>
+                </div>
+                <div class="bg-white p-3 rounded border-l-4 border-indigo-500 text-center shadow-sm">
+                    <p class="text-[8px] font-bold text-gray-400 uppercase">Fwd to LTSP</p>
+                    <h3 id="stat-ltsp" class="text-lg font-black text-indigo-600">0</h3>
+                </div>
+                <div class="bg-white p-3 rounded border-l-4 border-purple-500 text-center shadow-sm">
+                    <p class="text-[8px] font-bold text-gray-400 uppercase">Reviewed</p>
+                    <h3 id="stat-recommended" class="text-lg font-black text-purple-600">0</h3>
+                </div>
+                <div class="bg-white p-3 rounded border-l-4 border-cyan-500 text-center shadow-sm">
+                    <p class="text-[8px] font-bold text-gray-400 uppercase">Printed LTC</p>
+                    <h3 id="stat-certified" class="text-lg font-black text-cyan-600">0</h3>
+                </div>
+                <div class="bg-white p-3 rounded border-l-4 border-orange-500 text-center shadow-sm">
+                    <p class="text-[8px] font-bold text-gray-400 uppercase">Signed by PARPO</p>
+                    <h3 id="stat-signed" class="text-lg font-black text-orange-600">0</h3>
+                </div>
+                <div class="bg-white p-3 rounded border-l-4 border-red-500 text-center shadow-sm">
+                    <p class="text-[8px] font-bold text-gray-400 uppercase">Returned to Legal</p>
+                    <h3 id="stat-legal" class="text-lg font-black text-red-600">0</h3>
+                </div>
+                <div class="bg-white p-3 rounded border-l-4 border-green-500 text-center shadow-sm">
+                    <p class="text-[8px] font-bold text-gray-400 uppercase">Forwarded to Records</p>
+                    <h3 id="stat-records" class="text-lg font-black text-green-600">0</h3>
+                </div>
+                <div class="bg-white p-3 rounded border-l-4 border-teal-500 text-center shadow-sm">
+                    <p class="text-[8px] font-bold text-gray-400 uppercase">Released</p>
+                    <h3 id="stat-released" class="text-lg font-black text-teal-600">0</h3>
+                </div>
+                <div class="bg-white p-3 rounded border-l-4 border-gray-400 text-center shadow-sm">
+                    <p class="text-[8px] font-bold text-gray-400 uppercase">Disapproved</p>
+                    <h3 id="stat-disapproved" class="text-lg font-black text-gray-600">0</h3>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-lg shadow-sm overflow-hidden border border-gray-200">
+                <table class="w-full text-left border-collapse text-[11px] compact-table">
+                    <thead class="bg-gray-50 border-b uppercase font-bold text-[#003811] tracking-wider">
+                        <tr>
+                            <th class="w-[15%]">LTC Number</th>
+                            <th class="w-[20%]">Land Owner</th>
+                            <th class="w-[15%]">Legal Officer</th>
+                            <th class="w-[15%]">Status</th>
+                            <th class="w-[20%] text-center">Action</th>
+                            <th class="w-[15%] text-right">Date Updated</th>
+                        </tr>
+                    </thead>
+                    <tbody id="clearanceTableBody" class="divide-y divide-gray-100"></tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <div id="reviewModal" class="fixed inset-0 bg-black/60 z-50 hidden flex items-start justify-center p-4 overflow-y-auto no-print">
+        <div class="bg-white max-w-5xl w-full p-8 rounded-lg shadow-2xl relative my-4 no-print" id="modalContainer">
             
-            <!-- Dashboard List Container -->
-            <div id="clearanceList" class="space-y-2">
-                <!-- Dynamically populated based on LO vs Chief Legal -->
-            </div>
-        </aside>
-
-        <!-- Main Form / Action Area -->
-        <main class="w-2/3 bg-gray-50 overflow-y-auto p-6 relative">
-            
-            <!-- Action Bar -->
-            <div id="actionBar" class="flex flex-wrap gap-2 mb-6 hidden">
-                <button id="btnWithdraw" onclick="withdrawApplication()" class="bg-red-500 text-white px-4 py-2 text-xs font-bold rounded shadow uppercase hover:bg-red-600">Withdraw</button>
-                <button id="btnSavePrint" onclick="saveAndPrint()" class="bg-[#003811] text-white px-4 py-2 text-xs font-bold rounded shadow uppercase hover:bg-green-800">Save & Print</button>
-                <button id="btnIssueInterlocutory" onclick="openInterlocutoryModal()" class="bg-yellow-500 text-white px-4 py-2 text-xs font-bold rounded shadow uppercase hover:bg-yellow-600">Issue Interlocutory Order</button>
-                <button id="btnDeny" onclick="denyApplication()" class="hidden bg-red-700 text-white px-4 py-2 text-xs font-bold rounded shadow uppercase hover:bg-red-800">Deny</button>
-                <button id="btnForwardParpo" onclick="forwardToParpo()" class="bg-indigo-600 text-white px-4 py-2 text-xs font-bold rounded shadow uppercase hover:bg-indigo-700">Forward to PARPO</button>
+            <div class="flex justify-between items-center mb-6 border-b border-gray-200 pb-4 modal-header-actions">
+                <div class="flex items-center gap-4">
+                    <h2 id="modalMainTitle" class="text-4xl font-black text-[#003811] uppercase tracking-widest">REVIEW</h2>
+                    <div id="editNotice" class="bg-yellow-100 text-yellow-800 text-[10px] px-3 py-1 rounded hidden font-bold uppercase tracking-wide border border-yellow-300">
+                        EDIT MODE ACTIVE (VALUES ENLARGED FOR REVIEW)
+                    </div>
+                </div>
+                <div class="flex gap-2 items-center">
+                    <button onclick="manualSave(event)" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded text-xs font-black uppercase transition-colors mr-4 shadow">💾 Save Details</button>
+                    <button id="btnPrev" onclick="navigateReview(-1)" class="bg-gray-200 hover:bg-gray-300 px-4 py-2 rounded text-xs font-black uppercase transition-colors text-gray-800">&larr; Prev</button>
+                    <button id="btnNext" onclick="navigateReview(1)" class="bg-gray-200 hover:bg-gray-300 px-4 py-2 rounded text-xs font-black uppercase transition-colors text-gray-800">Next &rarr;</button>
+                    <button onclick="closeReview()" class="text-gray-400 hover:text-black text-3xl ml-4 font-normal leading-none">&times;</button>
+                </div>
             </div>
 
-            <!-- Application Form -->
-            <div id="applicationForm" class="bg-white p-6 rounded-lg shadow-md hidden border-t-4 border-[#003811]">
-                <h3 class="text-xl font-black text-[#003811] uppercase mb-4 border-b pb-2">DAR Clearance Details</h3>
-                
-                <div class="grid grid-cols-2 gap-4 mb-4">
-                    <div>
-                        <label class="block text-[10px] font-bold text-gray-600 uppercase mb-1">Docket Number</label>
-                        <input type="text" id="docketNum" readonly class="w-full px-3 py-2 bg-gray-100 border rounded font-bold">
+            <div id="reviewSection" class="mb-8 space-y-6 no-print">
+                <div class="bg-blue-50 p-6 rounded-lg border border-blue-200 space-y-6">
+                    <p class="text-xs font-bold text-gray-500 uppercase tracking-widest mb-4">Document Details (Editable - Click to Edit)</p>
+                    
+                    <div class="grid grid-cols-[200px_1fr] items-center gap-y-8">
+                        <div class="font-bold text-red-700 uppercase text-sm">LTC Number:</div>
+                        <div id="edit-LTC_ID_NUMBER" class="edit-big border-red-400 bg-red-50 text-red-800">---</div>
+                        
+                        <div class="font-bold text-gray-600 uppercase text-sm">Lot No/s:</div>
+                        <div id="edit-lot" class="edit-big">---</div>
+                        <div class="font-bold text-gray-600 uppercase text-sm">In the Name of:</div>
+                        <div id="edit-owner" class="edit-big">---</div>
+                        <div class="font-bold text-gray-600 uppercase text-sm">Registered under:</div>
+                        <div id="edit-tct" class="edit-big">---</div>
+                        <div class="font-bold text-gray-600 uppercase text-sm">Area (in has.):</div>
+                        <div id="edit-area" class="edit-big">---</div>
+                        <div class="font-bold text-gray-600 uppercase text-sm">Declared under T.D. No:</div>
+                        <div id="edit-td" class="edit-big">---</div>
+                        <div class="font-bold text-gray-600 uppercase text-sm">Located at:</div>
+                        <div id="edit-location" class="edit-big">---</div>
+                        <div class="font-bold text-gray-600 uppercase text-sm">Subjected of the Deed of:</div>
+                        <div id="edit-deed" class="edit-big">---</div>
+                        <div class="font-bold text-gray-600 uppercase text-sm">Executed by:</div>
+                        <div id="edit-executed" class="edit-big">---</div>
+                        <div class="font-bold text-gray-600 uppercase text-sm">In favor of:</div>
+                        <div id="edit-favor" class="edit-big">---</div>
                     </div>
-                    <div>
-                        <label class="block text-[10px] font-bold text-gray-600 uppercase mb-1">LTC Number</label>
-                        <input type="text" id="ltcNum" class="w-full px-3 py-2 bg-white border rounded font-bold">
+                    <div class="pt-4 border-t border-blue-200"></div>
+                    <div class="grid grid-cols-[200px_1fr] items-center gap-y-8">
+                        <div class="font-bold text-gray-600 uppercase text-sm">Doc. No:</div>
+                        <div id="edit-doc" class="edit-big">---</div>
+                        <div class="font-bold text-gray-600 uppercase text-sm">Page No:</div>
+                        <div id="edit-page" class="edit-big">---</div>
+                        <div class="font-bold text-gray-600 uppercase text-sm">Book No:</div>
+                        <div id="edit-book" class="edit-big">---</div>
+                        <div class="font-bold text-gray-600 uppercase text-sm">Series of:</div>
+                        <div id="edit-series" class="edit-big">---</div>
+                        <div class="font-bold text-gray-600 uppercase text-sm">Dated:</div>
+                        <div id="edit-dated" class="edit-big">---</div>
+                        <div class="font-bold text-gray-600 uppercase text-sm">Notary Public:</div>
+                        <div id="edit-notary" class="edit-big">---</div>
+                        <div class="font-bold text-gray-600 uppercase text-sm">Retention area of vendor:</div>
+                        <div id="edit-retention" class="edit-big">---</div>
+                        <div class="font-bold text-gray-600 uppercase text-sm">O.R. No:</div>
+                        <div id="edit-or_number" class="edit-big">---</div>
+                        <div class="font-bold text-gray-600 uppercase text-sm">O.R. Date:</div>
+                        <div id="edit-or_date" class="edit-big">---</div>
                     </div>
-                </div>
 
-                <div class="grid grid-cols-2 gap-4 mb-4">
-                    <div>
-                        <label class="block text-[10px] font-bold text-gray-600 uppercase mb-1">Applicant Name</label>
-                        <input type="text" id="applicantName" onblur="searchPreviousClearances()" class="w-full px-3 py-2 bg-white border rounded">
+                    <!-- AFFIDAVIT UI SECTION -->
+                    <div id="affidavitSection" class="mt-8 pt-4 border-t border-blue-200">
+                        <div class="flex justify-between items-center mb-2">
+                            <p class="text-xs font-bold text-gray-500 uppercase tracking-widest">Affidavit / Undertaking</p>
+                            <button id="btnGenericAddAffidavit" onclick="openAffidavitModal()" class="bg-gray-200 text-gray-800 px-3 py-1 rounded text-[10px] font-bold uppercase hover:bg-gray-300">Add/Edit Affidavit</button>
+                        </div>
+                        <div id="affidavitAlert" class="p-3 bg-yellow-50 border border-yellow-200 rounded flex justify-between items-center hidden">
+                            <span class="text-xs font-bold text-yellow-800">Area > 5 hectares. Affidavit of Undertaking is recommended.</span>
+                            <button onclick="openAffidavitModal()" class="bg-yellow-600 text-white px-3 py-1 rounded text-[10px] font-bold uppercase hover:bg-yellow-700">Add Now</button>
+                        </div>
+                        <div id="affidavitSuccess" class="p-3 bg-green-50 border border-green-200 rounded flex justify-between items-center hidden">
+                            <span class="text-xs font-bold text-green-800">Affidavit Attached: <span id="affidavitTypeText" class="font-black"></span></span>
+                            <button onclick="openAffidavitModal()" class="bg-green-600 text-white px-3 py-1 rounded text-[10px] font-bold uppercase hover:bg-green-700">Edit Details</button>
+                        </div>
                     </div>
-                    <div>
-                        <label class="block text-[10px] font-bold text-gray-600 uppercase mb-1">Property Address</label>
-                        <input type="text" id="propertyAddress" onblur="searchPreviousClearances()" class="w-full px-3 py-2 bg-white border rounded">
-                    </div>
-                </div>
 
-                <!-- PORTION ONLY LOGIC -->
-                <div class="mb-4 bg-gray-100 p-3 rounded border">
-                    <label class="flex items-center space-x-2 cursor-pointer mb-2">
-                        <input type="checkbox" id="chkPortion" onchange="togglePortionArea()" class="form-checkbox h-4 w-4 text-[#003811]">
-                        <span class="text-sm font-bold uppercase text-[#003811]">Portion Only</span>
-                    </label>
-                    <div id="portionAreaContainer" class="hidden">
-                        <label class="block text-[10px] font-bold text-gray-600 uppercase mb-1">Portion Area (sqm)</label>
-                        <input type="number" id="portionArea" class="w-full px-3 py-2 bg-white border rounded">
-                    </div>
                 </div>
+                <div id="remarksSection" class="bg-gray-50 p-4 rounded border border-gray-300">
+                    <label class="block text-[10px] font-bold text-gray-700 uppercase mb-2">Remarks (Required for Disapproval / Interlocutory Order Lacking Docs)</label>
+                    <textarea id="reviewRemarks" class="w-full border border-gray-300 rounded p-3 text-xs focus:outline-none focus:border-[#003811]" rows="3" placeholder="Enter remarks or lacking documents here..."></textarea>
+                </div>
+            </div>
 
-                <!-- PREVIOUS DAR CLEARANCE LOGIC -->
-                <div class="mb-4 bg-[#f8f9fa] p-4 rounded border">
-                    <h4 class="text-xs font-bold text-[#003811] uppercase mb-2">Previous DAR Clearances (Flexible Search)</h4>
-                    <p class="text-[10px] text-gray-500 mb-2">Auto-searches based on Name/Address similarity.</p>
-                    <ul id="previousClearancesList" class="text-sm text-gray-700 list-disc pl-5 mb-2">
-                        <!-- Populated by JS -->
+            <div id="actionButtons" class="flex justify-between items-center no-print">
+            </div>
+
+            <div id="docRecommendation" class="doc-print-area mx-auto hidden pt-8">
+                <!-- DOCUMENT CONTENT REMAINS UNCHANGED -->
+                <div class="doc-content">
+                    <div class="relative w-full mb-6 page-break-avoid">
+                        <div class="absolute right-0 top-0 text-right font-bold flex flex-col items-end">
+                            <span class="font-bold text-[10pt]">LTC Form No. 5</span>
+                            <span class="font-bold text-[10pt] mt-4 underline" id="rec-header-id-top">LTC-PENDING</span>
+                        </div>
+                        <div class="text-center text-[10pt] leading-snug font-bold uppercase">
+                            <p>Republic of the Philippines</p>
+                            <p>DEPARTMENT OF AGRARIAN REFORM</p>
+                            <p>Region V</p>
+                            <p>Province of Camarines Sur I</p>
+                        </div>
+                    </div>
+                    
+                    <div class="text-center mb-4 mt-2 page-break-avoid">
+                        <div class="font-black text-[16pt] tracking-wide">RECOMMENDATION</div>
+                        <div class="text-[10pt]">(Land Transfer Clearance)</div>
+                    </div>
+                    
+                    <p class="mb-3 text-justify indent-12 page-break-avoid">
+                        This is to recommend that the application/request for Issuance of Land Transfer Clearance (LTC) be <span class="font-bold">APPROVED</span> on the parcel of agricultural land with the following pertinent information, to wit;
+                    </p>
+
+                    <div class="mb-4 space-y-1 grid-block">
+                        <div class="flex items-end mb-1.5 ml-12">
+                            <div class="italic w-[260px] shrink-0">Lot No/s</div> <div class="text-left flex-1"><span class="data-value" id="rec-lot">---</span></div>
+                        </div>
+                        <div class="flex items-end mb-1.5 ml-12">
+                            <div class="italic w-[260px] shrink-0">In the Name of</div> <div class="text-left flex-1"><span class="data-value" id="rec-owner">---</span></div>
+                        </div>
+                        <div class="flex items-end mb-1.5 ml-12">
+                            <div class="italic w-[260px] shrink-0">Registered under</div> <div class="text-left flex-1"><span class="data-value" id="rec-tct">---</span></div>
+                        </div>
+                        <div class="flex items-end mb-1.5 ml-12">
+                            <div class="italic w-[260px] shrink-0">With an area (in has.) of</div> <div class="text-left flex-1"><span class="data-value" id="rec-area">---</span></div>
+                        </div>
+                        <div class="flex items-end mb-1.5 ml-12">
+                            <div class="italic w-[260px] shrink-0">Declared under T.D. No.</div> <div class="text-left flex-1"><span class="data-value" id="rec-td">---</span></div>
+                        </div>
+                        <div class="flex items-end mb-1.5 ml-12">
+                            <div class="italic w-[260px] shrink-0">Located at</div> <div class="text-left flex-1"><span class="data-value" id="rec-location">---</span></div>
+                        </div>
+                        <div class="flex items-end mb-1.5 ml-12">
+                            <div class="italic w-[260px] shrink-0">Subjected of the Deed of</div> <div class="text-left flex-1"><span class="data-value" id="rec-deed">---</span></div>
+                        </div>
+                        <div class="flex items-end mb-1.5 ml-12">
+                            <div class="italic w-[260px] shrink-0">Executed by</div> <div class="text-left flex-1"><span class="data-value" id="rec-executed">---</span></div>
+                        </div>
+                        <div class="flex items-end mb-1.5 ml-12">
+                            <div class="italic w-[260px] shrink-0">In favor of</div> <div class="text-left flex-1"><span class="data-value" id="rec-favor">---</span></div>
+                        </div>
+                        <div class="flex items-end mb-1.5 ml-12">
+                            <div class="italic w-[260px] shrink-0">Under Doc. No.</div> 
+                            <div class="flex items-end text-left flex-1">
+                                <span class="data-value text-center min-w-[50px] px-3" id="rec-doc">---</span>
+                                <span class="italic ml-8">Page No.</span> <span class="data-value text-center min-w-[50px] px-3 ml-2" id="rec-page">---</span>
+                                <span class="italic ml-8">Book No.</span> <span class="data-value text-center min-w-[50px] px-3 ml-2" id="rec-book">---</span>
+                            </div>
+                        </div>
+                        <div class="flex items-end mb-1.5 ml-12">
+                            <div class="italic w-[260px] shrink-0">Series of</div> 
+                            <div class="flex items-end text-left flex-1">
+                                <span class="data-value text-center min-w-[60px] px-3" id="rec-series">---</span>
+                                <span class="italic ml-8">Dated</span> <span class="data-value text-center min-w-[100px] px-3 ml-2" id="rec-dated">---</span>
+                            </div>
+                        </div>
+                        <div class="flex items-end mb-1.5 ml-12">
+                            <div class="italic w-[260px] shrink-0">of Notary Public</div> <div class="text-left flex-1"><span class="data-value" id="rec-notary">---</span></div>
+                        </div>
+                        <div class="flex items-end mb-1.5 ml-12">
+                            <div class="italic w-[260px] shrink-0">of a retention area of vendor/transferor</div> <div class="text-left flex-1"><span class="data-value" id="rec-retention">---</span></div>
+                        </div>
+                        
+                        <div class="flex items-end mb-1.5 ml-12 page-break-avoid">
+                            <div class="italic w-[260px] shrink-0 text-left">is hereby:</div>
+                            <div class="flex-1 text-left"><span class="font-bold border-b-[2px] border-black pb-0.5 tracking-wide uppercase">APPROVED</span></div>
+                        </div>
+                    </div>
+
+                    <p class="mb-3 text-justify leading-relaxed indent-12 page-break-avoid">
+                        based on the Attestation of the CARPO-LTS/FOD and from the report and recommendation of the Chief Legal Division/Authorized Legal Officer pursuant to Administrative Order (AO) No. 4 Series of 2021.
+                    </p>
+
+                    <div class="mt-3 mb-3 page-break-avoid indent-12">
+                        Done this <span class="pdf-today-ordinal font-bold">---</span>. Naga City, Camarines Sur.
+                    </div>
+
+                    <div class="w-full flex justify-end mb-3 mt-6 page-break-avoid">
+                        <div class="flex flex-col items-center mr-10">
+                            <p class="text-left w-full mb-6">Prepared by:</p>
+                            <div class="text-center inline-block">
+                                <p class="preparedByName font-bold uppercase underline underline-offset-4">---</p>
+                                <p class="preparedByPosition text-[9pt] uppercase mt-1">---</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="w-full flex flex-col items-start mb-4 page-break-avoid">
+                        <p class="text-left mb-6">Reviewed and Noted by:</p>
+                        <div class="text-center inline-block">
+                            <p class="sys-chief-name font-bold uppercase underline underline-offset-4">---</p>
+                            <p class="text-[9pt] mt-1">Chief, Legal Division</p>
+                        </div>
+                    </div>
+
+                    <div class="w-full mt-4 page-break-avoid qr-distribution-block">
+                        <div class="flex items-start gap-4 text-[8pt] leading-tight text-left">
+                            <div id="qr-rec" class="w-[55px] h-[55px] shrink-0"></div>
+                            <div class="flex-1 pt-0.5">
+                                <div class="flex flex-col gap-0.5 mb-3">
+                                    <div class="flex"><span class="w-[80px]">OR No:</span> <span class="font-bold underline underline-offset-2" id="rec-or_number">---</span></div>
+                                    <div class="flex"><span class="w-[80px]">Date issued:</span> <span class="font-bold underline underline-offset-2" id="rec-or_date">---</span></div>
+                                </div>
+                                <p class="mb-1">Copy distribution: &nbsp;Original-Applicant; &nbsp;Duplicate-LTC Folder; &nbsp;Records Section; &nbsp;Registry of Deeds-Camarines Sur</p>
+                                <p class="font-bold underline underline-offset-2 mt-1" id="rec-footer-id">LTC-PENDING</p>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <div id="docCertification" class="doc-print-area mx-auto hidden pt-8">
+                <div class="doc-content">
+                    <!-- CERTIFICATION CONTENT REMAINS UNCHANGED -->
+                    <div class="relative w-full mb-6 page-break-avoid">
+                        <div class="absolute right-0 top-0 text-right font-bold flex flex-col items-end">
+                            <span class="font-bold text-[10pt]">LTC Form No. 5</span>
+                            <span class="font-bold text-[10pt] mt-4 underline" id="cert-header-id">LTC-PENDING</span>
+                        </div>
+                        <div class="text-center text-[10pt] leading-snug font-bold uppercase">
+                            <p>Republic of the Philippines</p>
+                            <p>DEPARTMENT OF AGRARIAN REFORM</p>
+                            <p>Region V</p>
+                            <p>Province of Camarines Sur I</p>
+                        </div>
+                    </div>
+
+                    <div class="text-center mb-4 mt-2 page-break-avoid">
+                        <div class="font-black text-[16pt] tracking-wide">CERTIFICATION</div>
+                        <div class="text-[10pt]">(Land Transfer Clearance)</div>
+                    </div>
+                    
+                    <p class="mb-3 text-justify indent-12 page-break-avoid">
+                        This is to certify that the application/request for Issuance of Land Transfer Clearance (LTC) filed to this Office with the following pertinent information, to wit:
+                    </p>
+
+                    <div class="mb-4 space-y-1 grid-block">
+                        <div class="flex items-end mb-1.5 ml-12">
+                            <div class="italic w-[260px] shrink-0">Lot No/s</div> <div class="text-left flex-1"><span class="data-value" id="cert-lot">---</span></div>
+                        </div>
+                        <div class="flex items-end mb-1.5 ml-12">
+                            <div class="italic w-[260px] shrink-0">In the Name of</div> <div class="text-left flex-1"><span class="data-value" id="cert-owner">---</span></div>
+                        </div>
+                        <div class="flex items-end mb-1.5 ml-12">
+                            <div class="italic w-[260px] shrink-0">Registered under</div> <div class="text-left flex-1"><span class="data-value" id="cert-tct">---</span></div>
+                        </div>
+                        <div class="flex items-end mb-1.5 ml-12">
+                            <div class="italic w-[260px] shrink-0">With an area (in has.) of</div> <div class="text-left flex-1"><span class="data-value" id="cert-area">---</span></div>
+                        </div>
+                        <div class="flex items-end mb-1.5 ml-12">
+                            <div class="italic w-[260px] shrink-0">Declared under T.D. No.</div> <div class="text-left flex-1"><span class="data-value" id="cert-td">---</span></div>
+                        </div>
+                        <div class="flex items-end mb-1.5 ml-12">
+                            <div class="italic w-[260px] shrink-0">Located at</div> <div class="text-left flex-1"><span class="data-value" id="cert-location">---</span></div>
+                        </div>
+                        <div class="flex items-end mb-1.5 ml-12">
+                            <div class="italic w-[260px] shrink-0">Subjected of the Deed of</div> <div class="text-left flex-1"><span class="data-value" id="cert-deed">---</span></div>
+                        </div>
+                        <div class="flex items-end mb-1.5 ml-12">
+                            <div class="italic w-[260px] shrink-0">Executed by</div> <div class="text-left flex-1"><span class="data-value" id="cert-executed">---</span></div>
+                        </div>
+                        <div class="flex items-end mb-1.5 ml-12">
+                            <div class="italic w-[260px] shrink-0">In favor of</div> <div class="text-left flex-1"><span class="data-value" id="cert-favor">---</span></div>
+                        </div>
+                        <div class="flex items-end mb-1.5 ml-12">
+                            <div class="italic w-[260px] shrink-0">Under Doc. No.</div> 
+                            <div class="flex items-end text-left flex-1">
+                                <span class="data-value text-center min-w-[50px] px-3" id="cert-doc">---</span>
+                                <span class="italic ml-8">Page No.</span> <span class="data-value text-center min-w-[50px] px-3 ml-2" id="cert-page">---</span>
+                                <span class="italic ml-8">Book No.</span> <span class="data-value text-center min-w-[50px] px-3 ml-2" id="cert-book">---</span>
+                            </div>
+                        </div>
+                        <div class="flex items-end mb-1.5 ml-12">
+                            <div class="italic w-[260px] shrink-0">Series of</div> 
+                            <div class="flex items-end text-left flex-1">
+                                <span class="data-value text-center min-w-[60px] px-3" id="cert-series">---</span>
+                                <span class="italic ml-8">Dated</span> <span class="data-value text-center min-w-[100px] px-3 ml-2" id="cert-dated">---</span>
+                            </div>
+                        </div>
+                        <div class="flex items-end mb-1.5 ml-12">
+                            <div class="italic w-[260px] shrink-0">of Notary Public</div> <div class="text-left flex-1"><span class="data-value" id="cert-notary">---</span></div>
+                        </div>
+                        <div class="flex items-end mb-1.5 ml-12">
+                            <div class="italic w-[260px] shrink-0">of a retention area of vendor/transferor</div> <div class="text-left flex-1"><span class="data-value" id="cert-retention">---</span></div>
+                        </div>
+                        
+                        <div class="flex items-end mb-1.5 ml-12 page-break-avoid">
+                            <div class="italic w-[260px] shrink-0 text-left">is hereby:</div>
+                            <div class="flex-1 text-left"><span class="font-bold border-b-[2px] border-black pb-0.5 tracking-wide uppercase">APPROVED</span></div>
+                        </div>
+                    </div>
+
+                    <p class="mb-3 text-justify leading-relaxed indent-12 page-break-avoid">
+                        based on the Attestation of the CARPO-LTS/FOD and from the report and recommendation of the Chief Legal Division/Authorized Legal Officer pursuant to Administrative Order (AO) No. 4 Series of 2021.
+                    </p>
+
+                    <!-- DYNAMIC AFFIDAVIT TEXT PLACEMENT -->
+                    <p id="cert-affidavit-para" class="mb-3 text-justify leading-relaxed indent-12 page-break-avoid hidden"></p>
+
+                    <p class="mb-3 text-justify leading-relaxed indent-12 page-break-avoid">
+                        Any actual change in the use of the land and/or development over the subject land, requires a prior Order of Conversion or Exemption/Exclusion from the Office of the DAR Regional Director.
+                    </p>
+
+                    <p class="mb-3 text-justify leading-relaxed indent-12 page-break-avoid">
+                        This Office reserves the right to revoke this Certification of LTC in case of findings of misrepresentation or submission of falsified documents by either or both parties to the Deed of Transfer and any third person who may be affected by the transfer.
+                    </p>
+
+                    <p class="mb-4 text-justify leading-relaxed indent-12 page-break-avoid">
+                        This Certification is hereby issued only for the purpose stated in the application/request for issuance of LTC.
+                    </p>
+
+                    <div class="mt-3 mb-3 page-break-avoid indent-12">
+                        Done and issued this <span class="pdf-today-ordinal font-bold">---</span> at the DAR Provincial Office.
+                    </div>
+
+                    <div class="w-full flex justify-end mb-3 mt-6 page-break-avoid">
+                        <div class="flex flex-col items-center">
+                            <div class="text-center w-60">
+                                <p class="sys-parpo-name font-bold uppercase underline underline-offset-4 inline-block text-[11pt]">---</p>
+                                <p class="text-[9pt] uppercase mt-1">PARPO II</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="w-full mt-4 page-break-avoid qr-distribution-block">
+                        <div class="flex items-start gap-4 text-[8pt] leading-tight text-left">
+                            <div id="qr-cert" class="w-[55px] h-[55px] shrink-0"></div>
+                            <div class="flex-1 pt-0.5">
+                                <div class="flex flex-col gap-0.5 mb-3">
+                                    <div class="flex"><span class="w-[80px]">OR No:</span> <span class="font-bold underline underline-offset-2" id="cert-or_number">---</span></div>
+                                    <div class="flex"><span class="w-[80px]">Date issued:</span> <span class="font-bold underline underline-offset-2" id="cert-or_date">---</span></div>
+                                </div>
+                                <p class="mb-1">Copy distribution: &nbsp;Original-Applicant; &nbsp;Duplicate-LTC Folder; &nbsp;Records Section; &nbsp;Registry of Deeds-Camarines Sur</p>
+                                <p class="font-bold underline underline-offset-2 mt-1" id="cert-footer-id">LTC-PENDING</p>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <div id="docInterlocutoryOrder" class="doc-print-area mx-auto hidden pt-8">
+                <!-- IO CONTENT REMAINS UNCHANGED -->
+                <div class="doc-content px-8">
+                    <div class="flex justify-between items-start mb-10 text-[10pt] font-bold uppercase tracking-tight">
+                        <div class="w-[300px] leading-tight">
+                            IN RE: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;APPLICATION FOR LAND TRANSFER CLEARANCE PURSUANT TO DAR A. O. NO. 4, SERIES OF 2021,
+                            <br><br><br>
+                            <span id="io-owner" class="underline underline-offset-4">---</span>,
+                            <br>
+                            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Applicants.
+                            <br>
+                            x - - - - - - - - - - - - - x
+                        </div>
+                        <div class="text-right">
+                            <span class="underline underline-offset-4 font-bold" id="io-header-id">LTC-PENDING</span>
+                        </div>
+                    </div>
+
+                    <div class="text-center mb-8 page-break-avoid">
+                        <div class="font-black text-[13pt] tracking-widest uppercase">INTERLOCUTORY ORDER</div>
+                    </div>
+                    
+                    <p class="mb-4 text-justify indent-12 page-break-avoid leading-relaxed">
+                        For review and resolution by this Office is the above-mentioned application for DAR Land Transfer Clearance involving a parcel of agricultural land declared in the name of <span class="font-bold" id="io-owner-body">---</span>, embraced by TCT No. <span class="font-bold" id="io-tct">---</span>, Lot <span class="font-bold" id="io-lot">---</span>, with an area of <span class="font-bold" id="io-area">---</span> square meters and located at <span class="font-bold" id="io-location">---</span>.
+                    </p>
+
+                    <p class="mb-4 text-justify indent-12 page-break-avoid leading-relaxed">
+                        However, upon evaluation of the submitted documents, the following document is lacking, to wit:
+                    </p>
+
+                    <ul class="mb-6 ml-16 list-disc list-outside text-justify leading-relaxed page-break-avoid pr-8">
+                        <li id="io-remarks" class="font-bold">---</li>
                     </ul>
-                    <div class="flex items-center justify-between border-t pt-2 mt-2">
-                        <span class="text-xs font-bold uppercase">Total Previously Acquired Area:</span>
-                        <span id="totalPreviousArea" class="font-black text-red-600 text-lg">0 sqm</span>
+
+                    <p class="mb-8 text-justify indent-12 page-break-avoid leading-relaxed">
+                        <span class="font-bold">IN VIEW OF THE FOREGOING</span>, Order is hereby issued DENYING the instant application without prejudice. Let the entire records be returned to the applicant.
+                    </p>
+
+                    <div class="mb-16 font-bold page-break-avoid">
+                        SO ORDERED. <span class="pdf-today-ordinal">---</span>; Naga City.
+                    </div>
+
+                    <div class="w-full flex justify-end mb-16 page-break-avoid">
+                        <div class="flex flex-col items-center">
+                            <div class="text-center w-60">
+                                <p class="sys-parpo-name font-bold uppercase inline-block text-[11pt]">---</p>
+                                <p class="text-[10pt]">PARPO II</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="w-full mt-10 page-break-avoid text-[8pt] leading-tight italic text-gray-700">
+                        <p class="mb-2">Copy Furnished:</p>
+                        <p class="font-bold uppercase preparedByName">---</p>
+                        <p class="uppercase preparedByPosition">---</p>
+                        <p>DAR Municipal Office</p>
+                        <p>Camarines Sur</p>
+                        <p class="mt-4">File/Records</p>
                     </div>
                 </div>
             </div>
 
-            <!-- PRINT TEMPLATE (Hidden by default, visible on print) -->
-            <div id="printArea" class="hidden bg-white p-8 absolute top-0 left-0 w-full h-full">
-                <!-- REQUIREMENT 1: Header Removed -->
-                <!-- The text from image_6202b7.png has been purposely omitted here to meet the exact request. -->
-                <div class="text-center mb-8 mt-10">
-                    <h2 class="text-2xl font-black uppercase underline">Certification and Recommendation</h2>
+        </div>
+    </div>
+
+    <!-- Modal: Affidavit Details -->
+    <div id="affidavitDetailsModal" class="fixed inset-0 bg-black/60 hidden flex items-center justify-center z-[60] no-print">
+        <div class="bg-white p-8 rounded-lg shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto border-t-4 border-[#003811]">
+            <h3 class="text-xl font-bold text-[#003811] mb-6 border-b pb-2">Affidavit Details</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <div class="md:col-span-2">
+                    <label class="form-label">Executed By</label>
+                    <input type="text" id="m_executed_by" class="form-input" placeholder="e.g. JOEL BERMEJO CARCIDO">
                 </div>
-                <div class="space-y-4 text-justify leading-relaxed">
-                    <p>This is to certify that the application for DAR Clearance with Docket No. <span id="printDocket" class="font-bold underline"></span> and LTC No. <span id="printLTC" class="font-bold underline"></span> has been reviewed.</p>
-                    <p>Applicant: <span id="printApplicant" class="font-bold underline"></span></p>
-                    <p id="printPortionText" class="hidden">Note: This clearance is for a <strong>PORTION ONLY</strong> measuring <span id="printPortionArea" class="font-bold underline"></span> sqm.</p>
-                    <p class="mt-8 pt-8">Approved by:<br><br>___________________________<br><strong>Legal Officer / PARPO</strong></p>
+                <div class="md:col-span-2">
+                    <label class="form-label">Document Type</label>
+                    <div class="flex gap-6 mt-1">
+                        <label class="flex items-center gap-2 cursor-pointer font-bold text-sm">
+                            <input type="radio" name="m_doc_type" value="Affidavit of Undertaking" class="w-4 h-4 text-[#003811]" checked> Affidavit of Undertaking
+                        </label>
+                        <label class="flex items-center gap-2 cursor-pointer font-bold text-sm">
+                            <input type="radio" name="m_doc_type" value="Affidavit of No Opposition" class="w-4 h-4 text-[#003811]"> Affidavit of No Opposition
+                        </label>
+                    </div>
                 </div>
+                <div><label class="form-label">Excess Area</label><input type="text" id="m_excess_area" class="form-input" placeholder="e.g. 1,273 square meters"></div>
+                <div><label class="form-label">Series of (Year)</label><input type="text" id="m_series" class="form-input" placeholder="e.g. 2026"></div>
+                <div><label class="form-label">Doc. No.</label><input type="text" id="m_doc_no" class="form-input" placeholder="e.g. 405"></div>
+                <div><label class="form-label">Page No.</label><input type="text" id="m_page_no" class="form-input" placeholder="e.g. 82"></div>
+                <div><label class="form-label">Book No.</label><input type="text" id="m_book_no" class="form-input" placeholder="e.g. V"></div>
+                <div><label class="form-label">Date Executed</label><input type="text" id="m_date" class="form-input" placeholder="e.g. May 11, 2026"></div>
+                <div class="md:col-span-2"><label class="form-label">Notary Public</label><input type="text" id="m_notary" class="form-input" placeholder="e.g. Atty. Chelsea Audrey P. Masuhay, RPh."></div>
             </div>
-
-        </main>
-    </div>
-
-    <!-- MODALS -->
-    
-    <!-- 1. Enter Docket Number Modal (Triggered on LO Login) -->
-    <div id="docketModal" class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 hidden">
-        <div class="bg-white p-6 rounded-lg w-96 shadow-2xl">
-            <h3 class="text-lg font-black uppercase text-[#003811] mb-2">Enter Docket Number</h3>
-            <p class="text-xs text-gray-600 mb-4">Input Docket Number encoded by LCMS.</p>
-            <input type="text" id="inputDocketModal" placeholder="e.g. DOCK-2026-001" class="w-full px-3 py-2 border rounded mb-4 font-bold">
-            <div class="flex justify-end space-x-2">
-                <button onclick="closeDocketModal()" class="px-4 py-2 bg-gray-300 text-xs font-bold rounded uppercase">Cancel</button>
-                <button onclick="processDocket()" class="px-4 py-2 bg-[#003811] text-white text-xs font-bold rounded uppercase shadow">Proceed</button>
+            <div class="flex justify-end gap-3 mt-8 pt-4 border-t">
+                <button type="button" onclick="closeAffidavitModal()" class="px-5 py-2 bg-gray-200 text-gray-800 rounded font-bold text-sm hover:bg-gray-300 transition-colors">CANCEL</button>
+                <button type="button" onclick="saveAffidavitModal()" id="btnSaveAffidavit" class="px-5 py-2 bg-[#D4AF37] text-white rounded font-bold text-sm hover:bg-yellow-600 transition-colors shadow-md">SAVE & APPEND</button>
             </div>
         </div>
     </div>
 
-    <!-- 2. Interlocutory Order Checklist Modal -->
-    <div id="interlocutoryModal" class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 hidden">
-        <div class="bg-white p-6 rounded-lg w-96 shadow-2xl">
-            <h3 class="text-lg font-black uppercase text-yellow-600 mb-2">Issue Interlocutory Order</h3>
-            <p class="text-xs text-gray-600 mb-4">Select missing requirements:</p>
-            <div class="space-y-2 mb-4 h-32 overflow-y-auto">
-                <label class="flex items-center space-x-2"><input type="checkbox" class="form-checkbox"> <span class="text-sm">Proof of Identity</span></label>
-                <label class="flex items-center space-x-2"><input type="checkbox" class="form-checkbox"> <span class="text-sm">Land Title Copy</span></label>
-                <label class="flex items-center space-x-2"><input type="checkbox" class="form-checkbox"> <span class="text-sm">Tax Declaration</span></label>
-                <label class="flex items-center space-x-2"><input type="checkbox" class="form-checkbox"> <span class="text-sm">Affidavit of Aggregate Landholding</span></label>
-            </div>
-            <div class="flex justify-end space-x-2">
-                <button onclick="closeInterlocutoryModal()" class="px-4 py-2 bg-gray-300 text-xs font-bold rounded uppercase">Cancel</button>
-                <button onclick="confirmInterlocutory()" class="px-4 py-2 bg-yellow-500 text-white text-xs font-bold rounded uppercase shadow">Issue Order</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- 3. Transfer DAR Clearance Modal (Chief Legal Only) -->
-    <div id="transferModal" class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 hidden">
-        <div class="bg-white p-6 rounded-lg w-96 shadow-2xl">
-            <h3 class="text-lg font-black uppercase text-blue-600 mb-2">Transfer Clearance</h3>
-            <select id="selectLO" class="w-full px-3 py-2 border rounded mb-4">
-                <option value="LO_1">Legal Officer 1</option>
-                <option value="LO_2">Legal Officer 2</option>
-                <option value="LO_3">Legal Officer 3</option>
-            </select>
-            <div class="flex justify-end space-x-2">
-                <button onclick="closeTransferModal()" class="px-4 py-2 bg-gray-300 text-xs font-bold rounded uppercase">Cancel</button>
-                <button onclick="confirmTransfer()" class="px-4 py-2 bg-blue-600 text-white text-xs font-bold rounded uppercase shadow">Transfer</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- MAIN JAVASCRIPT LOGIC -->
     <script>
-        let currentUser = null;
-        let currentApplicationState = 'REVIEW'; // States: REVIEW, INTERLOCUTORY_ISSUED, WITHDRAWN, PARPO
-        let hasInterlocutory = false;
+        const userData = sessionStorage.getItem('currentUser');
+        if (!userData) { window.location.href = 'index.html'; }
+        const currentUser = JSON.parse(userData);
+        document.getElementById('activeUser').innerText = currentUser.full_name;
+        document.getElementById('userRoleBadge').innerText = currentUser.role;
 
-        // --- INIT & SESSION ---
-        window.onload = () => {
-            const userStr = sessionStorage.getItem('currentUser');
-            if (!userStr) {
-                // If bypassing login for testing, mock a user. Otherwise redirect.
-                currentUser = { username: 'test_lo', role: 'LO' }; 
-                // window.location.href = 'index.html'; 
-            } else {
-                currentUser = JSON.parse(userStr);
-            }
+        let currentSelection = null;
+        let currentAffidavit = null;
+        let rawData = [];
+        let currentNavList = [];
+        let currentNavIndex = -1;
+        let currentReviewMode = 'REVIEW';
+        const statusFlow = ['RECEIVED', 'FORWARDED TO LTSP', 'REVIEWED', 'PRINTED LTC', 'SIGNED BY PARPO', 'RETURNED TO LEGAL', 'FORWARDED TO RECORDS', 'RELEASED TO CLIENT', 'DISAPPROVED'];
 
-            document.getElementById('userRoleDisplay').innerText = `Logged in as: ${currentUser.role}`;
+        let chiefLegalName = "---";
+        let parpoName = "---";
+        let backgroundImageUrl = "";
+        let userRolesMap = {};
 
-            // Requirement 6: Dashboard Visibility Logic
-            if(currentUser.role === 'Chief Legal') {
-                document.getElementById('btnTransfer').classList.remove('hidden');
-                loadApplications('ALL'); // Chief sees all
-            } else if (currentUser.role === 'LO') {
-                loadApplications('OWN'); // LO sees own
-                openDocketModal(); // Flow step 4: Pop-up to enter docket
-            } else if (currentUser.role === 'PARPO') {
-                loadApplications('PARPO_ONLY');
-            }
+        const DB_FIELD_MAP = {
+            'LTC_ID_NUMBER': 'LTC_ID_NUMBER',
+            'lot_no': 'lot',
+            'owner_name': 'owner',
+            'registered_under': 'tct',
+            'area': 'area',
+            'td_no': 'td',
+            'location': 'location',
+            'deed_type': 'deed',
+            'executed_by': 'executed',
+            'in_favor_of': 'favor',
+            'doc_no': 'doc',
+            'page_no': 'page',
+            'book_no': 'book',
+            'series_of': 'series',
+            'dated': 'dated',
+            'notary_public': 'notary',
+            'retention_area_n': 'retention',
+            'or_number': 'or_number',
+            'or_date': 'or_date'
         };
 
-        function logout() {
-            sessionStorage.clear();
-            window.location.href = 'index.html';
+        function getInitialStatus(role) {
+            const userRole = (role || '').toUpperCase();
+            if (userRole.includes('LCMS') || userRole.includes('ENCODER')) {
+                return 'RECEIVED';
+            }
+            return 'REVIEWED';
         }
 
-        // --- DASHBOARD LIST LOGIC ---
-        function loadApplications(scope) {
-            const list = document.getElementById('clearanceList');
-            // Mock Data representing DB
-            const apps = [
-                { id: 1, docket: 'DOCK-2026-001', applicant: 'Juan Dela Cruz', status: 'Pending LO' },
-                { id: 2, docket: 'DOCK-2026-002', applicant: 'Maria Clara', status: 'Interlocutory' }
-            ];
+        async function loadMenu() {
+            const menuContainer = document.getElementById('dynamicMenu');
+            if (!currentUser || !currentUser.role) return;
+            const userRole = currentUser.role.toUpperCase().trim();
+            
+            try {
+                const { data: menuItems, error } = await supabaseClient
+                    .from('clearance_menu')
+                    .select('*')
+                    .order('sort_order', { ascending: true });
 
-            list.innerHTML = '';
-            apps.forEach(app => {
-                const div = document.createElement('div');
-                div.className = 'p-3 bg-gray-50 border rounded cursor-pointer hover:bg-gray-100 transition-colors';
-                div.innerHTML = `<p class="text-xs font-bold text-[#003811]">${app.docket}</p><p class="text-[10px] text-gray-500 uppercase">${app.applicant} - ${app.status}</p>`;
-                div.onclick = () => openApplication(app);
-                list.appendChild(div);
+                if (error) throw error;
+
+                menuContainer.innerHTML = '';
+                menuItems.forEach(item => {
+                    if (item.is_active === false || item.is_active === 'FALSE') return;
+                    
+                    let roles = [];
+                    if (item.required_roles) {
+                        if (Array.isArray(item.required_roles)) {
+                            roles = item.required_roles;
+                        } else {
+                            try {
+                                roles = JSON.parse(item.required_roles);
+                            } catch(e) {
+                                roles = item.required_roles.replace(/[\[\]"']/g, '').split(',').map(r => r.trim());
+                            }
+                        }
+                    }
+
+                    const hasRole = roles.length === 0 || roles.some(r => userRole.includes(String(r).toUpperCase().trim()));
+                    
+                    if (hasRole) {
+                        const isCurrent = window.location.pathname.includes(item.url);
+                        const link = document.createElement('a');
+                        link.href = item.url;
+                        link.className = `block px-6 py-4 text-[11px] font-black uppercase border-l-4 transition-all ${isCurrent ? 'bg-[#006400] border-[#D4AF37]' : 'border-transparent hover:bg-[#006400]'}`;
+                        link.innerText = item.label;
+                        menuContainer.appendChild(link);
+                    }
+                });
+            } catch (err) {
+                console.error("Menu Error:", err);
+            }
+        }
+
+        async function fetchDynamicSignatories() {
+            try {
+                const { data, error } = await supabaseClient.from('users').select('full_name, role');
+                if (data && !error) {
+                    data.forEach(u => {
+                        if(u.full_name) userRolesMap[u.full_name] = u.role;
+                        if (u.role && String(u.role).toUpperCase().includes('CHIEF')) chiefLegalName = u.full_name;
+                        if (u.role && String(u.role).toUpperCase().includes('PARPO')) parpoName = u.full_name;
+                    });
+                }
+            } catch(e) { console.error("Signatories Fetch Error:", e); }
+        }
+
+        async function fetchBackgroundImage() {
+            const { data } = supabaseClient.storage.from('bg').getPublicUrl('ltc_bg.jpg');
+            if (data && data.publicUrl) {
+                backgroundImageUrl = data.publicUrl;
+            }
+        }
+
+        async function fetchClearanceData() {
+            const { data, error } = await supabaseClient.from('land_records').select('*').order('updated_at', { ascending: false });
+            if (!error) { rawData = data || []; refreshDashboard(); }
+        }
+
+        function getWorkingDays(startDate, endDate) {
+            let count = 0; let curDate = new Date(startDate); curDate.setHours(0,0,0,0);
+            let end = new Date(endDate); end.setHours(0,0,0,0);
+            while (curDate < end) {
+                const dayOfWeek = curDate.getDay();
+                if (dayOfWeek !== 0 && dayOfWeek !== 6) count++;
+                curDate.setDate(curDate.getDate() + 1);
+            }
+            return count;
+        }
+
+        async function logStatusChange(recordId, oldStatus, newStatus) {
+            if (!recordId || !newStatus || oldStatus === newStatus) return;
+            try {
+                const { error } = await supabaseClient.from('status_logs').insert([{
+                    record_id: recordId,
+                    previous_status: oldStatus || 'UNKNOWN',
+                    new_status: newStatus,
+                    changed_by: currentUser.full_name || 'SYSTEM',
+                    changed_at: new Date().toISOString()
+                }]);
+                if (error) {
+                    console.error("Status Log Error:", error.message);
+                    if(error.message.includes('row-level security')) {
+                        console.warn("CRITICAL WARNING: Supabase RLS blocked status log insert.");
+                    }
+                }
+            } catch (err) { console.error("Status Log Catch:", err); }
+        }
+
+        function updateAffidavitUI() {
+            const alertEl = document.getElementById('affidavitAlert');
+            const successEl = document.getElementById('affidavitSuccess');
+            const certAff = document.getElementById('cert-affidavit-para');
+            
+            let areaVal = parseFloat(currentSelection.area) || 0;
+            let elArea = document.getElementById('edit-area');
+            if(elArea && elArea.innerText !== '---') {
+                areaVal = parseFloat(elArea.innerText.replace(/,/g, '')) || 0;
+            }
+
+            if (currentAffidavit && currentAffidavit.id) {
+                alertEl.classList.add('hidden');
+                successEl.classList.remove('hidden');
+                document.getElementById('affidavitTypeText').innerText = currentAffidavit.document_type || 'Affidavit';
+                
+                if(certAff) {
+                    certAff.innerText = currentAffidavit.generated_text;
+                    certAff.classList.remove('hidden');
+                }
+            } else {
+                successEl.classList.add('hidden');
+                if(certAff) {
+                    certAff.innerText = '';
+                    certAff.classList.add('hidden');
+                }
+                
+                if (areaVal > 5) {
+                    alertEl.classList.remove('hidden');
+                } else {
+                    alertEl.classList.add('hidden');
+                }
+            }
+        }
+
+        function openAffidavitModal() {
+            if (!currentSelection) return;
+            if (currentAffidavit) {
+                document.getElementById('m_executed_by').value = currentAffidavit.executed_by || '';
+                let radios = document.getElementsByName('m_doc_type');
+                for(let i=0; i<radios.length; i++){
+                    if(radios[i].value === currentAffidavit.document_type) radios[i].checked = true;
+                }
+                document.getElementById('m_excess_area').value = currentAffidavit.excess_area || '';
+                document.getElementById('m_series').value = currentAffidavit.series_year || '';
+                document.getElementById('m_doc_no').value = currentAffidavit.doc_no || '';
+                document.getElementById('m_page_no').value = currentAffidavit.page_no || '';
+                document.getElementById('m_book_no').value = currentAffidavit.book_no || '';
+                document.getElementById('m_date').value = currentAffidavit.date_executed || '';
+                document.getElementById('m_notary').value = currentAffidavit.notary_public || '';
+            } else {
+                document.getElementById('m_executed_by').value = currentSelection.owner_name || '';
+                document.getElementById('m_excess_area').value = '';
+                document.getElementById('m_series').value = new Date().getFullYear();
+                document.getElementById('m_doc_no').value = '';
+                document.getElementById('m_page_no').value = '';
+                document.getElementById('m_book_no').value = '';
+                document.getElementById('m_date').value = '';
+                document.getElementById('m_notary').value = '';
+            }
+            document.getElementById('affidavitDetailsModal').classList.remove('hidden');
+        }
+
+        function closeAffidavitModal() {
+            document.getElementById('affidavitDetailsModal').classList.add('hidden');
+        }
+
+        async function saveAffidavitModal() {
+            const btn = document.getElementById('btnSaveAffidavit');
+            const originalText = btn.innerText;
+            btn.innerText = 'SAVING...';
+            btn.disabled = true;
+
+            const executed_by = document.getElementById('m_executed_by').value;
+            const document_type = document.querySelector('input[name="m_doc_type"]:checked').value;
+            const excess_area = document.getElementById('m_excess_area').value;
+            const series_year = document.getElementById('m_series').value;
+            const doc_no = document.getElementById('m_doc_no').value;
+            const page_no = document.getElementById('m_page_no').value;
+            const book_no = document.getElementById('m_book_no').value;
+            const date_executed = document.getElementById('m_date').value;
+            const notary_public = document.getElementById('m_notary').value;
+
+            const generated_text = `Further, the transferee, ${executed_by} executed an ${document_type}, and manifested that he does not have Objection and no Opposition to future action by any person, entity or government agency to include, cover, process, or recognize the excess of ${excess_area}, as contained in the ${document_type} under Doc. No. ${doc_no}, Page No. ${page_no}, Book No. ${book_no}, Series of ${series_year} executed on ${date_executed} and notarized by ${notary_public}.`;
+
+            const payload = {
+                land_record_id: currentSelection.id,
+                executed_by, document_type, excess_area, series_year,
+                doc_no, page_no, book_no, date_executed, notary_public,
+                generated_text
+            };
+
+            let op;
+            if (currentAffidavit && currentAffidavit.id) {
+                op = supabaseClient.from('affidavit_details').update(payload).eq('id', currentAffidavit.id).select();
+            } else {
+                op = supabaseClient.from('affidavit_details').insert([payload]).select();
+            }
+
+            const { data, error } = await op;
+
+            if (error) {
+                alert("Error saving affidavit: " + error.message);
+            } else {
+                if (data && data.length > 0) {
+                    currentAffidavit = data[0];
+                    updateAffidavitUI();
+                }
+                closeAffidavitModal();
+            }
+
+            btn.innerText = originalText;
+            btn.disabled = false;
+        }
+
+        window.manualSave = async function(event) {
+            const btn = event.currentTarget;
+            const originalText = btn.innerText;
+            btn.innerText = 'SAVING...';
+            btn.disabled = true;
+
+            await autoSaveEdits();
+            await fetchClearanceData();
+
+            btn.innerText = '✅ SAVED';
+            setTimeout(() => {
+                btn.innerText = originalText;
+                btn.disabled = false;
+            }, 2000);
+        }
+
+        async function autoSaveEdits() {
+            if (!currentSelection || currentReviewMode === 'VIEW_CERT') return false;
+
+            const updateData = {};
+            let hasChanges = false;
+            let areaChanged = false;
+            
+            for (let dbCol in DB_FIELD_MAP) {
+                let htmlSuffix = DB_FIELD_MAP[dbCol];
+                let el = document.getElementById(`edit-${htmlSuffix}`);
+                
+                if (el && el.innerText !== '---') { 
+                    let newVal = el.innerText.replace(/\u00A0/g, ' ').trim();
+                    let oldVal = currentSelection[dbCol] ? String(currentSelection[dbCol]).trim() : '';
+                    if (newVal !== oldVal) {
+                        updateData[dbCol] = newVal;
+                        currentSelection[dbCol] = newVal;
+                        hasChanges = true;
+                        if(dbCol === 'area') areaChanged = true;
+                        
+                        let recEl = document.getElementById(`rec-${htmlSuffix}`);
+                        let certEl = document.getElementById(`cert-${htmlSuffix}`);
+                        let ioEl = document.getElementById(`io-${htmlSuffix}`); 
+                        if(recEl) recEl.innerText = newVal;
+                        if(certEl) certEl.innerText = newVal;
+                        if(ioEl) ioEl.innerText = newVal; 
+                    }
+                }
+            }
+
+            const remarksEl = document.getElementById('reviewRemarks');
+            if (remarksEl && !remarksEl.disabled) {
+                let newRemarks = remarksEl.value.trim();
+                let colRemarks = currentSelection.hasOwnProperty('Remarks') ? 'Remarks' : 'remarks';
+                let oldRemarks = currentSelection[colRemarks] ? String(currentSelection[colRemarks]).trim() : '';
+                if (newRemarks !== oldRemarks) {
+                    updateData[colRemarks] = newRemarks;
+                    currentSelection[colRemarks] = newRemarks;
+                    hasChanges = true;
+                    
+                    let ioRemEl = document.getElementById('io-remarks');
+                    if(ioRemEl) ioRemEl.innerText = newRemarks;
+                }
+            }
+
+            if (hasChanges) {
+                updateData.updated_at = new Date().toISOString();
+                const { error } = await supabaseClient.from('land_records').update(updateData).eq('id', currentSelection.id);
+                if(error) {
+                    console.error('Auto-save error:', error);
+                    alert("Save Error: " + error.message);
+                } else {
+                    const newLtc = updateData.LTC_ID_NUMBER || currentSelection.LTC_ID_NUMBER;
+                    if (newLtc) {
+                        const recHeaderId = document.getElementById('rec-header-id-top');
+                        const certHeaderId = document.getElementById('cert-header-id');
+                        const recFooterId = document.getElementById('rec-footer-id');
+                        const certFooterId = document.getElementById('cert-footer-id');
+                        const ioHeaderId = document.getElementById('io-header-id');
+                        if(recHeaderId) recHeaderId.innerText = newLtc;
+                        if(certHeaderId) certHeaderId.innerText = newLtc;
+                        if(recFooterId) recFooterId.innerText = newLtc;
+                        if(certFooterId) certFooterId.innerText = newLtc;
+                        if(ioHeaderId) ioHeaderId.innerText = newLtc;
+                    }
+                    if (areaChanged) updateAffidavitUI();
+                }
+            }
+            return hasChanges;
+        }
+
+        function refreshDashboard() {
+            const query = document.getElementById('searchInput').value.toLowerCase();
+            const tbody = document.getElementById('clearanceTableBody');
+            tbody.innerHTML = '';
+            let stats = { rec: 0, ltsp: 0, rev: 0, cer: 0, sig: 0, leg: 0, recd: 0, rel: 0, dis: 0 };
+            
+            let userRole = currentUser.role.toUpperCase();
+            let isParpo = userRole === 'PARPO II' || userRole === 'PARPO';
+            let isChief = userRole === 'CHIEF, LEGAL DIVISION' || userRole === 'DIVISION CHIEF' || userRole === 'CHIEF';
+            let isLegal = (userRole.includes('LEGAL') || userRole.includes('SARPO') || userRole.includes('ARPT') || userRole.includes('ARPO')) && !isParpo;
+            let isEncoder = userRole === 'ODTS ENCODER' || userRole.includes('ODTS');
+            let isRecords = userRole.includes('RECORDS');
+            let isLTSP = userRole.includes('LTSP');
+            let userFullName = currentUser.full_name;
+
+            let displayCount = 0;
+
+            rawData.forEach(item => {
+                let matchesSearch = false;
+                if (query === '') {
+                    matchesSearch = true;
+                } else {
+                    matchesSearch = Object.values(item).some(val => 
+                        val !== null && String(val).toLowerCase().includes(query)
+                    );
+                }
+
+                if (matchesSearch) {
+                    
+                    let st = (item.status || 'RECEIVED').trim().toUpperCase();
+                    
+                    if (st === 'RECEIVED' || st === 'RECEIVED - LEGAL') { stats.rec++; st = 'RECEIVED'; }
+                    else if (st === 'FORWARDED TO LTSP') { stats.ltsp++; st = 'FORWARDED TO LTSP'; }
+                    else if (st === 'REVIEWED' || st === 'REVIEWED AND RECOMMENDED' || st === 'RECOMMENDED') { stats.rev++; st = 'REVIEWED'; }
+                    else if (st === 'PRINTED LTC' || st === 'CERTIFIED' || st === 'PROCESSED') { stats.cer++; st = 'PRINTED LTC'; }
+                    else if (st === 'SIGNED BY PARPO' || st === 'SIGNED' || st === 'FOR SIGNATURE - PARPO II') { stats.sig++; st = 'SIGNED BY PARPO'; }
+                    else if (st === 'RETURNED TO LEGAL' || st === 'TO LEGAL' || st === 'FORWARDED - RECORDS') { stats.leg++; st = 'RETURNED TO LEGAL'; }
+                    else if (st === 'FORWARDED TO RECORDS' || st === 'TO RECORDS') { stats.recd++; st = 'FORWARDED TO RECORDS'; }
+                    else if (st === 'RELEASED TO CLIENT' || st === 'RELEASED - CLIENT' || st === 'RELEASE TO CLIENT') { stats.rel++; st = 'RELEASED TO CLIENT'; }
+                    else if (st === 'DISAPPROVED') { stats.dis++; st = 'DISAPPROVED'; }
+                    else if (st === 'CORRECTED') { st = 'CORRECTED'; }
+                    else if (st === 'RE-ISSUED') { st = 'RE-ISSUED'; }
+
+                    let daysPassed = item.updated_at ? getWorkingDays(new Date(item.updated_at), new Date()) : 0;
+                    let warningHTML = daysPassed > 5 ? `<span class="text-red-600 font-black ml-2 text-[12px]" title="Exceeded 5 working days!">⚠️</span>` : '';
+
+                    let actions = '<div class="flex flex-col gap-1 w-full max-w-[120px] mx-auto">';
+                    
+                    if (!isEncoder) {
+                        if (st === 'RECEIVED') {
+                            if (isChief || isLegal) {
+                                actions += `<button onclick='showReview("${item.id}", "REVIEW")' class="bg-[#003811] text-white w-full py-1.5 rounded shadow text-[10px] font-bold tracking-wide hover:bg-black uppercase transition-colors text-center">Review</button>`;
+                                actions += `<button onclick='processToNext("${item.id}", "FORWARDED TO LTSP", "${st}")' class="bg-indigo-600 text-white w-full py-1 mt-1 rounded shadow text-[9px] font-bold hover:bg-indigo-800 uppercase transition-colors text-center">Forward to LTSP</button>`;
+                                actions += `<button onclick='createVariant("${item.id}")' class="bg-white text-gray-800 border border-gray-300 w-full py-1 mt-1 rounded shadow text-[9px] font-bold hover:bg-gray-100 uppercase transition-colors text-center">+ Variant</button>`;
+                            }
+                        } else if (st === 'FORWARDED TO LTSP') {
+                            if (isLTSP) {
+                                actions += `<button onclick='processToNext("${item.id}", "RETURNED TO LEGAL", "${st}")' class="bg-indigo-600 text-white w-full py-1.5 rounded shadow text-[10px] font-bold hover:bg-indigo-700 uppercase transition-colors text-center">Forward to Legal</button>`;
+                            }
+                        } else if (st === 'REVIEWED') {
+                            if (isChief || isLegal) {
+                                actions += `<button onclick='openPrint("${item.id}", "rec")' class="bg-[#8b5cf6] text-white w-full py-1.5 rounded shadow text-[9px] font-black tracking-wide hover:bg-purple-800 uppercase transition-colors text-center">Recommendation</button>`;
+                                actions += `<button onclick='openPrint("${item.id}", "cert")' class="bg-[#d97706] text-white w-full py-1.5 rounded shadow text-[9px] font-black tracking-wide hover:bg-amber-700 uppercase transition-colors text-center">Certification</button>`;
+                                actions += `<button onclick='createVariant("${item.id}")' class="bg-white text-gray-800 border border-gray-300 w-full py-1 rounded shadow text-[9px] font-bold hover:bg-gray-100 uppercase transition-colors text-center mt-1">+ Variant</button>`;
+                            }
+                        } else if (st === 'PRINTED LTC') {
+                            if (isParpo) {
+                                actions += `<button onclick='showReview("${item.id}", "REVIEW")' class="bg-[#003811] text-white w-full py-1.5 rounded shadow text-[9px] font-black tracking-wide hover:bg-black uppercase transition-colors text-center">Edit</button>`;
+                                actions += `<button onclick='openPrint("${item.id}", "rec")' class="bg-[#8b5cf6] text-white w-full py-1.5 rounded shadow text-[9px] font-black tracking-wide hover:bg-purple-800 uppercase transition-colors text-center">Recommendation</button>`;
+                                actions += `<button onclick='openPrint("${item.id}", "cert")' class="bg-[#d97706] text-white w-full py-1.5 rounded shadow text-[9px] font-black tracking-wide hover:bg-amber-700 uppercase transition-colors text-center">Certification</button>`;
+                                actions += `<button onclick='processToNext("${item.id}", "SIGNED BY PARPO", "${st}")' class="bg-cyan-600 text-white w-full py-1.5 rounded shadow text-[10px] font-bold hover:bg-cyan-700 uppercase transition-colors text-center mt-1">Sign</button>`;
+                            } else if (isChief || isLegal) {
+                                actions += `<button onclick='openPrint("${item.id}", "rec")' class="bg-[#8b5cf6] text-white w-full py-1.5 rounded shadow text-[9px] font-black tracking-wide hover:bg-purple-800 uppercase transition-colors text-center">Recommendation</button>`;
+                                actions += `<button onclick='openPrint("${item.id}", "cert")' class="bg-[#d97706] text-white w-full py-1.5 rounded shadow text-[9px] font-black tracking-wide hover:bg-amber-700 uppercase transition-colors text-center">Certification</button>`;
+                            }
+                        } else if (st === 'SIGNED BY PARPO') {
+                            if (isParpo) {
+                                actions += `<button onclick='processToNext("${item.id}", "RETURNED TO LEGAL", "${st}")' class="bg-cyan-600 text-white w-full py-1.5 rounded shadow text-[10px] font-bold hover:bg-cyan-700 uppercase transition-colors text-center">Return to Legal</button>`;
+                            }
+                        } else if (st === 'RETURNED TO LEGAL') {
+                            if (isChief || isLegal) {
+                                actions += `<button onclick='openPrint("${item.id}", "rec")' class="bg-[#8b5cf6] text-white w-full py-1.5 rounded shadow text-[9px] font-black tracking-wide hover:bg-purple-800 uppercase transition-colors text-center mb-1">Recommendation</button>`;
+                                actions += `<button onclick='openPrint("${item.id}", "cert")' class="bg-[#d97706] text-white w-full py-1.5 rounded shadow text-[9px] font-black tracking-wide hover:bg-amber-700 uppercase transition-colors text-center mb-1">Certification</button>`;
+                                actions += `<button onclick='processToNext("${item.id}", "FORWARDED TO RECORDS", "${st}")' class="bg-cyan-600 text-white w-full py-1.5 rounded shadow text-[10px] font-bold hover:bg-cyan-700 uppercase transition-colors text-center">TO RECORDS</button>`;
+                            }
+                        } else if (st === 'FORWARDED TO RECORDS') {
+                            if (isRecords || isChief) {
+                                actions += `<button onclick='processToNext("${item.id}", "RELEASED TO CLIENT", "${st}")' class="bg-cyan-600 text-white w-full py-1.5 rounded shadow text-[10px] font-bold hover:bg-cyan-700 uppercase transition-colors text-center mb-1">Release</button>`;
+                            }
+                            if (isParpo || isLegal || isRecords || isChief) {
+                                actions += `<button onclick='showReview("${item.id}", "VIEW_CERT")' class="bg-gray-500 text-white w-full py-1.5 rounded shadow text-[10px] font-bold hover:bg-gray-600 uppercase transition-colors text-center mb-1">View</button>`;
+                            }
+                        } else if (st === 'RELEASED TO CLIENT' || st === 'RELEASED - CLIENT' || st === 'RELEASE TO CLIENT') {
+                            if (isChief || isLegal) {
+                                actions += `<button onclick='handleDuplicate("${item.id}", "CORRECTION")' class="bg-yellow-500 text-white w-full py-1.5 rounded shadow text-[10px] font-bold hover:bg-yellow-600 uppercase transition-colors text-center mb-1">Correction</button>`;
+                                actions += `<button onclick='handleDuplicate("${item.id}", "RE-ISSUANCE")' class="bg-blue-500 text-white w-full py-1.5 rounded shadow text-[10px] font-bold hover:bg-blue-600 uppercase transition-colors text-center mb-1">Re-Issue</button>`;
+                            }
+                            if (isParpo || isRecords) {
+                                actions += `<button onclick='showReview("${item.id}", "VIEW_CERT")' class="bg-gray-500 text-white w-full py-1.5 rounded shadow text-[10px] font-bold hover:bg-gray-600 uppercase transition-colors text-center mb-1">View</button>`;
+                            }
+                        } else if (st === 'DISAPPROVED') {
+                            if (isChief || isLegal) {
+                                actions += `<button onclick='showReview("${item.id}", "UPDATE")' class="bg-blue-600 text-white w-full py-1.5 rounded shadow text-[10px] font-bold hover:bg-blue-700 uppercase transition-colors text-center mb-1">Update</button>`;
+                                actions += `<button onclick='openPrint("${item.id}", "io")' class="bg-red-600 text-white w-full py-1.5 rounded shadow text-[10px] font-bold hover:bg-red-700 uppercase transition-colors text-center mb-1">Print Interlocutory</button>`;
+                                actions += `<button onclick='processToNext("${item.id}", "REVIEWED", "${st}")' class="bg-green-600 text-white w-full py-1.5 rounded shadow text-[10px] font-bold hover:bg-green-700 uppercase transition-colors text-center mb-1">Compliance Met</button>`;
+                            }
+                        } else if (st === 'CORRECTED' || st === 'RE-ISSUED') {
+                            actions += `<button onclick='showReview("${item.id}", "VIEW_CERT")' class="bg-gray-500 text-white w-full py-1.5 rounded shadow text-[10px] font-bold hover:bg-gray-600 uppercase transition-colors text-center mb-1">View</button>`;
+                        }
+                    }
+                    
+                    const postSignStatuses = ['SIGNED BY PARPO', 'RETURNED TO LEGAL', 'FORWARDED TO RECORDS', 'RELEASED TO CLIENT', 'CORRECTED', 'RE-ISSUED'];
+                    if ((isChief || isLegal) && !postSignStatuses.includes(st)) {
+                        actions += `<button onclick='deleteRecord("${item.id}")' class="bg-red-700 text-white w-full py-1 rounded shadow text-[9px] font-bold hover:bg-red-900 uppercase transition-colors text-center mt-1">Delete</button>`;
+                    }
+
+                    actions += `</div>`;
+
+                    let legalOfficerName = item.legalOfficer || item.legalofficer || item.encoded_by || item.created_by || '---'; 
+                    let ownerNameDisplay = item.owner_name || '<span class="text-gray-400 italic">Pending Encoding</span>';
+
+                    if (query !== '' || displayCount < 30) {
+                        tbody.innerHTML += `
+                            <tr class="hover:bg-gray-50 transition-colors">
+                                <td class="font-bold">${item.LTC_ID_NUMBER || item.ltc_no || '---'}</td>
+                                <td class="uppercase font-semibold">${ownerNameDisplay}</td>
+                                <td class="text-xs text-gray-500">${legalOfficerName}</td>
+                                <td><span class="px-2 py-1 rounded text-[8px] shadow-sm font-black uppercase ${getStatusStyle(st)}">${st}</span>${warningHTML}</td>
+                                <td class="text-center align-middle">${actions}</td>
+                                <td class="text-right font-mono text-gray-500">${item.updated_at ? new Date(item.updated_at).toLocaleString('en-US', { hour12: true }) : '---'}</td>
+                            </tr>`;
+                        displayCount++;
+                    }
+                }
+            });
+            
+            const actionDiv = document.getElementById('actionButtons');
+            if (currentSelection) {
+                let currentSt = (currentSelection.status || 'RECEIVED').trim().toUpperCase();
+                let printButtons = '';
+                
+                if (currentSt === 'REVIEWED' || currentSt === 'PRINTED LTC') {
+                    if (isChief || isLegal || isParpo) {
+                        printButtons = `
+                            <button onclick='openPrint("${currentSelection.id}", "rec")' class="bg-[#8b5cf6] text-white px-4 py-2 rounded text-xs font-black uppercase shadow hover:bg-purple-800 transition-colors">Print Recommendation</button>
+                            <button onclick='openPrint("${currentSelection.id}", "cert")' class="bg-[#d97706] text-white px-4 py-2 rounded text-xs font-black uppercase shadow hover:bg-amber-700 transition-colors">Print Certification</button>
+                        `;
+                    }
+                }
+
+                if (currentReviewMode === 'VIEW_CERT') {
+                    actionDiv.innerHTML = '';
+                } else if (currentReviewMode === 'CORRECTION' || currentReviewMode === 'RE-ISSUANCE' || currentReviewMode === 'UPDATE') {
+                    actionDiv.innerHTML = `
+                        <div class="flex gap-2 w-full justify-end">
+                            <button onclick="decideStatus('PRINTED LTC')" class="bg-yellow-600 text-white px-8 py-3 rounded text-sm font-black uppercase shadow-lg hover:bg-yellow-700 transition-colors">Save & Route to PARPO</button>
+                        </div>
+                    `;
+                } else if (currentSt === 'PRINTED LTC' && (userRole === 'PARPO II' || userRole === 'PARPO')) {
+                    actionDiv.innerHTML = `
+                        <div class="flex gap-2 w-full justify-end">
+                            ${printButtons}
+                            <button onclick="decideStatus('PRINTED LTC')" class="bg-green-700 text-white px-8 py-3 rounded text-sm font-black uppercase shadow-lg hover:bg-green-800 transition-colors">Update Details</button>
+                        </div>
+                    `;
+                } else if (currentSt === 'RECEIVED' || currentSt === 'REVIEWED') {
+                    actionDiv.innerHTML = `
+                        <div class="flex gap-2 w-full justify-end">
+                            ${printButtons}
+                            <button onclick="decideStatus('REVIEWED')" class="bg-green-700 text-white px-8 py-3 rounded text-sm font-black uppercase shadow-lg hover:bg-green-800 transition-colors">Approve</button>
+                            <button onclick="decideStatus('DISAPPROVED')" class="bg-red-700 text-white px-8 py-3 rounded text-sm font-black uppercase shadow-lg hover:bg-red-800 transition-colors">Disapprove</button>
+                        </div>
+                    `;
+                } else {
+                     actionDiv.innerHTML = `
+                        <div class="flex gap-2 w-full justify-end">
+                            ${printButtons}
+                        </div>
+                    `;
+                }
+            }
+            updateStats(stats);
+        }
+
+        window.deleteRecord = async function(id) {
+            if (confirm("Are you sure you want to permanently delete this record? This action cannot be undone.")) {
+                const { error } = await supabaseClient.from('land_records').delete().eq('id', id);
+                if (error) {
+                    alert('Error deleting record: ' + error.message);
+                } else {
+                    alert('Record successfully deleted.');
+                    fetchClearanceData();
+                }
+            }
+        }
+
+        window.createVariant = async function(id) {
+            const record = rawData.find(r => r.id === id);
+            if (!record) return;
+
+            let baseNo = record.LTC_ID_NUMBER || record.ltc_no || '';
+            let newNo = '';
+            
+            const match = baseNo.match(/-\((\d+)\)$/);
+            if (match) {
+                let num = parseInt(match[1]) + 1;
+                newNo = baseNo.replace(/-\(\d+\)$/, `-(${num})`);
+            } else {
+                newNo = baseNo ? baseNo + '-(1)' : 'NEW-(1)';
+            }
+
+            if (!confirm(`Create a new variant for this clearance?\nNew LTC No will be: ${newNo}`)) return;
+
+            const { id: oldId, created_at, updated_at, ...newRecordData } = record;
+            
+            if(newRecordData.ltc_no !== undefined) delete newRecordData.ltc_no;
+
+            newRecordData.LTC_ID_NUMBER = newNo;
+            newRecordData.status = getInitialStatus(currentUser.role); 
+
+            const { error } = await supabaseClient.from('land_records').insert([newRecordData]);
+            if (error) {
+                alert('Error creating variant: ' + error.message);
+            } else {
+                alert('Variant created successfully! You can now edit the "In favor of" details via the Review button.');
+                fetchClearanceData();
+            }
+        }
+
+        window.handleDuplicate = async function(id, mode) {
+            const record = rawData.find(r => r.id === id);
+            if (!record) return;
+
+            let newLtc = `NEW (${mode})`;
+
+            if (mode === 'CORRECTION' || mode === 'RE-ISSUANCE') {
+                const proceed = confirm(`Process a ${mode} for this record?\nClick OK to continue.`);
+                if (!proceed) return;
+            } else {
+                if (!confirm(`Are you sure you want to process a ${mode} for this record? A new entry will be created requiring a new LTC Number.`)) return;
+            }
+
+            const { id: oldId, created_at, updated_at, ...newRecordData } = record;
+            
+            if(newRecordData.ltc_no !== undefined) delete newRecordData.ltc_no;
+
+            let colLtc = record.hasOwnProperty('LTC_ID_NUMBER') ? 'LTC_ID_NUMBER' : 'ltc_no';
+            newRecordData[colLtc] = newLtc; 
+            newRecordData.status = getInitialStatus(currentUser.role); 
+            newRecordData.Remarks = '';
+
+            const { data, error } = await supabaseClient.from('land_records').insert([newRecordData]).select();
+            if (error) {
+                alert(`Error processing ${mode}: ` + error.message);
+            } else {
+                const oldStatusUpdate = mode === 'CORRECTION' ? 'CORRECTED' : 'RE-ISSUED';
+                const { error: oldUpdateError } = await supabaseClient.from('land_records').update({ 
+                    status: oldStatusUpdate, 
+                    updated_at: new Date().toISOString() 
+                }).eq('id', oldId);
+                
+                if (!oldUpdateError) {
+                    await logStatusChange(oldId, record.status, oldStatusUpdate);
+                }
+
+                await fetchClearanceData();
+                await logStatusChange(data[0].id, 'CREATED', newRecordData.status);
+                showReview(data[0].id, mode);
+            }
+        }
+
+        function getStatusStyle(s) {
+            const colors = { 
+                'RECEIVED': 'bg-blue-100 text-blue-800 border border-blue-200',
+                'FORWARDED TO LTSP': 'bg-indigo-100 text-indigo-800 border border-indigo-200', 
+                'REVIEWED': 'bg-purple-100 text-purple-800 border border-purple-200', 
+                'PRINTED LTC': 'bg-cyan-100 text-cyan-800 border border-cyan-200', 
+                'SIGNED BY PARPO': 'bg-orange-100 text-orange-800 border border-orange-200', 
+                'RETURNED TO LEGAL': 'bg-red-100 text-red-800 border border-red-200', 
+                'FORWARDED TO RECORDS': 'bg-green-100 text-green-800 border border-green-200', 
+                'RELEASED TO CLIENT': 'bg-teal-100 text-teal-800 border border-teal-200',
+                'DISAPPROVED': 'bg-gray-200 text-gray-800 border border-gray-300',
+                'CORRECTED': 'bg-yellow-100 text-yellow-800 border border-yellow-300',
+                'RE-ISSUED': 'bg-blue-100 text-blue-800 border border-blue-300'
+            };
+            return colors[s] || 'bg-gray-100 text-gray-800';
+        }
+
+        async function navigateReview(dir) {
+            if (currentReviewMode !== 'VIEW_CERT') await autoSaveEdits();
+            let newIndex = currentNavIndex + dir;
+            if(newIndex >= 0 && newIndex < currentNavList.length) { showReview(currentNavList[newIndex].id, currentReviewMode); }
+        }
+
+        function generateQRs(identifier) {
+            const currentPath = window.location.href.substring(0, window.location.href.lastIndexOf('/'));
+            const scanUrl = currentPath + "/verify.html?id=" + encodeURIComponent(identifier || 'NO-ID');
+
+            ['qr-rec', 'qr-cert'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) {
+                    el.innerHTML = '';
+                    new QRCode(el, { text: scanUrl, width: 55, height: 55, correctLevel: QRCode.CorrectLevel.L });
+                }
             });
         }
 
-        // --- DOCKET ENTRY FLOW (Steps 4 & 5) ---
-        function openDocketModal() { document.getElementById('docketModal').classList.remove('hidden'); }
-        function closeDocketModal() { document.getElementById('docketModal').classList.add('hidden'); }
-        
-        function processDocket() {
-            const input = document.getElementById('inputDocketModal').value;
-            closeDocketModal();
-            // If exists, load data. If not, setup for NEW LTC input.
-            document.getElementById('applicationForm').classList.remove('hidden');
-            document.getElementById('actionBar').classList.remove('hidden');
-            document.getElementById('docketNum').value = input || 'NEW-DOCKET-GEN';
-            resetButtonsForReview();
-        }
+        async function showReview(id, mode = 'REVIEW') {
+            currentReviewMode = mode;
+            const query = document.getElementById('searchInput').value.toLowerCase();
+            currentNavList = rawData.filter(item => {
+                let matchesSearch = false;
+                if (query === '') {
+                    matchesSearch = true;
+                } else {
+                    matchesSearch = Object.values(item).some(val => 
+                        val !== null && String(val).toLowerCase().includes(query)
+                    );
+                }
+                return matchesSearch;
+            });
+            currentNavIndex = currentNavList.findIndex(r => r.id === id);
+            currentSelection = currentNavList[currentNavIndex];
 
-        function openApplication(app) {
-            document.getElementById('applicationForm').classList.remove('hidden');
-            document.getElementById('actionBar').classList.remove('hidden');
-            document.getElementById('docketNum').value = app.docket;
-            document.getElementById('applicantName').value = app.applicant;
-            resetButtonsForReview();
-        }
-
-        // --- PORTION ONLY LOGIC (Requirement 5) ---
-        function togglePortionArea() {
-            const isChecked = document.getElementById('chkPortion').checked;
-            const container = document.getElementById('portionAreaContainer');
-            if (isChecked) {
-                container.classList.remove('hidden');
-                container.classList.add('block');
+            // Fetch current affidavit if exists
+            const { data: affData, error: affError } = await supabaseClient.from('affidavit_details').select('*').eq('land_record_id', currentSelection.id).maybeSingle();
+            if (!affError && affData) {
+                currentAffidavit = affData;
             } else {
-                container.classList.add('hidden');
-                container.classList.remove('block');
-                document.getElementById('portionArea').value = '';
+                currentAffidavit = null;
             }
-        }
 
-        // --- PREVIOUS DAR CLEARANCE SEARCH (Requirement 4) ---
-        function searchPreviousClearances() {
-            const name = document.getElementById('applicantName').value;
-            const address = document.getElementById('propertyAddress').value;
+            const qrIdentifier = currentSelection.LTC_ID_NUMBER || currentSelection.ltc_no || 'PENDING';
+            generateQRs(qrIdentifier);
+
+            document.getElementById('btnPrev').disabled = currentNavIndex <= 0;
+            document.getElementById('btnPrev').className = currentNavIndex <= 0 ? 'bg-gray-100 text-gray-400 px-4 py-2 rounded text-xs font-black uppercase cursor-not-allowed' : 'bg-gray-200 hover:bg-gray-300 px-4 py-2 rounded text-xs font-black uppercase transition-colors text-gray-800';
             
-            if(name.length < 3) return;
+            document.getElementById('btnNext').disabled = currentNavIndex >= currentNavList.length - 1;
+            document.getElementById('btnNext').className = currentNavIndex >= currentNavList.length - 1 ? 'bg-gray-100 text-gray-400 px-4 py-2 rounded text-xs font-black uppercase cursor-not-allowed' : 'bg-gray-200 hover:bg-gray-300 px-4 py-2 rounded text-xs font-black uppercase transition-colors text-gray-800';
 
-            // MOCK: Flexible search logic mapping to a DB call.
-            const listEl = document.getElementById('previousClearancesList');
-            const totalEl = document.getElementById('totalPreviousArea');
-            
-            // Simulating found records based on flexible search
-            listEl.innerHTML = `
-                <li>Prev. Clearance 1 (2020) - 15,000 sqm</li>
-                <li>Prev. Clearance 2 (2023) - 5,500 sqm</li>
-            `;
-            // Auto calculate sum
-            totalEl.innerText = "20,500 sqm";
-        }
+            const isEditable = (currentReviewMode !== 'VIEW_CERT');
 
-        // --- BUTTON STATE MACHINE / WORKFLOW LOGIC ---
-        function resetButtonsForReview() {
-            // Default Review View (Flow step 6)
-            hasInterlocutory = false;
-            document.getElementById('btnSavePrint').classList.remove('hidden');
-            document.getElementById('btnIssueInterlocutory').classList.remove('hidden');
-            document.getElementById('btnWithdraw').classList.remove('hidden');
-            document.getElementById('btnDeny').classList.add('hidden');
-        }
+            for (let dbCol in DB_FIELD_MAP) {
+                let htmlSuffix = DB_FIELD_MAP[dbCol];
+                
+                let editEl = document.getElementById(`edit-${htmlSuffix}`);
+                if(editEl) {
+                    editEl.innerText = currentSelection[dbCol] || '---';
+                    editEl.contentEditable = isEditable ? "true" : "false";
+                    editEl.onblur = () => { if(isEditable) autoSaveEdits(); }; 
+                }
 
-        // Flow step 7: Interlocutory issued -> Menu changes to Save&Print or Deny
-        function updateButtonsPostInterlocutory() {
-            hasInterlocutory = true;
-            document.getElementById('btnIssueInterlocutory').classList.add('hidden');
-            document.getElementById('btnDeny').classList.remove('hidden');
-            alert("Interlocutory Order Issued. System will await compliance. You may now Deny if they fail to comply, or Save & Print if they comply.");
-        }
-
-        // --- ACTION BUTTON HANDLERS ---
-        
-        // Requirement 3: Withdraw logic
-        function withdrawApplication() {
-            if(confirm("Are you sure you want to WITHDRAW this application? It will remain in the database for monitoring but will be flagged as withdrawn.")) {
-                currentApplicationState = 'WITHDRAWN';
-                document.getElementById('applicationForm').classList.add('hidden');
-                document.getElementById('actionBar').classList.add('hidden');
-                alert("Application Withdrawn Successfully.");
+                let val = currentSelection[dbCol] || ' ';
+                let recEl = document.getElementById(`rec-${htmlSuffix}`);
+                let certEl = document.getElementById(`cert-${htmlSuffix}`);
+                let ioEl = document.getElementById(`io-${htmlSuffix}`); 
+                if(recEl) recEl.innerText = val;
+                if(certEl) certEl.innerText = val;
+                
+                if (ioEl) {
+                    if (htmlSuffix === 'area' && val !== ' ' && val !== '---') {
+                        let sqMeters = parseFloat(val) * 10000;
+                        if (!isNaN(sqMeters)) {
+                            ioEl.innerText = sqMeters.toLocaleString('en-US');
+                        } else {
+                            ioEl.innerText = val;
+                        }
+                    } else {
+                        ioEl.innerText = val;
+                    }
+                } 
             }
-        }
 
-        // Flow step 8: Save and Print
-        function saveAndPrint() {
-            // Transfer data to print view
-            document.getElementById('printDocket').innerText = document.getElementById('docketNum').value;
-            document.getElementById('printLTC').innerText = document.getElementById('ltcNum').value;
-            document.getElementById('printApplicant').innerText = document.getElementById('applicantName').value;
-            
-            if(document.getElementById('chkPortion').checked) {
-                document.getElementById('printPortionText').classList.remove('hidden');
-                document.getElementById('printPortionArea').innerText = document.getElementById('portionArea').value;
+            const recHeaderId = document.getElementById('rec-header-id-top');
+            const certHeaderId = document.getElementById('cert-header-id');
+            const recFooterId = document.getElementById('rec-footer-id');
+            const certFooterId = document.getElementById('cert-footer-id');
+            const ioHeaderId = document.getElementById('io-header-id');
+            const headerVal = currentSelection.LTC_ID_NUMBER || currentSelection.ltc_no || 'LTC-PENDING';
+            if(recHeaderId) recHeaderId.innerText = headerVal;
+            if(certHeaderId) certHeaderId.innerText = headerVal;
+            if(recFooterId) recFooterId.innerText = headerVal;
+            if(certFooterId) certFooterId.innerText = headerVal;
+            if(ioHeaderId) ioHeaderId.innerText = headerVal;
+
+            document.querySelectorAll('.sys-chief-name').forEach(el => el.innerText = chiefLegalName && chiefLegalName !== "---" ? chiefLegalName : "ATTY. JAIME G. RESOCO, JR.");
+            document.querySelectorAll('.sys-parpo-name').forEach(el => el.innerText = parpoName);
+
+            const now = new Date();
+            const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+            const dateStrOrdinal = `${monthNames[now.getMonth()]} ${now.getDate()}, ${now.getFullYear()}`;
+            document.querySelectorAll('.pdf-today-ordinal').forEach(el => el.innerText = dateStrOrdinal);
+
+            if (currentReviewMode === 'VIEW_CERT') {
+                document.getElementById('modalMainTitle').innerText = "CERTIFICATION VIEW";
+                document.getElementById('reviewSection').classList.add('hidden');
+                document.getElementById('docRecommendation').classList.add('hidden');
+                document.getElementById('docInterlocutoryOrder').classList.add('hidden');
+                document.getElementById('docCertification').classList.remove('hidden');
+                document.getElementById('docCertification').style.display = 'block';
+                document.getElementById('actionButtons').classList.add('hidden');
+                document.getElementById('editNotice').classList.add('hidden');
             } else {
-                document.getElementById('printPortionText').classList.add('hidden');
+                document.getElementById('modalMainTitle').innerText = currentReviewMode.replace('-', ' ').toUpperCase();
+                document.getElementById('docRecommendation').classList.add('hidden');
+                document.getElementById('docCertification').classList.add('hidden');
+                document.getElementById('docInterlocutoryOrder').classList.add('hidden'); 
+                document.getElementById('docCertification').style.display = 'none';
+                document.getElementById('reviewSection').classList.remove('hidden');
+                document.getElementById('actionButtons').classList.remove('hidden');
+                document.getElementById('editNotice').classList.remove('hidden');
+            }
+            
+            let colRemarks = currentSelection.hasOwnProperty('Remarks') ? 'Remarks' : 'remarks';
+            let remarksVal = currentSelection[colRemarks] || '';
+            document.getElementById('reviewRemarks').value = remarksVal;
+            document.getElementById('reviewRemarks').disabled = !isEditable;
+            document.getElementById('reviewRemarks').onblur = () => { if(isEditable) autoSaveEdits(); };
+            
+            let ioRemEl = document.getElementById('io-remarks');
+            if(ioRemEl) ioRemEl.innerText = remarksVal || '---';
+
+            let ioOwnerBody = document.getElementById('io-owner-body');
+            if(ioOwnerBody) ioOwnerBody.innerText = currentSelection['owner_name'] || '---';
+            
+            updateAffidavitUI();
+            refreshDashboard(); 
+
+            document.getElementById('reviewModal').classList.remove('hidden');
+
+            let encoderName = currentSelection.legalOfficer || currentSelection.legalofficer || currentSelection.encoded_by || currentSelection.created_by || '---';
+            document.querySelectorAll('.preparedByName').forEach(el => el.innerText = encoderName);
+            
+            let encoderRole = userRolesMap[encoderName] || 'Personnel';
+            document.querySelectorAll('.preparedByPosition').forEach(el => el.innerText = encoderRole);
+        }
+
+        async function openPrint(id, type) {
+            await showReview(id, 'REVIEW'); 
+            
+            document.getElementById('reviewSection').classList.add('hidden');
+            document.getElementById('actionButtons').classList.add('hidden');
+            document.getElementById('editNotice').classList.add('hidden');
+            document.getElementById('modalMainTitle').parentElement.classList.add('hidden');
+            
+            let sourceId = type === 'rec' ? 'docRecommendation' : (type === 'cert' ? 'docCertification' : 'docInterlocutoryOrder');
+            let ltcNum = currentSelection.LTC_ID_NUMBER || currentSelection.ltc_no || id;
+            ltcNum = ltcNum.replace(/[^a-z0-9]/gi, '_').toLowerCase(); 
+            let filename = type === 'rec' ? `reco_${ltcNum}.pdf` : (type === 'cert' ? `cert_${ltcNum}.pdf` : `interlocutory_${ltcNum}.pdf`);
+
+            setTimeout(() => { 
+                generateIntelligentPDF(sourceId, filename, type);
+            }, 800); 
+        }
+
+        function generateIntelligentPDF(sourceId, filename, type) {
+            window.scrollTo(0, 0); 
+            
+            const overlay = document.createElement('div');
+            overlay.id = 'pdf-loading-overlay';
+            overlay.style.cssText = 'position: absolute; top: 0; left: 0; width: 100%; min-height: 100vh; background: #1F2937; z-index: 999999; display: flex; align-items: center; justify-content: flex-start; flex-direction: column; color: white; font-family: sans-serif; padding: 2rem 0; overflow: auto;';
+            
+            overlay.innerHTML = '<div class="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-[#D4AF37] mb-4"></div><h2 class="text-2xl font-black tracking-widest uppercase mb-6">Rendering Pages...</h2>';
+            
+            const wrapper = document.createElement('div');
+            wrapper.id = 'aiPrintWrapper';
+            wrapper.style.cssText = 'width: 8.5in; display: flex; flex-direction: column; align-items: center; background: transparent;';
+            
+            overlay.appendChild(wrapper);
+            document.body.appendChild(overlay);
+
+            const sourceContent = document.querySelector(`#${sourceId} .doc-content`);
+            const childrenNodes = Array.from(sourceContent.children);
+            let blocks = [];
+
+            childrenNodes.forEach(child => {
+                if (child.classList.contains('grid-block')) {
+                    Array.from(child.children).forEach(subChild => {
+                        const clone = subChild.cloneNode(true);
+                        clone.style.marginBottom = '6px';
+                        blocks.push(clone);
+                    });
+                } else {
+                    // Do not append hidden components
+                    if (!child.classList.contains('hidden')) {
+                        blocks.push(child.cloneNode(true));
+                    }
+                }
+            });
+
+            const pagesArray = [];
+
+            function createPage() {
+                const page = document.createElement('div');
+                page.style.cssText = 'width: 8.5in; height: 13in; min-height: 13in; max-height: 13in; position: relative; background: white; margin-bottom: 0px; overflow: hidden; flex-shrink: 0;';
+                
+                if (type !== 'io') {
+                    const bg = document.createElement('img');
+                    bg.src = backgroundImageUrl;
+                    bg.crossOrigin = "anonymous";
+                    bg.style.cssText = 'position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; object-fit: fill; display: block; pointer-events: none;';
+                    page.appendChild(bg);
+                    
+                    const securityData = `${currentSelection.LTC_ID_NUMBER || 'LTC-PENDING'} | ${currentSelection.owner_name || 'PENDING OWNER'} | ${currentSelection.registered_under || 'PENDING TCT'}`;
+                    const microTextString = Array(20).fill(securityData).join(' • ');
+                    const securityBorder = document.createElement('div');
+                    securityBorder.style.cssText = 'position: absolute; top: 1.08in; left: 0; width: 100%; font-size: 3.5pt; color: rgba(255,255,255,0.7); font-family: monospace; font-weight: bold; white-space: nowrap; overflow: hidden; z-index: 5; text-transform: uppercase; letter-spacing: 1.5px; user-select: none; pointer-events: none;';
+                    securityBorder.innerText = microTextString;
+                    page.appendChild(securityBorder);
+                }
+
+                const content = document.createElement('div');
+                content.style.cssText = `position: absolute; top: 1.15in; left: 1in; right: 1in; bottom: 1.15in; z-index: 10; display: flex; flex-direction: column; font-family: ${type === 'io' ? 'Arial, sans-serif' : '"Roboto", sans-serif'}; font-size: 9pt; color: black; line-height: 1.5; overflow: hidden;`;
+                page.appendChild(content);
+                
+                wrapper.appendChild(page);
+                pagesArray.push({ pageElement: page, contentElement: content });
+                return content;
             }
 
-            document.getElementById('printArea').classList.remove('hidden');
-            window.print();
-            document.getElementById('printArea').classList.add('hidden');
+            let currentContent = createPage();
+
+            blocks.forEach(block => {
+                currentContent.appendChild(block);
+                
+                if (currentContent.scrollHeight > currentContent.clientHeight) {
+                    currentContent.removeChild(block); 
+                    currentContent = createPage(); 
+                    currentContent.appendChild(block); 
+                }
+
+                const qrDivs = block.querySelectorAll('[id^="qr-"]');
+                qrDivs.forEach(qrDiv => {
+                    qrDiv.innerHTML = '';
+                    const currentPath = window.location.href.substring(0, window.location.href.lastIndexOf('/'));
+                    const scanUrl = currentPath + "/verify.html?id=" + encodeURIComponent(currentSelection.LTC_ID_NUMBER || currentSelection.ltc_no || 'NO-ID');
+                    new QRCode(qrDiv, { text: scanUrl, width: 55, height: 55, correctLevel: QRCode.CorrectLevel.L });
+                });
+            });
+
+            const opt = {
+                margin:       0,
+                filename:     filename,
+                image:        { type: 'jpeg', quality: 1.0 },
+                html2canvas:  { scale: 3, useCORS: true }, 
+                jsPDF:        { unit: 'in', format: [8.5, 13], orientation: 'portrait' }
+            };
+
+            html2pdf().set(opt).from(wrapper).toPdf().get('pdf').then(function(pdf) {
+                var totalPages = pdf.internal.getNumberOfPages();
+                
+                while(totalPages > pagesArray.length) {
+                    pdf.deletePage(totalPages);
+                    totalPages--;
+                }
+
+                if (type !== 'io') {
+                    for (var i = 1; i <= totalPages; i++) {
+                        pdf.setPage(i);
+                        pdf.setFontSize(10);
+                        pdf.setTextColor(80);
+                        pdf.text(currentSelection.LTC_ID_NUMBER || currentSelection.ltc_no || 'LTC-PENDING', 0.5, 11.5, { angle: 90 });
+                    }
+                }
+            }).save().then(async () => {
+                if (type === 'cert' && currentSelection.status === 'REVIEWED') {
+                    const oldStatus = currentSelection.status;
+                    await supabaseClient.from('land_records').update({ status: 'PRINTED LTC', updated_at: new Date().toISOString() }).eq('id', currentSelection.id);
+                    await logStatusChange(currentSelection.id, oldStatus, 'PRINTED LTC');
+                    fetchClearanceData();
+                }
+                document.body.removeChild(overlay);
+                closeReviewModalOnly(); 
+                document.getElementById('modalMainTitle').parentElement.classList.remove('hidden');
+            }).catch(err => {
+                console.error(err);
+                alert("PDF Generation Error: " + err.message);
+                document.body.removeChild(overlay);
+                document.getElementById('modalMainTitle').parentElement.classList.remove('hidden');
+            });
         }
 
-        // Requirement 2 / Flow step 6 & 7: Interlocutory
-        function openInterlocutoryModal() { document.getElementById('interlocutoryModal').classList.remove('hidden'); }
-        function closeInterlocutoryModal() { document.getElementById('interlocutoryModal').classList.add('hidden'); }
-        function confirmInterlocutory() {
-            closeInterlocutoryModal();
-            updateButtonsPostInterlocutory();
-        }
+        async function decideStatus(newSt) {
+            const remarks = document.getElementById('reviewRemarks').value;
+            if (newSt === 'DISAPPROVED' && !remarks.trim()) { alert('Please provide remarks for disapproval / lacking documents.'); return; }
+            
+            await autoSaveEdits(); 
 
-        // Requirement 2: Deny via system after Interlocutory
-        function denyApplication() {
-            if(confirm("Deny this DAR Clearance?")) {
-                alert("Application Denied. (Interlocutory Order failure to comply).");
-                // Update Supabase DB status here
+            const updateData = { status: newSt, updated_at: new Date().toISOString() };
+            const oldStatus = currentSelection.status;
+            
+            for (let dbCol in DB_FIELD_MAP) {
+                let suffix = DB_FIELD_MAP[dbCol];
+                let el = document.getElementById(`edit-${suffix}`);
+                if (el && el.innerText.trim() !== '---') { updateData[dbCol] = el.innerText.trim(); }
+            }
+
+            const { error } = await supabaseClient.from('land_records').update(updateData).eq('id', currentSelection.id);
+            if (!error) { 
+                await logStatusChange(currentSelection.id, oldStatus, newSt);
+                await fetchClearanceData(); 
+                closeReviewModalOnly(); 
+            } else {
+                alert('Database Error: ' + error.message);
             }
         }
 
-        // Flow Step 9
-        function forwardToParpo() {
-            if(confirm("Forward to PARPO? Application will lock for LO editing.")) {
-                currentApplicationState = 'PARPO';
-                alert("Forwarded to PARPO successfully.");
-                document.getElementById('actionBar').classList.add('hidden');
+        window.processToNext = async function(id, nextStatus, oldStatus) {
+            const { error } = await supabaseClient.from('land_records').update({ status: nextStatus, updated_at: new Date().toISOString() }).eq('id', id);
+            if (!error) { 
+                await logStatusChange(id, oldStatus, nextStatus);
+                await fetchClearanceData(); 
             }
         }
 
-        // Requirement 7: Transfer (Chief Legal)
-        function openTransferModal() { document.getElementById('transferModal').classList.remove('hidden'); }
-        function closeTransferModal() { document.getElementById('transferModal').classList.add('hidden'); }
-        function confirmTransfer() {
-            const selected = document.getElementById('selectLO').value;
-            alert(`Application Transferred to ${selected}.`);
-            closeTransferModal();
+        async function closeReview() { 
+            if (currentReviewMode !== 'VIEW_CERT') {
+                await autoSaveEdits();
+                await fetchClearanceData(); 
+            }
+            closeReviewModalOnly();
         }
+
+        function closeReviewModalOnly() {
+            document.getElementById('reviewModal').classList.add('hidden'); 
+            document.getElementById('docCertification').style.display = 'none';
+            document.getElementById('docInterlocutoryOrder').style.display = 'none';
+        }
+        
+        function getOrdinal(d) { if (d > 3 && d < 21) return 'th'; switch (d % 10) { case 1: return "st"; case 2: return "nd"; case 3: return "rd"; default: return "th"; } }
+        
+        function updateStats(s) { 
+            document.getElementById('stat-received').innerText = s.rec; 
+            if(document.getElementById('stat-ltsp')) document.getElementById('stat-ltsp').innerText = s.ltsp;
+            document.getElementById('stat-recommended').innerText = s.rev; 
+            document.getElementById('stat-certified').innerText = s.cer; document.getElementById('stat-signed').innerText = s.sig; 
+            document.getElementById('stat-legal').innerText = s.leg; document.getElementById('stat-records').innerText = s.recd; 
+            document.getElementById('stat-released').innerText = s.rel; document.getElementById('stat-disapproved').innerText = s.dis;
+        }
+
+        function logout() { sessionStorage.removeItem('currentUser'); window.location.href = 'index.html'; }
+        
+        window.onload = async () => { 
+            await fetchBackgroundImage();
+            await fetchDynamicSignatories();
+            loadMenu(); 
+            fetchClearanceData(); 
+        };
     </script>
 </body>
 </html>
