@@ -6,6 +6,7 @@
     <title>Intelligent DAR Clearance Entry</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- Updated to ensure core and worker match perfectly -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.4.21/mammoth.browser.min.js"></script>
 
@@ -21,7 +22,6 @@
         .scroll-area::-webkit-scrollbar-track { background: #f1f1f1; }
         .scroll-area::-webkit-scrollbar-thumb { background: #c1c1c1; border-radius: 4px; }
         
-        /* Highlight styling for fields filled by the AI */
         .ai-filled { border: 2px solid #D4AF37 !important; background-color: #FFFdf0 !important; font-weight: bold; color: #003811; transition: all 0.5s ease; }
         
         .loader-ring { display: inline-block; width: 16px; height: 16px; border: 3px solid rgba(255,255,255,.3); border-radius: 50%; border-top-color: #fff; animation: spin 1s ease-in-out infinite; }
@@ -77,7 +77,6 @@
                         </div>
                     </div>
 
-                    <!-- New container to display extracted text with updated colors -->
                     <div id="extractedTextContainer" class="hidden mt-4">
                         <label class="text-xs text-[#D4AF37] font-bold uppercase tracking-wider mb-1 block">Extracted Raw Text Preview:</label>
                         <textarea id="rawOutput" class="w-full text-sm p-4 rounded bg-white text-gray-800 border border-gray-300 shadow-inner" rows="8" readonly></textarea>
@@ -147,16 +146,12 @@
 
     <script>
         // --- SECURE CONFIGURATIONS ---
-        // 1. Supabase
         const SUPABASE_URL = 'https://tqeueibigqwxcizhvdty.supabase.co';
         const SUPABASE_KEY = 'sb_publishable_oXBtC1VgBlO07oEmqpcFpw_gBtVMpvT';
         const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        // 2. OpenAI API Configuration
-        const OPENAI_API_KEY = "sk-ijklmnop1234qrstijklmnop1234qrstijklmnop"; 
-
-        // 3. PDF.js Worker Configuration (CRITICAL FOR PDF EXTRACTION)
-        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+        // Required explicitly to prevent PDF.js worker issues
+        window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 
         // --- AUTH & UI INITIALIZATION ---
         const userData = sessionStorage.getItem('currentUser');
@@ -166,7 +161,6 @@
         document.getElementById('userRoleBadge').innerText = currentUser.role;
         const userRole = currentUser.role.toUpperCase().trim();
 
-        // --- SIDEBAR MENU RENDERING ---
         async function renderMenu() {
             const menuContainer = document.getElementById('dynamicMenu');
             try {
@@ -222,28 +216,34 @@
             progressContainer.classList.remove('hidden');
             extractedTextContainer.classList.add('hidden');
             clearAIHighlights();
+            rawOutput.value = ""; 
 
             try {
-                // Step 1: Format and Extract Text
                 progressText.innerText = "Extracting raw text from document...";
                 progressBar.style.width = "50%";
+                
+                // Fetch document logic
                 const docData = await prepareDocumentForAI(file);
 
-                // Step 2: Display Extracted Text
                 extractedTextContainer.classList.remove('hidden');
                 
                 if (docData.type === 'text') {
-                    rawOutput.value = docData.content;
+                    if (docData.content.trim() === "") {
+                        rawOutput.value = "[Extraction Warning]: No text found. If this is a scanned PDF made of images, standard text extraction cannot read it. (OCR capabilities needed).";
+                    } else {
+                        rawOutput.value = docData.content;
+                    }
                 } else if (docData.type === 'image') {
-                    rawOutput.value = `[Image Data Generated: Base64 String Ready for Vision AI Analysis]\n\n${docData.content.substring(0, 150)}... (truncated)`;
+                    rawOutput.value = `[Image Document Uploaded]\n\nImage Base64 Signature generated successfully for processing.`;
                 }
 
                 progressBar.style.width = "100%";
-                progressText.innerText = `Success: Document text extracted successfully.`;
+                progressText.innerText = `Success: Document processed successfully.`;
 
             } catch (error) {
-                console.error("Full Error Details:", error);
-                alert("Extraction Failed: " + error.message + "\n\n(Tip: Try refreshing the page or checking the file type)");
+                console.error("Extraction failed:", error);
+                extractedTextContainer.classList.remove('hidden');
+                rawOutput.value = `[System Error]: ${error.message}`;
                 progressText.innerText = "Operation Failed.";
                 progressBar.style.backgroundColor = "red";
             } finally {
@@ -252,56 +252,54 @@
             }
         }
 
-        // --- UTILITY: MULTI-FORMAT DOCUMENT CONVERTER (PDF, IMAGE, DOCX, DOC) ---
+        // --- COMPLETELY REBUILT EXTRACTOR LOGIC ---
         async function prepareDocumentForAI(file) {
-            return new Promise(async (resolve, reject) => {
-                try {
-                    const fileType = file.type;
-                    const fileName = file.name.toLowerCase();
+            const fileType = file.type;
+            const fileName = file.name.toLowerCase();
 
-                    // 1. Handle PDF via PDF.js (Extract Pure Text instead of Base64 Image)
-                    if (fileType === "application/pdf") {
-                        const arrayBuffer = await file.arrayBuffer();
-                        // REQUIRED FIX: PDF.js requires Uint8Array
-                        const typedArray = new Uint8Array(arrayBuffer); 
-                        const pdf = await pdfjsLib.getDocument(typedArray).promise;
-                        let extractedText = "";
-                        
-                        for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
-                            const page = await pdf.getPage(pageNum);
-                            const textContent = await page.getTextContent();
-                            const textItems = textContent.items.map(item => item.str).join(" ");
-                            extractedText += textItems + "\n\n";
-                        }
-                        resolve({ type: 'text', content: extractedText.trim() });
-
-                    // 2. Handle DOCX via Mammoth.js
-                    } else if (fileType === "application/vnd.openxmlformats-officedocument.wordprocessingml.document" || fileName.endsWith('.docx')) {
-                        const arrayBuffer = await file.arrayBuffer();
-                        mammoth.extractRawText({ arrayBuffer: arrayBuffer })
-                            .then(function(result) {
-                                resolve({ type: 'text', content: result.value });
-                            }).catch(reject);
-                            
-                    // 3. Handle older DOC files via raw text parsing (Fallback)
-                    } else if (fileType === "application/msword" || fileName.endsWith('.doc')) {
-                        console.warn("Legacy .doc format detected. Text extraction may be incomplete.");
-                        const reader = new FileReader();
-                        reader.onloadend = () => resolve({ type: 'text', content: reader.result });
-                        reader.readAsText(file);
-                        
-                    // 4. Handle Standard Images
-                    } else if (fileType.startsWith("image/")) {
-                        const reader = new FileReader();
-                        reader.onloadend = () => resolve({ type: 'image', mime: fileType, content: reader.result.split(',')[1] });
-                        reader.readAsDataURL(file);
-                    } else {
-                        reject(new Error("Unsupported file format. Please upload a PDF, DOCX, DOC, or Image file."));
-                    }
-                } catch (err) {
-                    reject(err);
+            // 1. PDF Extraction
+            if (fileType === "application/pdf" || fileName.endsWith('.pdf')) {
+                const arrayBuffer = await file.arrayBuffer();
+                const typedArray = new Uint8Array(arrayBuffer); 
+                
+                // Explicitly pass as {data: typedArray}
+                const loadingTask = window.pdfjsLib.getDocument({ data: typedArray });
+                const pdf = await loadingTask.promise;
+                let extractedText = "";
+                
+                for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+                    const page = await pdf.getPage(pageNum);
+                    const textContent = await page.getTextContent();
+                    const textItems = textContent.items.map(item => item.str).join(" ");
+                    extractedText += textItems + "\n\n";
                 }
-            });
+                return { type: 'text', content: extractedText.trim() };
+            }
+
+            // 2. DOCX Extraction
+            if (fileType === "application/vnd.openxmlformats-officedocument.wordprocessingml.document" || fileName.endsWith('.docx')) {
+                const arrayBuffer = await file.arrayBuffer();
+                const result = await mammoth.extractRawText({ arrayBuffer: arrayBuffer });
+                return { type: 'text', content: result.value };
+            }
+
+            // 3. Fallback for older .doc files
+            if (fileType === "application/msword" || fileName.endsWith('.doc')) {
+                const text = await file.text();
+                return { type: 'text', content: text };
+            }
+
+            // 4. Image Handling
+            if (fileType.startsWith("image/")) {
+                return new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onload = () => resolve({ type: 'image', mime: fileType, content: reader.result.split(',')[1] });
+                    reader.onerror = error => reject(error);
+                    reader.readAsDataURL(file);
+                });
+            }
+
+            throw new Error("Unsupported file format. Please upload a PDF, DOCX, DOC, or Image file.");
         }
 
         function clearAIHighlights() {
@@ -310,7 +308,6 @@
             document.getElementById('extractedTextContainer').classList.add('hidden');
         }
 
-        // --- STANDARD APP LOGIC (Supabase) ---
         async function fetchLegalOfficers() {
             try {
                 const { data } = await supabaseClient.from('users').select('full_name').in('role', ['CHIEF, LEGAL DIVISION', 'ATTORNEY IV']);
@@ -345,7 +342,6 @@
 
         function logout() { sessionStorage.removeItem('currentUser'); window.location.href = 'index.html'; }
         
-        // Initialize everything when the page loads
         window.onload = () => {
             renderMenu();
             fetchLegalOfficers();
