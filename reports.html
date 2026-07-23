@@ -220,16 +220,16 @@
             if (!error) { 
                 let fetchedData = data || []; 
 
-                // FILTER: LO can only see their own reports (except Chief Legal)
+                // FILTER: Restrict view based on the USER's name, regardless of their specific role string.
+                // Only grant unrestricted view to roles specifically tasked with overwatch (CHIEF, PARPO, ADMIN, RECORDS)
                 const userRole = (currentUser.role || '').toUpperCase().trim();
-                const isChiefLegal = userRole.includes('CHIEF');
-                const isLO = userRole === 'LO' || (userRole.includes('LEGAL') && !isChiefLegal);
+                const isUnrestricted = userRole.includes('CHIEF') || userRole.includes('PARPO') || userRole.includes('ADMIN') || userRole.includes('RECORDS');
 
-                if (isLO) {
+                if (!isUnrestricted) {
                     const myName = (currentUser.full_name || '').toLowerCase().trim();
                     fetchedData = fetchedData.filter(item => {
                         const loName = (item.legalOfficer || item.legalofficer || item.encoded_by || item.created_by || '').toLowerCase().trim();
-                        // Allows exact match or partial match (e.g. "Atty. John Doe" matching "John Doe")
+                        // Allows exact match or partial match based strictly on the user's name
                         return loName === myName || loName.includes(myName) || myName.includes(loName);
                     });
                 }
