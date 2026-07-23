@@ -1174,7 +1174,7 @@
                     
                     if (st === 'RECEIVED' || st === 'ASSIGNED TO LEGAL') { stats.rec++; }
                     else if (st === 'FORWARDED TO LTSP' || st === 'RETURNED FROM LTSP') { stats.ltsp++; }
-                    else if (st === 'DRAFT' || st === 'WITH INTERLOCK') { stats.rev++; }
+                    else if (st === 'DRAFT' || st === 'WITH INTERLOCK' || st === 'COMPLIED') { stats.rev++; }
                     else if (st === 'FORWARDED TO PARPO') { stats.cer++; }
                     else if (st === 'SIGNED BY PARPO') { stats.sig++; }
                     else if (st === 'RETURNED TO LEGAL (SIGNED)') { stats.leg++; }
@@ -1199,7 +1199,7 @@
                         }
                     }
                     if (isLegal && !isParpo) {
-                        if (['ASSIGNED TO LEGAL', 'RETURNED FROM LTSP', 'DRAFT', 'WITH INTERLOCK', 'RECEIVED'].includes(st)) {
+                        if (['ASSIGNED TO LEGAL', 'RETURNED FROM LTSP', 'DRAFT', 'WITH INTERLOCK', 'COMPLIED', 'RECEIVED'].includes(st)) {
                             actions += `<button onclick='showReview("${item.id}", "REVIEW")' class="bg-[#003811] text-white w-full py-1 rounded shadow text-[9px] font-bold tracking-wide hover:bg-black uppercase transition-colors text-center mb-1">Review / Process</button>`;
                             actions += `<button onclick='openPrint("${item.id}", "rec")' class="bg-[#8b5cf6] text-white w-full py-1 rounded shadow text-[9px] font-bold hover:bg-purple-800 uppercase transition-colors text-center mb-1">Print Reco</button>`;
                             actions += `<button onclick='openPrint("${item.id}", "cert")' class="bg-[#d97706] text-white w-full py-1 rounded shadow text-[9px] font-bold hover:bg-amber-700 uppercase transition-colors text-center mb-1">Print Cert</button>`;
@@ -1265,13 +1265,17 @@
                     let btns = `<div class="flex flex-wrap gap-2 w-full justify-end">`;
                     
                     if (isLegal && !isParpo) {
-                        if (['RECEIVED', 'ASSIGNED TO LEGAL', 'RETURNED FROM LTSP', 'DRAFT', 'WITH INTERLOCK'].includes(currentSt)) {
+                        if (['RECEIVED', 'ASSIGNED TO LEGAL', 'RETURNED FROM LTSP', 'DRAFT', 'WITH INTERLOCK', 'COMPLIED'].includes(currentSt)) {
                             btns += `<button onclick="decideStatus('DRAFT')" class="bg-blue-600 text-white px-4 py-2 rounded text-[10px] font-black shadow hover:bg-blue-700 transition-colors">SAVE DRAFT</button>`;
                             btns += `<button onclick="manualSave(event)" class="bg-indigo-600 text-white px-4 py-2 rounded text-[10px] font-black shadow hover:bg-indigo-700 transition-colors">SAVE FINAL</button>`;
                             btns += `<button onclick='openPrint("${currentSelection.id}", "rec")' class="bg-[#8b5cf6] text-white px-4 py-2 rounded text-[10px] font-black uppercase shadow hover:bg-purple-800 transition-colors">PRINT RECO</button>`;
                             btns += `<button onclick='openPrint("${currentSelection.id}", "cert")' class="bg-[#d97706] text-white px-4 py-2 rounded text-[10px] font-black uppercase shadow hover:bg-amber-700 transition-colors">PRINT CERT</button>`;
                             btns += `<button onclick="decideStatus('FORWARDED TO PARPO')" class="bg-green-700 text-white px-4 py-2 rounded text-[10px] font-black shadow hover:bg-green-800 transition-colors">FWD TO PARPO</button>`;
                             btns += `<button onclick="issueInterlocutory()" class="bg-yellow-600 text-white px-4 py-2 rounded text-[10px] font-black shadow hover:bg-yellow-700 transition-colors">INTERLOCUTORY ORDER</button>`;
+                            
+                            if (currentSt === 'WITH INTERLOCK') {
+                                btns += `<button onclick="decideStatus('COMPLIED')" class="bg-teal-600 text-white px-4 py-2 rounded text-[10px] font-black shadow hover:bg-teal-700 transition-colors">MARK COMPLIED</button>`;
+                            }
                         }
                         if (currentSt === 'RETURNED TO LEGAL (SIGNED)') {
                             btns += `<button onclick="decideStatus('FORWARDED TO RECORDS')" class="bg-cyan-600 text-white px-6 py-2 rounded text-xs font-black shadow hover:bg-cyan-700 transition-colors">FORWARD TO RECORDS</button>`;
@@ -1361,6 +1365,7 @@
                 'RETURNED FROM LTSP': 'bg-pink-100 text-pink-800 border border-pink-200', 
                 'DRAFT': 'bg-purple-100 text-purple-800 border border-purple-200', 
                 'WITH INTERLOCK': 'bg-yellow-100 text-yellow-800 border border-yellow-400',
+                'COMPLIED': 'bg-teal-100 text-teal-800 border border-teal-300',
                 'FORWARDED TO PARPO': 'bg-cyan-100 text-cyan-800 border border-cyan-200', 
                 'SIGNED BY PARPO': 'bg-orange-100 text-orange-800 border border-orange-200', 
                 'RETURNED TO LEGAL (SIGNED)': 'bg-red-100 text-red-800 border border-red-200', 
