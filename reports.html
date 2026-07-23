@@ -218,7 +218,23 @@
             
             const { data, error } = await supabaseClient.from('land_records').select('*').order('updated_at', { ascending: false });
             if (!error) { 
-                rawData = data || []; 
+                let fetchedData = data || []; 
+
+                // FILTER: LO can only see their own reports (except Chief Legal)
+                const userRole = (currentUser.role || '').toUpperCase().trim();
+                const isChiefLegal = userRole.includes('CHIEF');
+                const isLO = userRole === 'LO' || (userRole.includes('LEGAL') && !isChiefLegal);
+
+                if (isLO) {
+                    const myName = (currentUser.full_name || '').toLowerCase().trim();
+                    fetchedData = fetchedData.filter(item => {
+                        const loName = (item.legalOfficer || item.legalofficer || item.encoded_by || item.created_by || '').toLowerCase().trim();
+                        // Allows exact match or partial match (e.g. "Atty. John Doe" matching "John Doe")
+                        return loName === myName || loName.includes(myName) || myName.includes(loName);
+                    });
+                }
+
+                rawData = fetchedData; 
                 refreshReport(); 
             } else {
                 tbody.innerHTML = `<tr><td colspan="7" class="text-center py-10 text-red-500 font-bold uppercase">Database Error: ${error.message}</td></tr>`;
@@ -415,7 +431,7 @@
         
         window.onload = async () => { 
             loadMenu(); 
-            fetchClearanceData(); 
+            fetchReportData(); 
         };
     </script>
 </body>
