@@ -79,7 +79,13 @@
                     </div>
 
                     <div id="extractedTextContainer" class="hidden mt-4">
-                        <label class="text-xs text-[#D4AF37] font-bold uppercase tracking-wider mb-1 block">Extracted Raw Text Preview:</label>
+                        <div class="flex flex-col md:flex-row justify-between items-start md:items-end mb-2 gap-2">
+                            <label class="text-xs text-[#D4AF37] font-bold uppercase tracking-wider block">Extracted Raw Text Preview:</label>
+                            <button type="button" onclick="analyzeWithChatGPT()" id="btnGPT" class="bg-blue-600 text-white px-4 py-2 rounded text-xs font-bold shadow hover:bg-blue-700 transition-colors uppercase flex items-center gap-2">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                                Auto-Fill with ChatGPT
+                            </button>
+                        </div>
                         <textarea id="rawOutput" class="w-full text-sm p-4 rounded bg-white text-gray-800 border border-gray-300 shadow-inner" rows="8" readonly></textarea>
                     </div>
                 </div>
@@ -150,6 +156,9 @@
         const SUPABASE_URL = 'https://tqeueibigqwxcizhvdty.supabase.co';
         const SUPABASE_KEY = 'sb_publishable_oXBtC1VgBlO07oEmqpcFpw_gBtVMpvT';
         const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        
+        // Ensure you securely provide/replace this API key in your actual environment
+        const OPENAI_API_KEY = 'YOUR_OPENAI_API_KEY_HERE'; 
 
         window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 
@@ -196,6 +205,96 @@
                     }
                 });
             } catch (err) { console.error("Menu loading error:", err); }
+        }
+
+        // --- CHATGPT INTEGRATION ---
+        async function analyzeWithChatGPT() {
+            const rawText = document.getElementById('rawOutput').value;
+            if (!rawText || rawText.trim() === "" || rawText.startsWith("[Extraction Warning]")) {
+                return alert("No valid text to analyze.");
+            }
+
+            const btnGPT = document.getElementById('btnGPT');
+            btnGPT.innerHTML = `<span class="loader-ring"></span> Analyzing...`;
+            btnGPT.disabled = true;
+
+            const prompt = `
+            Analyze the following legal document text and extract the information into a JSON object. 
+            If information is missing or not explicitly found, leave the value as an empty string "".
+            DO NOT return any other text or markdown, only the raw JSON object.
+            
+            Expected JSON keys:
+            - lot_no (Lot Number/s)
+            - registered_under (TCT, OCT, or Title Number)
+            - owner_name (Name of the Registered Owner)
+            - area (Area in hectares)
+            - td_no (Tax Declaration Number)
+            - location (Location of the property)
+            - deed_type (Subject of the Deed, e.g., Deed of Absolute Sale)
+            - executed_by (Vendor, Donor, or Executed by)
+            - in_favor_of (Vendee, Donee, or In favor of)
+            - doc_no (Document Number)
+            - page_no (Page Number)
+            - book_no (Book Number)
+            - series_of (Series Of year)
+            - dated (Date Executed)
+            - notary_public (Name of Notary Public)
+
+            Text to analyze:
+            ${rawText}
+            `;
+
+            try {
+                const response = await fetch('https://api.openai.com/v1/chat/completions', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${OPENAI_API_KEY}`
+                    },
+                    body: JSON.stringify({
+                        model: "gpt-3.5-turbo",
+                        messages: [{ role: "user", content: prompt }],
+                        temperature: 0.1
+                    })
+                });
+
+                if (!response.ok) {
+                    const err = await response.json();
+                    throw new Error(err.error?.message || "ChatGPT API Error");
+                }
+
+                const data = await response.json();
+                let aiResponse = data.choices[0].message.content.trim();
+                
+                // Parse JSON (handle potential markdown formatting from GPT)
+                if (aiResponse.startsWith('```json')) {
+                    aiResponse = aiResponse.replace(/```json/g, '').replace(/```/g, '');
+                } else if (aiResponse.startsWith('```')) {
+                    aiResponse = aiResponse.replace(/```/g, '');
+                }
+                
+                const extractedData = JSON.parse(aiResponse);
+
+                // Map JSON response to form fields
+                const fieldMapping = ['lot_no', 'registered_under', 'owner_name', 'area', 'td_no', 'location', 'deed_type', 'executed_by', 'in_favor_of', 'doc_no', 'page_no', 'book_no', 'series_of', 'dated', 'notary_public'];
+                
+                fieldMapping.forEach(id => {
+                    if (extractedData[id]) {
+                        const el = document.getElementById(id);
+                        if (el) {
+                            el.value = extractedData[id];
+                            el.classList.add('ai-filled');
+                        }
+                    }
+                });
+
+            } catch (error) {
+                console.error("ChatGPT Analysis Failed:", error);
+                alert("Failed to analyze text: " + error.message);
+            } finally {
+                btnGPT.innerHTML = `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg> Auto-Fill with ChatGPT`;
+                btnGPT.disabled = false;
+            }
         }
 
         // --- THE INTELLIGENT AI ENGINE (WITH OCR) ---
