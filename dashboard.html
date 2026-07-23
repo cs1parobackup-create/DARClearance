@@ -679,15 +679,30 @@
         async function fetchRequirements() {
             try {
                 const { data, error } = await supabaseClient.from('ltc_requirements').select('*');
-                if (!error && data) {
-                    checklistItems = data.filter(item => 
-                        item.is_active === true || 
-                        String(item.is_active).toUpperCase() === 'TRUE' || 
-                        item.is_active === 1 || 
-                        item.is_active === 't'
-                    );
-                } else if (error) {
+                
+                if (error) {
                     console.error("Error fetching ltc_requirements:", error);
+                    alert("Supabase Error (ltc_requirements): " + error.message + "\n\nTip: Check if RLS (Row Level Security) is blocking the SELECT query for this specific table.");
+                    return;
+                }
+                
+                if (data && data.length > 0) {
+                    checklistItems = data.filter(item => {
+                        // Catch multiple variants of true/TRUE/1/t
+                        if (item.is_active === true || item.is_active === 1) return true;
+                        if (typeof item.is_active === 'string') {
+                            const val = item.is_active.trim().toUpperCase();
+                            return val === 'TRUE' || val === 'T' || val === '1';
+                        }
+                        return false;
+                    });
+                    
+                    // Fallback Bypass: If the filter stripped everything but rows DO exist, load all of them
+                    // This guarantees that if the data is fetched, you WILL see it.
+                    if (checklistItems.length === 0) {
+                        console.warn("Filter removed all items. Bypassing filter to display raw data.");
+                        checklistItems = data;
+                    }
                 }
             } catch(e) { console.error("Checklist Fetch Error:", e); }
         }
@@ -1083,7 +1098,7 @@
             container.innerHTML = '';
             
             if (checklistItems.length === 0) {
-                container.innerHTML = '<p class="text-sm text-gray-500 italic">No predefined requirements found in database. Use the text box below.</p>';
+                container.innerHTML = '<p class="text-sm text-gray-500 italic font-bold">No predefined requirements fetched from server. Use the text box below, or check your database settings.</p>';
             } else {
                 checklistItems.forEach(item => {
                     container.innerHTML += `
