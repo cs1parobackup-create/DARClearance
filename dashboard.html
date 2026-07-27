@@ -73,8 +73,7 @@
             <p id="userRoleBadge" class="text-[10px] text-gray-300 uppercase tracking-widest mt-1 font-bold">---</p>
         </div>
         
-        <div id="dynamicMenu" class="flex-1 overflow-y-auto py-2">
-            </div>
+        <div id="dynamicMenu" class="flex-1 overflow-y-auto py-2"></div>
 
         <div class="p-4 bg-black/20">
             <p id="activeUser" class="text-xs text-gray-300 truncate mb-2 font-bold"></p>
@@ -103,7 +102,7 @@
                     <h3 id="stat-ltsp" class="text-lg font-black text-indigo-600">0</h3>
                 </div>
                 <div class="bg-white p-3 rounded border-l-4 border-purple-500 text-center shadow-sm">
-                    <p class="text-[8px] font-bold text-gray-400 uppercase">Reviewed / Draft</p>
+                    <p class="text-[8px] font-bold text-gray-400 uppercase">Draft / Finalized</p>
                     <h3 id="stat-recommended" class="text-lg font-black text-purple-600">0</h3>
                 </div>
                 <div class="bg-white p-3 rounded border-l-4 border-cyan-500 text-center shadow-sm">
@@ -157,12 +156,13 @@
                 <div class="flex items-center gap-4">
                     <h2 id="modalMainTitle" class="text-4xl font-black text-[#003811] uppercase tracking-widest">REVIEW</h2>
                     <div id="editNotice" class="bg-yellow-100 text-yellow-800 text-[10px] px-3 py-1 rounded hidden font-bold uppercase tracking-wide border border-yellow-300">
-                        EDIT MODE ACTIVE (VALUES ENLARGED FOR REVIEW)
+                        EDIT MODE ACTIVE
                     </div>
                 </div>
                 <div class="flex gap-2 items-center">
                     <button onclick="checkPreviousRecords()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded text-xs font-black uppercase transition-colors mr-2 shadow">🔍 Check Previous</button>
-                    <button onclick="manualSave(event)" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded text-xs font-black uppercase transition-colors mr-4 shadow">💾 SAVE FINAL</button>
+                    <!-- Quick save without changing status -->
+                    <button id="btnTopSave" onclick="quickSave(event)" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded text-xs font-black uppercase transition-colors mr-4 shadow">💾 QUICK SAVE</button>
                     <button id="btnPrev" onclick="navigateReview(-1)" class="bg-gray-200 hover:bg-gray-300 px-4 py-2 rounded text-xs font-black uppercase transition-colors text-gray-800">&larr; Prev</button>
                     <button id="btnNext" onclick="navigateReview(1)" class="bg-gray-200 hover:bg-gray-300 px-4 py-2 rounded text-xs font-black uppercase transition-colors text-gray-800">Next &rarr;</button>
                     <button onclick="closeReview()" class="text-gray-400 hover:text-black text-3xl ml-4 font-normal leading-none">&times;</button>
@@ -171,7 +171,7 @@
 
             <div id="reviewSection" class="mb-8 space-y-6 no-print">
                 <div class="bg-blue-50 p-6 rounded-lg border border-blue-200 space-y-6">
-                    <p class="text-xs font-bold text-gray-500 uppercase tracking-widest mb-4">Document Details (Editable - Click to Edit)</p>
+                    <p class="text-xs font-bold text-gray-500 uppercase tracking-widest mb-4">Document Details</p>
                     
                     <div class="grid grid-cols-[200px_1fr] items-center gap-y-8">
                         <div class="font-bold text-red-700 uppercase text-sm">LTC Number:</div>
@@ -248,6 +248,7 @@
 
             <!-- Documents rendering hidden blocks -->
             <div id="docRecommendation" class="doc-print-area mx-auto hidden pt-8">
+                <!-- Content same as original, hidden for print generator -->
                 <div class="doc-content">
                     <div class="relative w-full mb-6 page-break-avoid">
                         <div class="absolute right-0 top-0 text-right font-bold flex flex-col items-end">
@@ -360,11 +361,11 @@
                             </div>
                         </div>
                     </div>
-
                 </div>
             </div>
 
             <div id="docCertification" class="doc-print-area mx-auto hidden pt-8">
+                <!-- Content same as original, hidden for print generator -->
                 <div class="doc-content">
                     <div class="relative w-full mb-6 page-break-avoid">
                         <div class="absolute right-0 top-0 text-right font-bold flex flex-col items-end">
@@ -442,7 +443,6 @@
                         based on the Attestation of the CARPO-LTS/FOD and from the report and recommendation of the Chief Legal Division/Authorized Legal Officer pursuant to Administrative Order (AO) No. 4 Series of 2021.
                     </p>
 
-                    <!-- DYNAMIC AFFIDAVIT TEXT PLACEMENT -->
                     <p id="cert-affidavit-para" class="mb-3 text-justify leading-relaxed indent-12 page-break-avoid hidden"></p>
 
                     <p class="mb-3 text-justify leading-relaxed indent-12 page-break-avoid">
@@ -483,11 +483,11 @@
                             </div>
                         </div>
                     </div>
-
                 </div>
             </div>
 
             <div id="docInterlocutoryOrder" class="doc-print-area mx-auto hidden pt-8">
+                <!-- Content same as original, hidden for print generator -->
                 <div class="doc-content px-8">
                     <div class="flex justify-between items-start mb-10 text-[10pt] font-bold uppercase tracking-tight">
                         <div class="w-[300px] leading-tight">
@@ -551,7 +551,7 @@
         </div>
     </div>
 
-    <!-- Modal: Assign LO (ODTS Encoder Step) -->
+    <!-- Modals (Assign LO, Affidavit, Interlocutory Checklist) -->
     <div id="assignLoModal" class="fixed inset-0 bg-black/60 hidden flex items-center justify-center z-[80] no-print">
         <div class="bg-white p-6 rounded shadow-2xl max-w-sm w-full border-t-4 border-[#003811]">
             <h3 id="assignLoModalTitle" class="font-black tracking-wide uppercase text-lg mb-4 text-[#003811]">Assign Legal Officer</h3>
@@ -565,7 +565,6 @@
         </div>
     </div>
 
-    <!-- Modal: Affidavit Details -->
     <div id="affidavitDetailsModal" class="fixed inset-0 bg-black/60 hidden flex items-center justify-center z-[60] no-print">
         <div class="bg-white p-8 rounded-lg shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto border-t-4 border-[#003811]">
             <h3 class="text-xl font-bold text-[#003811] mb-6 border-b pb-2">Affidavit Details</h3>
@@ -600,14 +599,12 @@
         </div>
     </div>
 
-    <!-- Modal: Interlocutory Checklist -->
     <div id="interlocutoryModal" class="fixed inset-0 bg-black/60 hidden flex items-center justify-center z-[70] no-print">
         <div class="bg-white p-6 rounded-lg shadow-2xl max-w-lg w-full border-t-4 border-yellow-600">
             <h3 class="text-xl font-bold text-[#003811] mb-2 border-b pb-2 uppercase">Lacking Requirements</h3>
             <p class="text-xs text-gray-500 mb-4">Select the missing documents to be included in the Interlocutory Order.</p>
             
             <div id="checklistContainer" class="max-h-60 overflow-y-auto space-y-2 mb-4 border p-3 rounded bg-gray-50 text-sm">
-                <!-- Checkboxes will be injected here via JS -->
             </div>
             
             <div class="mt-2 mb-4">
@@ -646,26 +643,11 @@
         let selectedForAssignment = null;
 
         const DB_FIELD_MAP = {
-            'LTC_ID_NUMBER': 'LTC_ID_NUMBER',
-            'lot_no': 'lot',
-            'owner_name': 'owner',
-            'registered_under': 'tct',
-            'area': 'area',
-            'portion_area': 'portion_area',
-            'td_no': 'td',
-            'location': 'location',
-            'deed_type': 'deed',
-            'executed_by': 'executed',
-            'in_favor_of': 'favor',
-            'doc_no': 'doc',
-            'page_no': 'page',
-            'book_no': 'book',
-            'series_of': 'series',
-            'dated': 'dated',
-            'notary_public': 'notary',
-            'retention_area_n': 'retention',
-            'or_number': 'or_number',
-            'or_date': 'or_date'
+            'LTC_ID_NUMBER': 'LTC_ID_NUMBER', 'lot_no': 'lot', 'owner_name': 'owner', 'registered_under': 'tct',
+            'area': 'area', 'portion_area': 'portion_area', 'td_no': 'td', 'location': 'location', 'deed_type': 'deed',
+            'executed_by': 'executed', 'in_favor_of': 'favor', 'doc_no': 'doc', 'page_no': 'page', 'book_no': 'book',
+            'series_of': 'series', 'dated': 'dated', 'notary_public': 'notary', 'retention_area_n': 'retention',
+            'or_number': 'or_number', 'or_date': 'or_date'
         };
 
         function getInitialStatus(role) {
@@ -679,16 +661,10 @@
         async function fetchRequirements() {
             try {
                 const { data, error } = await supabaseClient.from('ltc_requirements').select('*');
-                
-                if (error) {
-                    console.error("Error fetching ltc_requirements:", error);
-                    alert("Supabase Error (ltc_requirements): " + error.message + "\n\nTip: Check if RLS (Row Level Security) is blocking the SELECT query for this specific table.");
-                    return;
-                }
+                if (error) return;
                 
                 if (data && data.length > 0) {
                     checklistItems = data.filter(item => {
-                        // Catch multiple variants of true/TRUE/1/t
                         if (item.is_active === true || item.is_active === 1) return true;
                         if (typeof item.is_active === 'string') {
                             const val = item.is_active.trim().toUpperCase();
@@ -696,15 +672,9 @@
                         }
                         return false;
                     });
-                    
-                    // Fallback Bypass: If the filter stripped everything but rows DO exist, load all of them
-                    // This guarantees that if the data is fetched, you WILL see it.
-                    if (checklistItems.length === 0) {
-                        console.warn("Filter removed all items. Bypassing filter to display raw data.");
-                        checklistItems = data;
-                    }
+                    if (checklistItems.length === 0) checklistItems = data;
                 }
-            } catch(e) { console.error("Checklist Fetch Error:", e); }
+            } catch(e) { console.error(e); }
         }
 
         async function loadMenu() {
@@ -749,9 +719,7 @@
                         menuContainer.appendChild(link);
                     }
                 });
-            } catch (err) {
-                console.error("Menu Error:", err);
-            }
+            } catch (err) {}
         }
 
         async function fetchDynamicSignatories() {
@@ -765,7 +733,7 @@
                         if (u.role && String(u.role).toUpperCase().includes('PARPO')) parpoName = u.full_name;
                     });
                 }
-            } catch(e) { console.error("Signatories Fetch Error:", e); }
+            } catch(e) {}
         }
 
         async function fetchBackgroundImage() {
@@ -793,13 +761,10 @@
             if (!recordId || !newStatus || oldStatus === newStatus) return;
             try {
                 const { error } = await supabaseClient.from('status_logs').insert([{
-                    record_id: recordId,
-                    previous_status: oldStatus || 'UNKNOWN',
-                    new_status: newStatus,
-                    changed_by: currentUser.full_name || 'SYSTEM',
-                    changed_at: new Date().toISOString()
+                    record_id: recordId, previous_status: oldStatus || 'UNKNOWN', new_status: newStatus,
+                    changed_by: currentUser.full_name || 'SYSTEM', changed_at: new Date().toISOString()
                 }]);
-            } catch (err) { console.error("Status Log Catch:", err); }
+            } catch (err) {}
         }
 
         window.addDocket = async function() {
@@ -815,10 +780,8 @@
                     const isEncoder = userRole.includes('LCMS') || userRole.includes('ENCODER') || userRole.includes('ODTS');
                     
                     const newRecord = { 
-                        LTC_ID_NUMBER: docketNo, 
-                        status: statusInit,
-                        legalOfficer: isEncoder ? null : currentUser.full_name,
-                        encoded_by: currentUser.full_name
+                        LTC_ID_NUMBER: docketNo, status: statusInit,
+                        legalOfficer: isEncoder ? null : currentUser.full_name, encoded_by: currentUser.full_name
                     };
                     const {data, error} = await supabaseClient.from('land_records').insert([newRecord]).select();
                     if (!error && data) {
@@ -836,11 +799,8 @@
             const record = rawData.find(r => r.id === id);
             
             const modalTitle = document.getElementById('assignLoModalTitle');
-            if (record && record.legalOfficer) {
-                modalTitle.innerText = 'Change Legal Officer';
-            } else {
-                modalTitle.innerText = 'Assign Legal Officer';
-            }
+            if (record && record.legalOfficer) { modalTitle.innerText = 'Change Legal Officer'; } 
+            else { modalTitle.innerText = 'Assign Legal Officer'; }
             
             const dropdown = document.getElementById('loDropdown');
             dropdown.innerHTML = '<option value="">Select Legal Officer...</option>';
@@ -860,16 +820,12 @@
             const oldStatus = record ? record.status : 'RECEIVED';
             
             let newStatus = oldStatus;
-            if (oldStatus === 'RECEIVED') {
-                newStatus = 'ASSIGNED TO LEGAL';
-            }
+            if (oldStatus === 'RECEIVED') { newStatus = 'ASSIGNED TO LEGAL'; }
             
             const {error} = await supabaseClient.from('land_records').update({ legalOfficer: loName, status: newStatus, updated_at: new Date().toISOString() }).eq('id', selectedForAssignment);
             
             if (!error) {
-                if (oldStatus !== newStatus) {
-                    await logStatusChange(selectedForAssignment, oldStatus, newStatus);
-                }
+                if (oldStatus !== newStatus) { await logStatusChange(selectedForAssignment, oldStatus, newStatus); }
                 document.getElementById('assignLoModal').classList.add('hidden');
                 alert("Legal Officer updated successfully.");
                 fetchClearanceData();
@@ -883,9 +839,7 @@
             
             let areaVal = parseFloat(currentSelection.area) || 0;
             let elArea = document.getElementById('edit-area');
-            if(elArea && elArea.innerText !== '---') {
-                areaVal = parseFloat(elArea.innerText.replace(/,/g, '')) || 0;
-            }
+            if(elArea && elArea.innerText !== '---') { areaVal = parseFloat(elArea.innerText.replace(/,/g, '')) || 0; }
 
             if (currentAffidavit && currentAffidavit.id) {
                 alertEl.classList.add('hidden');
@@ -902,12 +856,8 @@
                     certAff.innerText = '';
                     certAff.classList.add('hidden');
                 }
-                
-                if (areaVal > 5) {
-                    alertEl.classList.remove('hidden');
-                } else {
-                    alertEl.classList.add('hidden');
-                }
+                if (areaVal > 5) { alertEl.classList.remove('hidden'); } 
+                else { alertEl.classList.add('hidden'); }
             }
         }
 
@@ -916,9 +866,7 @@
             if (currentAffidavit) {
                 document.getElementById('m_executed_by').value = currentAffidavit.executed_by || '';
                 let radios = document.getElementsByName('m_doc_type');
-                for(let i=0; i<radios.length; i++){
-                    if(radios[i].value === currentAffidavit.document_type) radios[i].checked = true;
-                }
+                for(let i=0; i<radios.length; i++){ if(radios[i].value === currentAffidavit.document_type) radios[i].checked = true; }
                 document.getElementById('m_excess_area').value = currentAffidavit.excess_area || '';
                 document.getElementById('m_series').value = currentAffidavit.series_year || '';
                 document.getElementById('m_doc_no').value = currentAffidavit.doc_no || '';
@@ -939,15 +887,12 @@
             document.getElementById('affidavitDetailsModal').classList.remove('hidden');
         }
 
-        function closeAffidavitModal() {
-            document.getElementById('affidavitDetailsModal').classList.add('hidden');
-        }
+        function closeAffidavitModal() { document.getElementById('affidavitDetailsModal').classList.add('hidden'); }
 
         async function saveAffidavitModal() {
             const btn = document.getElementById('btnSaveAffidavit');
             const originalText = btn.innerText;
-            btn.innerText = 'SAVING...';
-            btn.disabled = true;
+            btn.innerText = 'SAVING...'; btn.disabled = true;
 
             const executed_by = document.getElementById('m_executed_by').value;
             const document_type = document.querySelector('input[name="m_doc_type"]:checked').value;
@@ -962,60 +907,39 @@
             const generated_text = `Further, the transferee, ${executed_by} executed an ${document_type}, and manifested that he does not have Objection and no Opposition to future action by any person, entity or government agency to include, cover, process, or recognize the excess of ${excess_area}, as contained in the ${document_type} under Doc. No. ${doc_no}, Page No. ${page_no}, Book No. ${book_no}, Series of ${series_year} executed on ${date_executed} and notarized by ${notary_public}.`;
 
             const payload = {
-                land_record_id: currentSelection.id,
-                executed_by, document_type, excess_area, series_year,
-                doc_no, page_no, book_no, date_executed, notary_public,
-                generated_text
+                land_record_id: currentSelection.id, executed_by, document_type, excess_area, series_year,
+                doc_no, page_no, book_no, date_executed, notary_public, generated_text
             };
 
             let op;
             if (currentAffidavit && currentAffidavit.id) {
                 op = supabaseClient.from('affidavit_details').update(payload).eq('id', currentAffidavit.id).select();
-            } else {
-                op = supabaseClient.from('affidavit_details').insert([payload]).select();
-            }
+            } else { op = supabaseClient.from('affidavit_details').insert([payload]).select(); }
 
             const { data, error } = await op;
-            if (error) {
-                alert("Error saving affidavit: " + error.message);
-            } else {
-                if (data && data.length > 0) {
-                    currentAffidavit = data[0];
-                    updateAffidavitUI();
-                }
+            if (error) { alert("Error saving affidavit: " + error.message); } 
+            else {
+                if (data && data.length > 0) { currentAffidavit = data[0]; updateAffidavitUI(); }
                 closeAffidavitModal();
             }
-            btn.innerText = originalText;
-            btn.disabled = false;
+            btn.innerText = originalText; btn.disabled = false;
         }
 
-        window.manualSave = async function(event) {
+        window.quickSave = async function(event) {
             const btn = event.currentTarget;
             const originalText = btn.innerText;
             btn.innerText = 'SAVING...';
             btn.disabled = true;
-            await autoSaveEdits();
-
-            if (currentSelection && ['RECEIVED', 'ASSIGNED TO LEGAL', 'RETURNED FROM LTSP'].includes(currentSelection.status)) {
-                const oldStatus = currentSelection.status;
-                const { error } = await supabaseClient.from('land_records').update({ status: 'DRAFT', updated_at: new Date().toISOString() }).eq('id', currentSelection.id);
-                if (!error) {
-                    await logStatusChange(currentSelection.id, oldStatus, 'DRAFT');
-                }
-            }
-
-            await fetchClearanceData();
-            btn.innerText = '✅ SAVED';
             
-            setTimeout(() => { 
-                btn.innerText = originalText; 
-                btn.disabled = false; 
-                closeReviewModalOnly();
-            }, 1000);
+            await autoSaveEdits();
+            await fetchClearanceData();
+            
+            btn.innerText = '✅ SAVED';
+            setTimeout(() => { btn.innerText = originalText; btn.disabled = false; }, 1000);
         }
 
         async function autoSaveEdits() {
-            if (!currentSelection || currentReviewMode === 'VIEW_CERT') return false;
+            if (!currentSelection || currentReviewMode === 'VIEW' || currentReviewMode === 'VIEW_CERT') return false;
             const updateData = {};
             let hasChanges = false;
             let areaChanged = false;
@@ -1028,9 +952,7 @@
                     let newVal = el.innerText.replace(/\u00A0/g, ' ').trim();
                     let oldVal = currentSelection[dbCol] ? String(currentSelection[dbCol]).trim() : '';
                     if (newVal !== oldVal) {
-                        updateData[dbCol] = newVal;
-                        currentSelection[dbCol] = newVal;
-                        hasChanges = true;
+                        updateData[dbCol] = newVal; currentSelection[dbCol] = newVal; hasChanges = true;
                         if(dbCol === 'area') areaChanged = true;
                         
                         let recEl = document.getElementById(`rec-${htmlSuffix}`);
@@ -1049,9 +971,7 @@
                 let colRemarks = currentSelection.hasOwnProperty('Remarks') ? 'Remarks' : 'remarks';
                 let oldRemarks = currentSelection[colRemarks] ? String(currentSelection[colRemarks]).trim() : '';
                 if (newRemarks !== oldRemarks) {
-                    updateData[colRemarks] = newRemarks;
-                    currentSelection[colRemarks] = newRemarks;
-                    hasChanges = true;
+                    updateData[colRemarks] = newRemarks; currentSelection[colRemarks] = newRemarks; hasChanges = true;
                     
                     let ioRemEl = document.getElementById('io-remarks');
                     if(ioRemEl) {
@@ -1089,11 +1009,9 @@
             if(!currentSelection) return;
             const owner = (currentSelection.owner_name || '').toLowerCase();
             const favor = (currentSelection.in_favor_of || '').toLowerCase();
-            
             if(!owner && !favor) return alert('No Owner Name or "In Favor Of" specified to check records.');
             
-            let totalArea = 0;
-            let prevDocs = [];
+            let totalArea = 0; let prevDocs = [];
             rawData.forEach(r => {
                 if (r.id === currentSelection.id) return;
                 const rOwner = (r.owner_name || '').toLowerCase();
@@ -1111,12 +1029,8 @@
                     prevDocs.push(`LTC No: ${r.LTC_ID_NUMBER || r.ltc_no || 'Pending'} | Area: ${a} has | Loc: ${r.location || 'Unknown'} | Owner: ${r.owner_name || 'N/A'} | Favor: ${r.in_favor_of || 'N/A'}`);
                 }
             });
-            
-            if (prevDocs.length > 0) {
-                alert(`PREVIOUS RECORDS FOUND: ${prevDocs.length}\nTOTAL PREVIOUS AREA: ${totalArea.toFixed(4)} has\n\nDetails:\n${prevDocs.join('\n')}`);
-            } else {
-                alert(`No previous records found for the associated names.`);
-            }
+            if (prevDocs.length > 0) { alert(`PREVIOUS RECORDS FOUND: ${prevDocs.length}\nTOTAL PREVIOUS AREA: ${totalArea.toFixed(4)} has\n\nDetails:\n${prevDocs.join('\n')}`); } 
+            else { alert(`No previous records found for the associated names.`); }
         };
 
         window.withdrawRecord = async function(id) {
@@ -1127,9 +1041,7 @@
         }
 
         window.issueInterlocutory = function() {
-            const container = document.getElementById('checklistContainer');
-            container.innerHTML = '';
-            
+            const container = document.getElementById('checklistContainer'); container.innerHTML = '';
             if (checklistItems.length === 0) {
                 container.innerHTML = '<p class="text-sm text-gray-500 italic font-bold">No predefined requirements fetched from server. Use the text box below, or check your database settings.</p>';
             } else {
@@ -1142,14 +1054,11 @@
                     `;
                 });
             }
-            
             document.getElementById('otherRequirements').value = '';
             document.getElementById('interlocutoryModal').classList.remove('hidden');
         }
 
-        window.closeInterlocutoryModal = function() {
-            document.getElementById('interlocutoryModal').classList.add('hidden');
-        }
+        window.closeInterlocutoryModal = function() { document.getElementById('interlocutoryModal').classList.add('hidden'); }
 
         window.submitInterlocutory = async function() {
             const checkboxes = document.querySelectorAll('.lacking-chk:checked');
@@ -1158,10 +1067,7 @@
             const other = document.getElementById('otherRequirements').value.trim();
             if (other) { missingList.push(other); }
             
-            if (missingList.length === 0) {
-                alert("Please select or specify at least one lacking requirement.");
-                return;
-            }
+            if (missingList.length === 0) { alert("Please select or specify at least one lacking requirement."); return; }
             
             const plainText = missingList.join('\n');
             document.getElementById('reviewRemarks').value = plainText;
@@ -1193,9 +1099,7 @@
             rawData.forEach(item => {
                 let matchesSearch = false;
                 if (query === '') { matchesSearch = true; } 
-                else {
-                    matchesSearch = Object.values(item).some(val => val !== null && String(val).toLowerCase().includes(query));
-                }
+                else { matchesSearch = Object.values(item).some(val => val !== null && String(val).toLowerCase().includes(query)); }
 
                 if (isLegal && !isChief) {
                     let loName = (item.legalOfficer || item.legalofficer || item.encoded_by || item.created_by || '').toLowerCase();
@@ -1207,7 +1111,7 @@
                     
                     if (st === 'RECEIVED' || st === 'ASSIGNED TO LEGAL') { stats.rec++; }
                     else if (st === 'FORWARDED TO LTSP' || st === 'RETURNED FROM LTSP') { stats.ltsp++; }
-                    else if (st === 'DRAFT' || st === 'WITH INTERLOCK' || st === 'COMPLIED') { stats.rev++; }
+                    else if (['DRAFT', 'WITH INTERLOCK', 'COMPLIED', 'FINALIZED'].includes(st)) { stats.rev++; }
                     else if (st === 'FORWARDED TO PARPO') { stats.cer++; }
                     else if (st === 'SIGNED BY PARPO') { stats.sig++; }
                     else if (st === 'RETURNED TO LEGAL (SIGNED)') { stats.leg++; }
@@ -1234,47 +1138,61 @@
                         }
                     }
                     if (isLegal && !isParpo) {
-                        if (['ASSIGNED TO LEGAL', 'RETURNED FROM LTSP', 'RECEIVED'].includes(st)) {
-                            actions += `<button onclick='showReview("${item.id}", "REVIEW")' class="bg-[#003811] text-white w-full py-1 rounded shadow text-[9px] font-bold tracking-wide hover:bg-black uppercase transition-colors text-center mb-1">UPDATE / REVIEW</button>`;
+                        // Editable Statuses
+                        if (['ASSIGNED TO LEGAL', 'RETURNED FROM LTSP', 'RECEIVED', 'DRAFT', 'WITH INTERLOCK', 'COMPLIED'].includes(st)) {
+                            actions += `<button onclick='showReview("${item.id}", "UPDATE")' class="bg-[#003811] text-white w-full py-1 rounded shadow text-[9px] font-bold tracking-wide hover:bg-black uppercase transition-colors text-center mb-1">UPDATE / REVIEW</button>`;
+                            actions += `<button onclick='createVariant("${item.id}")' class="bg-white text-gray-800 border border-gray-300 w-full py-1 rounded shadow text-[9px] font-bold hover:bg-gray-100 uppercase transition-colors text-center mb-1">+ Variant</button>`;
                         }
                         
-                        if (['ASSIGNED TO LEGAL', 'RETURNED FROM LTSP', 'RECEIVED', 'DRAFT', 'WITH INTERLOCK', 'COMPLIED'].includes(st)) {
+                        // Finalized Phase (REVIEW button disappears, replaced by View and Prints)
+                        if (st === 'FINALIZED') {
+                            actions += `<button onclick='showReview("${item.id}", "VIEW")' class="bg-gray-600 text-white w-full py-1 rounded shadow text-[9px] font-bold hover:bg-gray-800 uppercase transition-colors text-center mb-1">VIEW</button>`;
                             actions += `<button onclick='openPrint("${item.id}", "rec")' class="bg-[#8b5cf6] text-white w-full py-1 rounded shadow text-[9px] font-bold hover:bg-purple-800 uppercase transition-colors text-center mb-1">Print Reco</button>`;
                             actions += `<button onclick='openPrint("${item.id}", "cert")' class="bg-[#d97706] text-white w-full py-1 rounded shadow text-[9px] font-bold hover:bg-amber-700 uppercase transition-colors text-center mb-1">Print Cert</button>`;
                             actions += `<button onclick='processToNext("${item.id}", "FORWARDED TO PARPO", "${st}")' class="bg-green-700 text-white w-full py-1 rounded shadow text-[9px] font-bold hover:bg-green-800 uppercase transition-colors text-center mb-1">Fwd to PARPO</button>`;
-                            actions += `<button onclick='createVariant("${item.id}")' class="bg-white text-gray-800 border border-gray-300 w-full py-1 rounded shadow text-[9px] font-bold hover:bg-gray-100 uppercase transition-colors text-center mb-1">+ Variant</button>`;
                         }
 
                         if (st === 'RETURNED TO LEGAL (SIGNED)') {
+                            actions += `<button onclick='showReview("${item.id}", "VIEW")' class="bg-gray-500 text-white w-full py-1.5 mt-1 rounded shadow text-[10px] font-bold hover:bg-gray-600 uppercase transition-colors text-center mb-1">View</button>`;
                             actions += `<button onclick='processToNext("${item.id}", "FORWARDED TO RECORDS", "${st}")' class="bg-cyan-600 text-white w-full py-1.5 rounded shadow text-[10px] font-bold hover:bg-cyan-700 uppercase transition-colors text-center mt-1">Fwd to Records</button>`;
                         }
+
                         if (st === 'RELEASED TO CLIENT') {
+                            actions += `<button onclick='showReview("${item.id}", "VIEW")' class="bg-gray-500 text-white w-full py-1.5 mt-1 rounded shadow text-[10px] font-bold hover:bg-gray-600 uppercase transition-colors text-center mb-1">View</button>`;
                             actions += `<button onclick='handleDuplicate("${item.id}", "CORRECTION")' class="bg-yellow-500 text-white w-full py-1.5 rounded shadow text-[10px] font-bold hover:bg-yellow-600 uppercase transition-colors text-center mb-1">Correction</button>`;
                             actions += `<button onclick='handleDuplicate("${item.id}", "RE-ISSUANCE")' class="bg-blue-500 text-white w-full py-1.5 rounded shadow text-[10px] font-bold hover:bg-blue-600 uppercase transition-colors text-center mb-1">Re-Issue</button>`;
+                        }
+                        
+                        // View mode for other uneditable states
+                        if (['FORWARDED TO PARPO', 'SIGNED BY PARPO', 'FORWARDED TO RECORDS', 'CORRECTED', 'RE-ISSUED'].includes(st)) {
+                            actions += `<button onclick='showReview("${item.id}", "VIEW")' class="bg-gray-500 text-white w-full py-1.5 mt-1 rounded shadow text-[10px] font-bold hover:bg-gray-600 uppercase transition-colors text-center mb-1">View</button>`;
                         }
                     }
                     if (isParpo) {
                         if (st === 'FORWARDED TO PARPO' || st === 'SIGNED BY PARPO') {
-                            actions += `<button onclick='showReview("${item.id}", "REVIEW")' class="bg-[#003811] text-white w-full py-1.5 rounded shadow text-[9px] font-black tracking-wide hover:bg-black uppercase transition-colors text-center mb-1">Review & Sign</button>`;
+                            actions += `<button onclick='showReview("${item.id}", "UPDATE")' class="bg-[#003811] text-white w-full py-1.5 rounded shadow text-[9px] font-black tracking-wide hover:bg-black uppercase transition-colors text-center mb-1">Review & Sign</button>`;
                             actions += `<button onclick='openPrint("${item.id}", "rec")' class="bg-[#8b5cf6] text-white w-full py-1 rounded shadow text-[9px] font-bold hover:bg-purple-800 uppercase transition-colors text-center mb-1">Print Reco</button>`;
                             actions += `<button onclick='openPrint("${item.id}", "cert")' class="bg-[#d97706] text-white w-full py-1 rounded shadow text-[9px] font-bold hover:bg-amber-700 uppercase transition-colors text-center mb-1">Print Cert</button>`;
                         }
                         if (st === 'SIGNED BY PARPO') {
-                            actions += `<button onclick='processToNext("${item.id}", "RETURN TO LEGAL (SIGNED)", "${st}")' class="bg-red-600 text-white w-full py-1.5 rounded shadow text-[10px] font-bold hover:bg-red-700 uppercase transition-colors text-center mb-1">Return to Legal</button>`;
+                            actions += `<button onclick='processToNext("${item.id}", "RETURNED TO LEGAL (SIGNED)", "${st}")' class="bg-red-600 text-white w-full py-1.5 rounded shadow text-[10px] font-bold hover:bg-red-700 uppercase transition-colors text-center mb-1">Return to Legal</button>`;
+                        }
+                        if (['RETURNED TO LEGAL (SIGNED)', 'FORWARDED TO RECORDS', 'RELEASED TO CLIENT'].includes(st)) {
+                            actions += `<button onclick='showReview("${item.id}", "VIEW")' class="bg-gray-500 text-white w-full py-1.5 mt-1 rounded shadow text-[10px] font-bold hover:bg-gray-600 uppercase transition-colors text-center mb-1">View</button>`;
                         }
                     }
                     if (isRecords) {
                         if (st === 'FORWARDED TO RECORDS') {
+                            actions += `<button onclick='showReview("${item.id}", "VIEW")' class="bg-gray-500 text-white w-full py-1.5 mt-1 rounded shadow text-[10px] font-bold hover:bg-gray-600 uppercase transition-colors text-center mb-1">View</button>`;
                             actions += `<button onclick='processToNext("${item.id}", "RELEASED TO CLIENT", "${st}")' class="bg-cyan-600 text-white w-full py-1.5 rounded shadow text-[10px] font-bold hover:bg-cyan-700 uppercase transition-colors text-center mb-1">Release to Client</button>`;
+                        }
+                        if (st === 'RELEASED TO CLIENT') {
+                            actions += `<button onclick='showReview("${item.id}", "VIEW")' class="bg-gray-500 text-white w-full py-1.5 mt-1 rounded shadow text-[10px] font-bold hover:bg-gray-600 uppercase transition-colors text-center mb-1">View</button>`;
                         }
                     }
                     
                     if (isChief && st !== 'WITHDRAWN') {
                         actions += `<button onclick='withdrawRecord("${item.id}")' class="bg-gray-400 text-white w-full py-1 mt-1 rounded shadow text-[9px] font-bold hover:bg-gray-600 uppercase transition-colors text-center">Withdraw</button>`;
-                    }
-
-                    if (['DRAFT', 'WITH INTERLOCK', 'COMPLIED', 'FORWARDED TO PARPO', 'SIGNED BY PARPO', 'RETURNED TO LEGAL (SIGNED)', 'FORWARDED TO RECORDS', 'RELEASED TO CLIENT', 'CORRECTED', 'RE-ISSUED'].includes(st)) {
-                        actions += `<button onclick='showReview("${item.id}", "VIEW_CERT")' class="bg-gray-500 text-white w-full py-1.5 mt-1 rounded shadow text-[10px] font-bold hover:bg-gray-600 uppercase transition-colors text-center mb-1">View</button>`;
                     }
 
                     actions += `</div>`;
@@ -1301,36 +1219,31 @@
             if (currentSelection) {
                 let currentSt = (currentSelection.status || 'RECEIVED').trim().toUpperCase();
                 
-                if (currentReviewMode === 'VIEW_CERT') {
+                // Modal Action Buttons Control
+                if (currentReviewMode === 'VIEW' || currentReviewMode === 'VIEW_CERT') {
                     actionDiv.innerHTML = '';
                 } else {
                     let btns = `<div class="flex flex-wrap gap-2 w-full justify-end">`;
                     
                     if (isLegal && !isParpo) {
-                        if (['RECEIVED', 'ASSIGNED TO LEGAL', 'RETURNED FROM LTSP', 'DRAFT', 'WITH INTERLOCK', 'COMPLIED'].includes(currentSt)) {
+                        if (['RECEIVED', 'ASSIGNED TO LEGAL', 'RETURNED FROM LTSP', 'DRAFT', 'COMPLIED'].includes(currentSt)) {
                             btns += `<button onclick="decideStatus('DRAFT')" class="bg-blue-600 text-white px-4 py-2 rounded text-[10px] font-black shadow hover:bg-blue-700 transition-colors">SAVE DRAFT</button>`;
-                            btns += `<button onclick="manualSave(event)" class="bg-indigo-600 text-white px-4 py-2 rounded text-[10px] font-black shadow hover:bg-indigo-700 transition-colors">SAVE FINAL</button>`;
-                            btns += `<button onclick='openPrint("${currentSelection.id}", "rec")' class="bg-[#8b5cf6] text-white px-4 py-2 rounded text-[10px] font-black uppercase shadow hover:bg-purple-800 transition-colors">PRINT RECO</button>`;
-                            btns += `<button onclick='openPrint("${currentSelection.id}", "cert")' class="bg-[#d97706] text-white px-4 py-2 rounded text-[10px] font-black uppercase shadow hover:bg-amber-700 transition-colors">PRINT CERT</button>`;
-                            btns += `<button onclick="decideStatus('FORWARDED TO PARPO')" class="bg-green-700 text-white px-4 py-2 rounded text-[10px] font-black shadow hover:bg-green-800 transition-colors">FWD TO PARPO</button>`;
+                            btns += `<button onclick="decideStatus('FINALIZED')" class="bg-indigo-600 text-white px-4 py-2 rounded text-[10px] font-black shadow hover:bg-indigo-700 transition-colors">SAVE FINAL</button>`;
                             btns += `<button onclick="issueInterlocutory()" class="bg-yellow-600 text-white px-4 py-2 rounded text-[10px] font-black shadow hover:bg-yellow-700 transition-colors">INTERLOCUTORY ORDER</button>`;
-                            
-                            if (currentSt === 'WITH INTERLOCK') {
-                                btns += `<button onclick="decideStatus('COMPLIED')" class="bg-teal-600 text-white px-4 py-2 rounded text-[10px] font-black shadow hover:bg-teal-700 transition-colors">MARK COMPLIED</button>`;
-                            }
                         }
-                        if (currentSt === 'RETURN TO LEGAL (SIGNED)') {
-                            btns += `<button onclick="decideStatus('FORWARDED TO RECORDS')" class="bg-cyan-600 text-white px-6 py-2 rounded text-xs font-black shadow hover:bg-cyan-700 transition-colors">FORWARD TO RECORDS</button>`;
+                        if (currentSt === 'WITH INTERLOCK') {
+                            btns += `<button onclick="decideStatus('COMPLIED')" class="bg-teal-600 text-white px-4 py-2 rounded text-[10px] font-black shadow hover:bg-teal-700 transition-colors">MARK COMPLIED</button>`;
                         }
                     }
                     if (isParpo) {
                         if (currentSt === 'FORWARDED TO PARPO') {
+                            btns += `<button onclick="decideStatus('FORWARDED TO PARPO')" class="bg-blue-600 text-white px-4 py-2 rounded text-[10px] font-black uppercase shadow hover:bg-blue-800 transition-colors">SAVE UPDATES</button>`;
                             btns += `<button onclick='openPrint("${currentSelection.id}", "rec")' class="bg-[#8b5cf6] text-white px-4 py-2 rounded text-[10px] font-black uppercase shadow hover:bg-purple-800 transition-colors">PRINT RECO</button>`;
                             btns += `<button onclick='openPrint("${currentSelection.id}", "cert")' class="bg-[#d97706] text-white px-4 py-2 rounded text-[10px] font-black uppercase shadow hover:bg-amber-700 transition-colors">PRINT CERT</button>`;
                             btns += `<button onclick="decideStatus('SIGNED BY PARPO')" class="bg-orange-600 text-white px-4 py-2 rounded text-[10px] font-black shadow hover:bg-orange-700 transition-colors">SIGN APPROVAL</button>`;
                         }
                         if (currentSt === 'SIGNED BY PARPO') {
-                            btns += `<button onclick="decideStatus('RETURN TO LEGAL (SIGNED)')" class="bg-red-600 text-white px-6 py-2 rounded text-xs font-black shadow hover:bg-red-700 transition-colors">RETURN TO LEGAL</button>`;
+                            btns += `<button onclick="decideStatus('RETURNED TO LEGAL (SIGNED)')" class="bg-red-600 text-white px-6 py-2 rounded text-xs font-black shadow hover:bg-red-700 transition-colors">RETURN TO LEGAL</button>`;
                         }
                     }
                     btns += `</div>`;
@@ -1395,7 +1308,7 @@
                 await supabaseClient.from('land_records').update({ status: oldStatusUpdate, updated_at: new Date().toISOString() }).eq('id', oldId);
                 
                 await fetchClearanceData();
-                showReview(data[0].id, mode);
+                showReview(data[0].id, 'UPDATE');
             }
         }
 
@@ -1406,6 +1319,7 @@
                 'FORWARDED TO LTSP': 'bg-indigo-100 text-indigo-800 border border-indigo-200', 
                 'RETURNED FROM LTSP': 'bg-pink-100 text-pink-800 border border-pink-200', 
                 'DRAFT': 'bg-purple-100 text-purple-800 border border-purple-200', 
+                'FINALIZED': 'bg-blue-200 text-blue-900 border border-blue-400',
                 'WITH INTERLOCK': 'bg-yellow-100 text-yellow-800 border border-yellow-400',
                 'COMPLIED': 'bg-teal-100 text-teal-800 border border-teal-300',
                 'FORWARDED TO PARPO': 'bg-cyan-100 text-cyan-800 border border-cyan-200', 
@@ -1422,7 +1336,7 @@
         }
 
         async function navigateReview(dir) {
-            if (currentReviewMode !== 'VIEW_CERT') await autoSaveEdits();
+            if (currentReviewMode !== 'VIEW' && currentReviewMode !== 'VIEW_CERT') await autoSaveEdits();
             let newIndex = currentNavIndex + dir;
             if(newIndex >= 0 && newIndex < currentNavList.length) { showReview(currentNavList[newIndex].id, currentReviewMode); }
         }
@@ -1440,15 +1354,13 @@
             });
         }
 
-        async function showReview(id, mode = 'REVIEW') {
+        async function showReview(id, mode = 'UPDATE') {
             currentReviewMode = mode;
             const query = document.getElementById('searchInput').value.toLowerCase();
             currentNavList = rawData.filter(item => {
                 let matchesSearch = false;
                 if (query === '') { matchesSearch = true; } 
-                else {
-                    matchesSearch = Object.values(item).some(val => val !== null && String(val).toLowerCase().includes(query));
-                }
+                else { matchesSearch = Object.values(item).some(val => val !== null && String(val).toLowerCase().includes(query)); }
                 return matchesSearch;
             });
             currentNavIndex = currentNavList.findIndex(r => r.id === id);
@@ -1467,7 +1379,17 @@
             document.getElementById('btnNext').disabled = currentNavIndex >= currentNavList.length - 1;
             document.getElementById('btnNext').className = currentNavIndex >= currentNavList.length - 1 ? 'bg-gray-100 text-gray-400 px-4 py-2 rounded text-xs font-black uppercase cursor-not-allowed' : 'bg-gray-200 hover:bg-gray-300 px-4 py-2 rounded text-xs font-black uppercase transition-colors text-gray-800';
 
-            const isEditable = (currentReviewMode !== 'VIEW_CERT');
+            const isEditable = (currentReviewMode === 'UPDATE');
+
+            const topSaveBtn = document.getElementById('btnTopSave');
+            const editNotice = document.getElementById('editNotice');
+            if (!isEditable) {
+                topSaveBtn.classList.add('hidden');
+                editNotice.classList.add('hidden');
+            } else {
+                topSaveBtn.classList.remove('hidden');
+                editNotice.classList.remove('hidden');
+            }
 
             for (let dbCol in DB_FIELD_MAP) {
                 let htmlSuffix = DB_FIELD_MAP[dbCol];
@@ -1523,7 +1445,6 @@
                 document.getElementById('docCertification').classList.remove('hidden');
                 document.getElementById('docCertification').style.display = 'block';
                 document.getElementById('actionButtons').classList.add('hidden');
-                document.getElementById('editNotice').classList.add('hidden');
             } else {
                 document.getElementById('modalMainTitle').innerText = currentReviewMode.replace('-', ' ').toUpperCase();
                 document.getElementById('docRecommendation').classList.add('hidden');
@@ -1531,8 +1452,13 @@
                 document.getElementById('docInterlocutoryOrder').classList.add('hidden'); 
                 document.getElementById('docCertification').style.display = 'none';
                 document.getElementById('reviewSection').classList.remove('hidden');
-                document.getElementById('actionButtons').classList.remove('hidden');
-                document.getElementById('editNotice').classList.remove('hidden');
+                
+                // Hide actionButtons completely if mode is VIEW to enforce exact flow
+                if (currentReviewMode === 'VIEW') {
+                    document.getElementById('actionButtons').classList.add('hidden');
+                } else {
+                    document.getElementById('actionButtons').classList.remove('hidden');
+                }
             }
             
             let colRemarks = currentSelection.hasOwnProperty('Remarks') ? 'Remarks' : 'remarks';
@@ -1563,7 +1489,7 @@
         }
 
         async function openPrint(id, type) {
-            await showReview(id, 'REVIEW'); 
+            await showReview(id, 'VIEW'); // Force strict view mode for printing
             
             document.getElementById('reviewSection').classList.add('hidden');
             document.getElementById('actionButtons').classList.add('hidden');
@@ -1734,7 +1660,7 @@
         }
 
         async function closeReview() { 
-            if (currentReviewMode !== 'VIEW_CERT') {
+            if (currentReviewMode !== 'VIEW' && currentReviewMode !== 'VIEW_CERT') {
                 await autoSaveEdits();
                 await fetchClearanceData(); 
             }
