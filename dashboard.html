@@ -554,7 +554,7 @@
     <!-- Modal: Assign LO (ODTS Encoder Step) -->
     <div id="assignLoModal" class="fixed inset-0 bg-black/60 hidden flex items-center justify-center z-[80] no-print">
         <div class="bg-white p-6 rounded shadow-2xl max-w-sm w-full border-t-4 border-[#003811]">
-            <h3 class="font-black tracking-wide uppercase text-lg mb-4 text-[#003811]">Assign Legal Office</h3>
+            <h3 id="assignLoModalTitle" class="font-black tracking-wide uppercase text-lg mb-4 text-[#003811]">Assign Legal Officer</h3>
             <select id="loDropdown" class="w-full border p-2 rounded mb-6 focus:outline-none focus:border-[#003811]">
                 <option value="">Select Legal Officer...</option>
             </select>
@@ -811,10 +811,13 @@
             } else {
                 if (confirm("Docket does not exist. Create new DAR Clearance?")) {
                     const statusInit = getInitialStatus(currentUser.role);
+                    const userRole = (currentUser.role || '').toUpperCase();
+                    const isEncoder = userRole.includes('LCMS') || userRole.includes('ENCODER') || userRole.includes('ODTS');
+                    
                     const newRecord = { 
                         LTC_ID_NUMBER: docketNo, 
                         status: statusInit,
-                        legalOfficer: currentUser.full_name,
+                        legalOfficer: isEncoder ? null : currentUser.full_name,
                         encoded_by: currentUser.full_name
                     };
                     const {data, error} = await supabaseClient.from('land_records').insert([newRecord]).select();
@@ -830,6 +833,15 @@
 
         window.openAssignLO = function(id) {
             selectedForAssignment = id;
+            const record = rawData.find(r => r.id === id);
+            
+            const modalTitle = document.getElementById('assignLoModalTitle');
+            if (record && record.legalOfficer) {
+                modalTitle.innerText = 'Change Legal Officer';
+            } else {
+                modalTitle.innerText = 'Assign Legal Officer';
+            }
+            
             const dropdown = document.getElementById('loDropdown');
             dropdown.innerHTML = '<option value="">Select Legal Officer...</option>';
             allUsers.forEach(u => {
@@ -847,12 +859,19 @@
             const record = rawData.find(r => r.id === selectedForAssignment);
             const oldStatus = record ? record.status : 'RECEIVED';
             
-            const {error} = await supabaseClient.from('land_records').update({ legalOfficer: loName, status: 'ASSIGNED TO LEGAL', updated_at: new Date().toISOString() }).eq('id', selectedForAssignment);
+            let newStatus = oldStatus;
+            if (oldStatus === 'RECEIVED') {
+                newStatus = 'ASSIGNED TO LEGAL';
+            }
+            
+            const {error} = await supabaseClient.from('land_records').update({ legalOfficer: loName, status: newStatus, updated_at: new Date().toISOString() }).eq('id', selectedForAssignment);
             
             if (!error) {
-                await logStatusChange(selectedForAssignment, oldStatus, 'ASSIGNED TO LEGAL');
+                if (oldStatus !== newStatus) {
+                    await logStatusChange(selectedForAssignment, oldStatus, newStatus);
+                }
                 document.getElementById('assignLoModal').classList.add('hidden');
-                alert("DAR Clearance assigned successfully.");
+                alert("Legal Officer updated successfully.");
                 fetchClearanceData();
             }
         }
@@ -1196,8 +1215,11 @@
                     let actions = '<div class="flex flex-col gap-1 w-full max-w-[120px] mx-auto">';
                     
                     if (isEncoder) {
+                        if (['RECEIVED', 'ASSIGNED TO LEGAL', 'DRAFT', 'RETURNED FROM LTSP'].includes(st)) {
+                            let assignBtnLabel = item.legalOfficer ? 'Change LO' : 'Assign LO';
+                            actions += `<button onclick='openAssignLO("${item.id}")' class="bg-blue-600 text-white w-full py-1 mt-1 rounded shadow text-[9px] font-bold hover:bg-blue-800 uppercase transition-colors text-center">${assignBtnLabel}</button>`;
+                        }
                         if (st === 'RECEIVED' || st === 'ASSIGNED TO LEGAL') {
-                            actions += `<button onclick='openAssignLO("${item.id}")' class="bg-blue-600 text-white w-full py-1 mt-1 rounded shadow text-[9px] font-bold hover:bg-blue-800 uppercase transition-colors text-center">Assign LO</button>`;
                             actions += `<button onclick='processToNext("${item.id}", "FORWARDED TO LTSP", "${st}")' class="bg-indigo-600 text-white w-full py-1 mt-1 rounded shadow text-[9px] font-bold hover:bg-indigo-800 uppercase transition-colors text-center">Forward to LTSP</button>`;
                         }
                     }
