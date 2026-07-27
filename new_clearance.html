@@ -90,8 +90,8 @@
                                     </div>
                                 </div>
                                 <div class="flex gap-2">
-                                    <input type="text" id="areaInput" name="area" class="form-input" placeholder="Total Area">
                                     <input type="text" id="portionAreaInput" name="portion_area" class="form-input hidden" placeholder="Portion Area">
+                                    <input type="text" id="areaInput" name="area" class="form-input" placeholder="Total Area">
                                 </div>
                             </div>
                             <div><label class="form-label">Declared under T.D. No.</label><input type="text" name="td_no" class="form-input"></div>
@@ -261,9 +261,16 @@
             const portionInput = document.getElementById('portionAreaInput');
             if (this.checked) {
                 portionInput.classList.remove('hidden');
+                portionInput.focus();
             } else {
                 portionInput.classList.add('hidden');
                 portionInput.value = '';
+                
+                // Trigger check on Area when portion is unchecked
+                const areaVal = parseFloat(document.getElementById('areaInput').value) || 0;
+                if (areaVal > 5 && !affidavitData.has_affidavit) {
+                    openAffidavitModal();
+                }
             }
             updateAffidavitUI();
         });
@@ -275,7 +282,8 @@
             const areaVal = parseFloat(document.getElementById('areaInput').value) || 0;
             const portionVal = parseFloat(document.getElementById('portionAreaInput').value) || 0;
 
-            const requiresAffidavit = (areaVal > 5 || (isPortion && portionVal > 5));
+            const requiresAffidavit = isPortion ? (portionVal > 5) : (areaVal > 5);
+            
             const alertEl = document.getElementById('affidavitAlert');
             const successEl = document.getElementById('affidavitSuccess');
             const btnGeneric = document.getElementById('btnGenericAddAffidavit');
@@ -307,6 +315,24 @@
                 }
             }
         }
+
+        // Add blur listener to popup affidavit modal automatically if conditions are met
+        document.getElementById('areaInput').addEventListener('blur', function() {
+            if (isEncoder) return;
+            const isPortion = document.getElementById('isPortionCheck').checked;
+            const areaVal = parseFloat(this.value) || 0;
+            if (!isPortion && areaVal > 5 && !affidavitData.has_affidavit) {
+                openAffidavitModal();
+            }
+        });
+
+        document.getElementById('portionAreaInput').addEventListener('blur', function() {
+            if (isEncoder) return;
+            const portionVal = parseFloat(this.value) || 0;
+            if (portionVal > 5 && !affidavitData.has_affidavit) {
+                openAffidavitModal();
+            }
+        });
 
         document.getElementById('areaInput').addEventListener('input', updateAffidavitUI);
         document.getElementById('portionAreaInput').addEventListener('input', updateAffidavitUI);
@@ -353,7 +379,7 @@
                 const isPortion = document.getElementById('isPortionCheck').checked;
                 const areaVal = parseFloat(document.getElementById('areaInput').value) || 0;
                 const portionVal = parseFloat(document.getElementById('portionAreaInput').value) || 0;
-                const requiresAffidavit = (areaVal > 5 || (isPortion && portionVal > 5));
+                const requiresAffidavit = isPortion ? (portionVal > 5) : (areaVal > 5);
 
                 if (requiresAffidavit && !affidavitData.has_affidavit) {
                     alert("An Affidavit of Undertaking / No Opposition is strictly required for areas greater than 5 hectares. Please Add it before saving.");
