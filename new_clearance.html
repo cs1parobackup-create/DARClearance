@@ -57,7 +57,6 @@
                                     <input type="radio" name="clearance_type" value="AO4" required class="w-4 h-4 text-[#003811] focus:ring-[#003811]">
                                     AO4
                                 </label>
-                                <!-- AO8 Removed per instructions -->
                             </div>
                         </div>
                         <div>
@@ -78,8 +77,19 @@
                         </div>
                         <div><label class="form-label">In the Name of</label><textarea name="owner_name" class="form-input"></textarea></div>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <!-- Area Input has event listener attached below -->
-                            <div><label class="form-label">Area (in has.)</label><input type="text" id="areaInput" name="area" class="form-input"></div>
+                            <div>
+                                <div class="flex justify-between items-center mb-1">
+                                    <label class="form-label mb-0">Area (in has.)</label>
+                                    <label class="flex items-center gap-1 cursor-pointer text-[11px] font-bold text-[#003811]">
+                                        <input type="checkbox" id="isPortionCheck" class="w-3 h-3 text-[#003811] focus:ring-[#003811]">
+                                        PORTION
+                                    </label>
+                                </div>
+                                <div class="flex gap-2">
+                                    <input type="text" id="portionAreaInput" name="portion_area" class="form-input hidden" placeholder="Portion Area">
+                                    <input type="text" id="areaInput" name="area" class="form-input" placeholder="Total Area">
+                                </div>
+                            </div>
                             <div><label class="form-label">Declared under T.D. No.</label><input type="text" name="td_no" class="form-input"></div>
                         </div>
                         <div><label class="form-label">Located at</label><textarea name="location" class="form-input"></textarea></div>
@@ -241,15 +251,27 @@
             } catch (err) { console.error("Menu loading error:", err); }
         }
 
-        /* --- UPDATED FEATURE: Trigger Affidavit on ANY valid area input --- */
+        /* --- PORTION / AREA AND AFFIDAVIT LOGIC --- */
         let hasPromptedForAffidavit = false;
         const affidavitData = { has_affidavit: false }; 
 
-        document.getElementById('areaInput').addEventListener('blur', function() {
-            const val = parseFloat(this.value);
-            // Modified to trigger if area is greater than 0 (handling both < 5 and > 5 scenarios)
+        document.getElementById('isPortionCheck').addEventListener('change', function() {
+            const portionInput = document.getElementById('portionAreaInput');
+            if (this.checked) {
+                portionInput.classList.remove('hidden');
+            } else {
+                portionInput.classList.add('hidden');
+                portionInput.value = '';
+                resetAffidavitTrigger();
+            }
+        });
+
+        function checkAffidavitTrigger() {
+            const isPortion = document.getElementById('isPortionCheck').checked;
+            const targetInput = isPortion ? document.getElementById('portionAreaInput') : document.getElementById('areaInput');
+            const val = parseFloat(targetInput.value);
+
             if (!isNaN(val) && val > 0 && !hasPromptedForAffidavit) {
-                // Dynamic prompt text based on area
                 const promptText = val > 5 
                     ? "The area entered is greater than 5 hectares. Do you have an Undertaking or Affidavit of No Opposition?" 
                     : "The area entered is less than or equal to 5 hectares. Do you have an Undertaking or Affidavit of No Opposition?";
@@ -258,17 +280,24 @@
                 document.getElementById('areaPromptModal').classList.remove('hidden');
                 hasPromptedForAffidavit = true; 
             }
-        });
-        
-        // Reset logic if input is cleared or drops to an invalid number
-        document.getElementById('areaInput').addEventListener('input', function() {
-            const val = parseFloat(this.value);
+        }
+
+        function resetAffidavitTrigger() {
+            const isPortion = document.getElementById('isPortionCheck').checked;
+            const targetInput = isPortion ? document.getElementById('portionAreaInput') : document.getElementById('areaInput');
+            const val = parseFloat(targetInput.value);
+
             if (isNaN(val) || val <= 0) {
                 hasPromptedForAffidavit = false;
                 affidavitData.has_affidavit = false;
                 document.getElementById('certPreviewContainer').classList.add('hidden');
             }
-        });
+        }
+
+        document.getElementById('areaInput').addEventListener('blur', checkAffidavitTrigger);
+        document.getElementById('portionAreaInput').addEventListener('blur', checkAffidavitTrigger);
+        document.getElementById('areaInput').addEventListener('input', resetAffidavitTrigger);
+        document.getElementById('portionAreaInput').addEventListener('input', resetAffidavitTrigger);
 
         function handleAreaPrompt(hasAffidavit) {
             document.getElementById('areaPromptModal').classList.add('hidden');
@@ -303,7 +332,7 @@
             closeAffidavitModal();
         }
 
-        /* --- END UPDATED FEATURE --- */
+        /* --- END PORTION / AREA AND AFFIDAVIT LOGIC --- */
 
         document.getElementById('documentForm').addEventListener('submit', async function(e) {
             e.preventDefault();
@@ -321,6 +350,7 @@
                     status: 'RECEIVED'
                 };
             } else {
+                // Incorporates all text fields including portion_area (as seen in image_e6c944.png) and LTC_ID_NUMBER directly
                 payload = Object.fromEntries(formData.entries());
                 payload.status = 'RECEIVED';
             }
@@ -362,6 +392,7 @@
                 alert("Application Recorded Successfully.");
                 this.reset();
                 hasPromptedForAffidavit = false;
+                document.getElementById('portionAreaInput').classList.add('hidden');
                 document.getElementById('certPreviewContainer').classList.add('hidden');
                 
                 if (!isEncoder) { document.getElementById('legalOfficerSelect').value = currentUser.full_name; }
