@@ -55,8 +55,8 @@
         .edit-big {
             font-size: 1.25rem !important; line-height: 1.75rem !important; font-weight: 900 !important;
             color: #1e3a8a !important; background-color: #fefce8 !important; border-bottom: 3px solid #fde047 !important;
-            padding: 6px 12px !important; border-radius: 4px; display: inline-block; min-width: 200px;
-            text-transform: uppercase; outline: none; transition: all 0.2s;
+            padding: 6px 12px !important; border-radius: 4px; display: inline-block; min-width: 200px; min-height: 42px;
+            text-transform: uppercase; outline: none; transition: all 0.2s; vertical-align: middle;
         }
         .edit-big:focus { background-color: #fef08a !important; border-bottom: 3px solid #eab308 !important; }
         
@@ -175,49 +175,58 @@
                     
                     <div class="grid grid-cols-[200px_1fr] items-center gap-y-8">
                         <div class="font-bold text-red-700 uppercase text-sm">LTC Number:</div>
-                        <div id="edit-LTC_ID_NUMBER" class="edit-big border-red-400 bg-red-50 text-red-800">---</div>
+                        <div id="edit-LTC_ID_NUMBER" class="edit-big border-red-400 bg-red-50 text-red-800"></div>
                         
                         <div class="font-bold text-gray-600 uppercase text-sm">Lot No/s:</div>
-                        <div id="edit-lot" class="edit-big">---</div>
+                        <div id="edit-lot" class="edit-big"></div>
                         <div class="font-bold text-gray-600 uppercase text-sm">In the Name of:</div>
-                        <div id="edit-owner" class="edit-big">---</div>
+                        <div id="edit-owner" class="edit-big"></div>
                         <div class="font-bold text-gray-600 uppercase text-sm">Registered under:</div>
-                        <div id="edit-tct" class="edit-big">---</div>
+                        <div id="edit-tct" class="edit-big"></div>
                         <div class="font-bold text-gray-600 uppercase text-sm">Area (in has.):</div>
-                        <div id="edit-area" class="edit-big">---</div>
-                        <div class="font-bold text-gray-600 uppercase text-sm">Portion Area (if any):</div>
-                        <div id="edit-portion_area" class="edit-big">---</div>
+                        <div id="edit-area" class="edit-big"></div>
+                        <div class="font-bold text-gray-600 uppercase text-sm flex items-center justify-between pr-4">
+                            Portion Area:
+                            <label class="relative inline-flex items-center cursor-pointer ml-2">
+                                <input type="checkbox" id="toggle-portion" class="sr-only peer" onchange="togglePortionField()">
+                                <div class="w-8 h-4 bg-gray-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-[#003811]"></div>
+                            </label>
+                        </div>
+                        <div>
+                            <div id="edit-portion_area" class="edit-big w-full hidden"></div>
+                            <div id="text-whole-area" class="text-[1.25rem] leading-[1.75rem] font-black text-gray-400 uppercase hidden py-[6px] px-[12px]">THE WHOLE AREA</div>
+                        </div>
                         <div class="font-bold text-gray-600 uppercase text-sm">Declared under T.D. No:</div>
-                        <div id="edit-td" class="edit-big">---</div>
+                        <div id="edit-td" class="edit-big"></div>
                         <div class="font-bold text-gray-600 uppercase text-sm">Located at:</div>
-                        <div id="edit-location" class="edit-big">---</div>
+                        <div id="edit-location" class="edit-big"></div>
                         <div class="font-bold text-gray-600 uppercase text-sm">Subjected of the Deed of:</div>
-                        <div id="edit-deed" class="edit-big">---</div>
+                        <div id="edit-deed" class="edit-big"></div>
                         <div class="font-bold text-gray-600 uppercase text-sm">Executed by:</div>
-                        <div id="edit-executed" class="edit-big">---</div>
+                        <div id="edit-executed" class="edit-big"></div>
                         <div class="font-bold text-gray-600 uppercase text-sm">In favor of:</div>
-                        <div id="edit-favor" class="edit-big">---</div>
+                        <div id="edit-favor" class="edit-big"></div>
                     </div>
                     <div class="pt-4 border-t border-blue-200"></div>
                     <div class="grid grid-cols-[200px_1fr] items-center gap-y-8">
                         <div class="font-bold text-gray-600 uppercase text-sm">Doc. No:</div>
-                        <div id="edit-doc" class="edit-big">---</div>
+                        <div id="edit-doc" class="edit-big"></div>
                         <div class="font-bold text-gray-600 uppercase text-sm">Page No:</div>
-                        <div id="edit-page" class="edit-big">---</div>
+                        <div id="edit-page" class="edit-big"></div>
                         <div class="font-bold text-gray-600 uppercase text-sm">Book No:</div>
-                        <div id="edit-book" class="edit-big">---</div>
+                        <div id="edit-book" class="edit-big"></div>
                         <div class="font-bold text-gray-600 uppercase text-sm">Series of:</div>
-                        <div id="edit-series" class="edit-big">---</div>
+                        <div id="edit-series" class="edit-big"></div>
                         <div class="font-bold text-gray-600 uppercase text-sm">Dated:</div>
-                        <div id="edit-dated" class="edit-big">---</div>
+                        <div id="edit-dated" class="edit-big"></div>
                         <div class="font-bold text-gray-600 uppercase text-sm">Notary Public:</div>
-                        <div id="edit-notary" class="edit-big">---</div>
+                        <div id="edit-notary" class="edit-big"></div>
                         <div class="font-bold text-gray-600 uppercase text-sm">Retention area of vendor:</div>
-                        <div id="edit-retention" class="edit-big">---</div>
+                        <div id="edit-retention" class="edit-big"></div>
                         <div class="font-bold text-gray-600 uppercase text-sm">O.R. No:</div>
-                        <div id="edit-or_number" class="edit-big">---</div>
+                        <div id="edit-or_number" class="edit-big"></div>
                         <div class="font-bold text-gray-600 uppercase text-sm">O.R. Date:</div>
-                        <div id="edit-or_date" class="edit-big">---</div>
+                        <div id="edit-or_date" class="edit-big"></div>
                     </div>
 
                     <!-- AFFIDAVIT UI SECTION -->
@@ -268,52 +277,52 @@
 
                     <div class="mb-4 space-y-1 grid-block">
                         <div class="flex items-end mb-1.5 ml-12">
-                            <div class="italic w-[260px] shrink-0">Lot No/s</div> <div class="text-left flex-1"><span class="data-value" id="rec-lot">---</span></div>
+                            <div class="italic w-[260px] shrink-0">Lot No/s</div> <div class="text-left flex-1"><span class="data-value" id="rec-lot"> </span></div>
                         </div>
                         <div class="flex items-end mb-1.5 ml-12">
-                            <div class="italic w-[260px] shrink-0">In the Name of</div> <div class="text-left flex-1"><span class="data-value" id="rec-owner">---</span></div>
+                            <div class="italic w-[260px] shrink-0">In the Name of</div> <div class="text-left flex-1"><span class="data-value" id="rec-owner"> </span></div>
                         </div>
                         <div class="flex items-end mb-1.5 ml-12">
-                            <div class="italic w-[260px] shrink-0">Registered under</div> <div class="text-left flex-1"><span class="data-value" id="rec-tct">---</span></div>
+                            <div class="italic w-[260px] shrink-0">Registered under</div> <div class="text-left flex-1"><span class="data-value" id="rec-tct"> </span></div>
                         </div>
                         <div class="flex items-end mb-1.5 ml-12">
-                            <div class="italic w-[260px] shrink-0">With an area (in has.) of</div> <div class="text-left flex-1"><span class="data-value" id="rec-area">---</span></div>
+                            <div class="italic w-[260px] shrink-0">With an area (in has.) of</div> <div class="text-left flex-1"><span class="data-value" id="rec-area"> </span></div>
                         </div>
                         <div class="flex items-end mb-1.5 ml-12">
-                            <div class="italic w-[260px] shrink-0">Declared under T.D. No.</div> <div class="text-left flex-1"><span class="data-value" id="rec-td">---</span></div>
+                            <div class="italic w-[260px] shrink-0">Declared under T.D. No.</div> <div class="text-left flex-1"><span class="data-value" id="rec-td"> </span></div>
                         </div>
                         <div class="flex items-end mb-1.5 ml-12">
-                            <div class="italic w-[260px] shrink-0">Located at</div> <div class="text-left flex-1"><span class="data-value" id="rec-location">---</span></div>
+                            <div class="italic w-[260px] shrink-0">Located at</div> <div class="text-left flex-1"><span class="data-value" id="rec-location"> </span></div>
                         </div>
                         <div class="flex items-end mb-1.5 ml-12">
-                            <div class="italic w-[260px] shrink-0">Subjected of the Deed of</div> <div class="text-left flex-1"><span class="data-value" id="rec-deed">---</span></div>
+                            <div class="italic w-[260px] shrink-0">Subjected of the Deed of</div> <div class="text-left flex-1"><span class="data-value" id="rec-deed"> </span></div>
                         </div>
                         <div class="flex items-end mb-1.5 ml-12">
-                            <div class="italic w-[260px] shrink-0">Executed by</div> <div class="text-left flex-1"><span class="data-value" id="rec-executed">---</span></div>
+                            <div class="italic w-[260px] shrink-0">Executed by</div> <div class="text-left flex-1"><span class="data-value" id="rec-executed"> </span></div>
                         </div>
                         <div class="flex items-end mb-1.5 ml-12">
-                            <div class="italic w-[260px] shrink-0">In favor of</div> <div class="text-left flex-1"><span class="data-value" id="rec-favor">---</span></div>
+                            <div class="italic w-[260px] shrink-0">In favor of</div> <div class="text-left flex-1"><span class="data-value" id="rec-favor"> </span></div>
                         </div>
                         <div class="flex items-end mb-1.5 ml-12">
                             <div class="italic w-[260px] shrink-0">Under Doc. No.</div> 
                             <div class="flex items-end text-left flex-1">
-                                <span class="data-value text-center min-w-[50px] px-3" id="rec-doc">---</span>
-                                <span class="italic ml-8">Page No.</span> <span class="data-value text-center min-w-[50px] px-3 ml-2" id="rec-page">---</span>
-                                <span class="italic ml-8">Book No.</span> <span class="data-value text-center min-w-[50px] px-3 ml-2" id="rec-book">---</span>
+                                <span class="data-value text-center min-w-[50px] px-3" id="rec-doc"> </span>
+                                <span class="italic ml-8">Page No.</span> <span class="data-value text-center min-w-[50px] px-3 ml-2" id="rec-page"> </span>
+                                <span class="italic ml-8">Book No.</span> <span class="data-value text-center min-w-[50px] px-3 ml-2" id="rec-book"> </span>
                             </div>
                         </div>
                         <div class="flex items-end mb-1.5 ml-12">
                             <div class="italic w-[260px] shrink-0">Series of</div> 
                             <div class="flex items-end text-left flex-1">
-                                <span class="data-value text-center min-w-[60px] px-3" id="rec-series">---</span>
-                                <span class="italic ml-8">Dated</span> <span class="data-value text-center min-w-[100px] px-3 ml-2" id="rec-dated">---</span>
+                                <span class="data-value text-center min-w-[60px] px-3" id="rec-series"> </span>
+                                <span class="italic ml-8">Dated</span> <span class="data-value text-center min-w-[100px] px-3 ml-2" id="rec-dated"> </span>
                             </div>
                         </div>
                         <div class="flex items-end mb-1.5 ml-12">
-                            <div class="italic w-[260px] shrink-0">of Notary Public</div> <div class="text-left flex-1"><span class="data-value" id="rec-notary">---</span></div>
+                            <div class="italic w-[260px] shrink-0">of Notary Public</div> <div class="text-left flex-1"><span class="data-value" id="rec-notary"> </span></div>
                         </div>
                         <div class="flex items-end mb-1.5 ml-12">
-                            <div class="italic w-[260px] shrink-0">of a retention area of vendor/transferor</div> <div class="text-left flex-1"><span class="data-value" id="rec-retention">---</span></div>
+                            <div class="italic w-[260px] shrink-0">of a retention area of vendor/transferor</div> <div class="text-left flex-1"><span class="data-value" id="rec-retention"> </span></div>
                         </div>
                         
                         <div class="flex items-end mb-1.5 ml-12 page-break-avoid">
@@ -353,8 +362,8 @@
                             <div id="qr-rec" class="w-[55px] h-[55px] shrink-0"></div>
                             <div class="flex-1 pt-0.5">
                                 <div class="flex flex-col gap-0.5 mb-3">
-                                    <div class="flex"><span class="w-[80px]">OR No:</span> <span class="font-bold underline underline-offset-2" id="rec-or_number">---</span></div>
-                                    <div class="flex"><span class="w-[80px]">Date issued:</span> <span class="font-bold underline underline-offset-2" id="rec-or_date">---</span></div>
+                                    <div class="flex"><span class="w-[80px]">OR No:</span> <span class="font-bold underline underline-offset-2" id="rec-or_number"> </span></div>
+                                    <div class="flex"><span class="w-[80px]">Date issued:</span> <span class="font-bold underline underline-offset-2" id="rec-or_date"> </span></div>
                                 </div>
                                 <p class="mb-1">Copy distribution: &nbsp;Original-Applicant; &nbsp;Duplicate-LTC Folder; &nbsp;Records Section; &nbsp;Registry of Deeds-Camarines Sur</p>
                                 <p class="font-bold underline underline-offset-2 mt-1" id="rec-footer-id">LTC-PENDING</p>
@@ -385,52 +394,52 @@
 
                     <div class="mb-4 space-y-1 grid-block">
                         <div class="flex items-end mb-1.5 ml-12">
-                            <div class="italic w-[260px] shrink-0">Lot No/s</div> <div class="text-left flex-1"><span class="data-value" id="cert-lot">---</span></div>
+                            <div class="italic w-[260px] shrink-0">Lot No/s</div> <div class="text-left flex-1"><span class="data-value" id="cert-lot"> </span></div>
                         </div>
                         <div class="flex items-end mb-1.5 ml-12">
-                            <div class="italic w-[260px] shrink-0">In the Name of</div> <div class="text-left flex-1"><span class="data-value" id="cert-owner">---</span></div>
+                            <div class="italic w-[260px] shrink-0">In the Name of</div> <div class="text-left flex-1"><span class="data-value" id="cert-owner"> </span></div>
                         </div>
                         <div class="flex items-end mb-1.5 ml-12">
-                            <div class="italic w-[260px] shrink-0">Registered under</div> <div class="text-left flex-1"><span class="data-value" id="cert-tct">---</span></div>
+                            <div class="italic w-[260px] shrink-0">Registered under</div> <div class="text-left flex-1"><span class="data-value" id="cert-tct"> </span></div>
                         </div>
                         <div class="flex items-end mb-1.5 ml-12">
-                            <div class="italic w-[260px] shrink-0">With an area (in has.) of</div> <div class="text-left flex-1"><span class="data-value" id="cert-area">---</span></div>
+                            <div class="italic w-[260px] shrink-0">With an area (in has.) of</div> <div class="text-left flex-1"><span class="data-value" id="cert-area"> </span></div>
                         </div>
                         <div class="flex items-end mb-1.5 ml-12">
-                            <div class="italic w-[260px] shrink-0">Declared under T.D. No.</div> <div class="text-left flex-1"><span class="data-value" id="cert-td">---</span></div>
+                            <div class="italic w-[260px] shrink-0">Declared under T.D. No.</div> <div class="text-left flex-1"><span class="data-value" id="cert-td"> </span></div>
                         </div>
                         <div class="flex items-end mb-1.5 ml-12">
-                            <div class="italic w-[260px] shrink-0">Located at</div> <div class="text-left flex-1"><span class="data-value" id="cert-location">---</span></div>
+                            <div class="italic w-[260px] shrink-0">Located at</div> <div class="text-left flex-1"><span class="data-value" id="cert-location"> </span></div>
                         </div>
                         <div class="flex items-end mb-1.5 ml-12">
-                            <div class="italic w-[260px] shrink-0">Subjected of the Deed of</div> <div class="text-left flex-1"><span class="data-value" id="cert-deed">---</span></div>
+                            <div class="italic w-[260px] shrink-0">Subjected of the Deed of</div> <div class="text-left flex-1"><span class="data-value" id="cert-deed"> </span></div>
                         </div>
                         <div class="flex items-end mb-1.5 ml-12">
-                            <div class="italic w-[260px] shrink-0">Executed by</div> <div class="text-left flex-1"><span class="data-value" id="cert-executed">---</span></div>
+                            <div class="italic w-[260px] shrink-0">Executed by</div> <div class="text-left flex-1"><span class="data-value" id="cert-executed"> </span></div>
                         </div>
                         <div class="flex items-end mb-1.5 ml-12">
-                            <div class="italic w-[260px] shrink-0">In favor of</div> <div class="text-left flex-1"><span class="data-value" id="cert-favor">---</span></div>
+                            <div class="italic w-[260px] shrink-0">In favor of</div> <div class="text-left flex-1"><span class="data-value" id="cert-favor"> </span></div>
                         </div>
                         <div class="flex items-end mb-1.5 ml-12">
                             <div class="italic w-[260px] shrink-0">Under Doc. No.</div> 
                             <div class="flex items-end text-left flex-1">
-                                <span class="data-value text-center min-w-[50px] px-3" id="cert-doc">---</span>
-                                <span class="italic ml-8">Page No.</span> <span class="data-value text-center min-w-[50px] px-3 ml-2" id="cert-page">---</span>
-                                <span class="italic ml-8">Book No.</span> <span class="data-value text-center min-w-[50px] px-3 ml-2" id="cert-book">---</span>
+                                <span class="data-value text-center min-w-[50px] px-3" id="cert-doc"> </span>
+                                <span class="italic ml-8">Page No.</span> <span class="data-value text-center min-w-[50px] px-3 ml-2" id="cert-page"> </span>
+                                <span class="italic ml-8">Book No.</span> <span class="data-value text-center min-w-[50px] px-3 ml-2" id="cert-book"> </span>
                             </div>
                         </div>
                         <div class="flex items-end mb-1.5 ml-12">
                             <div class="italic w-[260px] shrink-0">Series of</div> 
                             <div class="flex items-end text-left flex-1">
-                                <span class="data-value text-center min-w-[60px] px-3" id="cert-series">---</span>
-                                <span class="italic ml-8">Dated</span> <span class="data-value text-center min-w-[100px] px-3 ml-2" id="cert-dated">---</span>
+                                <span class="data-value text-center min-w-[60px] px-3" id="cert-series"> </span>
+                                <span class="italic ml-8">Dated</span> <span class="data-value text-center min-w-[100px] px-3 ml-2" id="cert-dated"> </span>
                             </div>
                         </div>
                         <div class="flex items-end mb-1.5 ml-12">
-                            <div class="italic w-[260px] shrink-0">of Notary Public</div> <div class="text-left flex-1"><span class="data-value" id="cert-notary">---</span></div>
+                            <div class="italic w-[260px] shrink-0">of Notary Public</div> <div class="text-left flex-1"><span class="data-value" id="cert-notary"> </span></div>
                         </div>
                         <div class="flex items-end mb-1.5 ml-12">
-                            <div class="italic w-[260px] shrink-0">of a retention area of vendor/transferor</div> <div class="text-left flex-1"><span class="data-value" id="cert-retention">---</span></div>
+                            <div class="italic w-[260px] shrink-0">of a retention area of vendor/transferor</div> <div class="text-left flex-1"><span class="data-value" id="cert-retention"> </span></div>
                         </div>
                         
                         <div class="flex items-end mb-1.5 ml-12 page-break-avoid">
@@ -475,8 +484,8 @@
                             <div id="qr-cert" class="w-[55px] h-[55px] shrink-0"></div>
                             <div class="flex-1 pt-0.5">
                                 <div class="flex flex-col gap-0.5 mb-3">
-                                    <div class="flex"><span class="w-[80px]">OR No:</span> <span class="font-bold underline underline-offset-2" id="cert-or_number">---</span></div>
-                                    <div class="flex"><span class="w-[80px]">Date issued:</span> <span class="font-bold underline underline-offset-2" id="cert-or_date">---</span></div>
+                                    <div class="flex"><span class="w-[80px]">OR No:</span> <span class="font-bold underline underline-offset-2" id="cert-or_number"> </span></div>
+                                    <div class="flex"><span class="w-[80px]">Date issued:</span> <span class="font-bold underline underline-offset-2" id="cert-or_date"> </span></div>
                                 </div>
                                 <p class="mb-1">Copy distribution: &nbsp;Original-Applicant; &nbsp;Duplicate-LTC Folder; &nbsp;Records Section; &nbsp;Registry of Deeds-Camarines Sur</p>
                                 <p class="font-bold underline underline-offset-2 mt-1" id="cert-footer-id">LTC-PENDING</p>
@@ -493,7 +502,7 @@
                         <div class="w-[300px] leading-tight">
                             IN RE: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;APPLICATION FOR LAND TRANSFER CLEARANCE PURSUANT TO DAR A. O. NO. 4, SERIES OF 2021,
                             <br><br><br>
-                            <span id="io-owner" class="underline underline-offset-4">---</span>,
+                            <span id="io-owner" class="underline underline-offset-4"> </span>,
                             <br>
                             &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Applicants.
                             <br>
@@ -509,7 +518,7 @@
                     </div>
                     
                     <p class="mb-4 text-justify indent-12 page-break-avoid leading-relaxed">
-                        For review and resolution by this Office is the above-mentioned application for DAR Land Transfer Clearance involving a parcel of agricultural land declared in the name of <span class="font-bold" id="io-owner-body">---</span>, embraced by TCT No. <span class="font-bold" id="io-tct">---</span>, Lot <span class="font-bold" id="io-lot">---</span>, with an area of <span class="font-bold" id="io-area">---</span> square meters and located at <span class="font-bold" id="io-location">---</span>.
+                        For review and resolution by this Office is the above-mentioned application for DAR Land Transfer Clearance involving a parcel of agricultural land declared in the name of <span class="font-bold" id="io-owner-body"> </span>, embraced by TCT No. <span class="font-bold" id="io-tct"> </span>, Lot <span class="font-bold" id="io-lot"> </span>, with an area of <span class="font-bold" id="io-area"> </span> square meters and located at <span class="font-bold" id="io-location"> </span>.
                     </p>
 
                     <p class="mb-4 text-justify indent-12 page-break-avoid leading-relaxed">
@@ -517,7 +526,7 @@
                     </p>
 
                     <ul id="io-remarks" class="mb-6 ml-16 list-disc list-outside text-justify leading-relaxed page-break-avoid pr-8 font-bold">
-                        <li>---</li>
+                        <li> </li>
                     </ul>
 
                     <p class="mb-8 text-justify indent-12 page-break-avoid leading-relaxed">
@@ -650,6 +659,25 @@
             'or_number': 'or_number', 'or_date': 'or_date'
         };
 
+        window.togglePortionField = function() {
+            const isChecked = document.getElementById('toggle-portion').checked;
+            const editEl = document.getElementById('edit-portion_area');
+            const wholeText = document.getElementById('text-whole-area');
+            
+            if (isChecked) {
+                editEl.classList.remove('hidden');
+                wholeText.classList.add('hidden');
+                if (editEl.innerText === 'THE WHOLE AREA') editEl.innerText = '';
+            } else {
+                editEl.classList.add('hidden');
+                wholeText.classList.remove('hidden');
+                editEl.innerText = 'THE WHOLE AREA';
+            }
+            if (currentReviewMode !== 'VIEW' && currentReviewMode !== 'VIEW_CERT') {
+                autoSaveEdits();
+            }
+        }
+
         function getInitialStatus(role) {
             const userRole = (role || '').toUpperCase();
             if (userRole.includes('LCMS') || userRole.includes('ENCODER') || userRole.includes('ODTS')) {
@@ -781,7 +809,7 @@
                     
                     const newRecord = { 
                         LTC_ID_NUMBER: docketNo, status: statusInit,
-                        legalOfficer: isEncoder ? null : currentUser.full_name
+                        legalOfficer: isEncoder ? null : currentUser.full_name, encoded_by: currentUser.full_name
                     };
                     const {data, error} = await supabaseClient.from('land_records').insert([newRecord]).select();
                     if (!error && data) {
@@ -839,7 +867,7 @@
             
             let areaVal = parseFloat(currentSelection.area) || 0;
             let elArea = document.getElementById('edit-area');
-            if(elArea && elArea.innerText !== '---') { areaVal = parseFloat(elArea.innerText.replace(/,/g, '')) || 0; }
+            if(elArea && elArea.innerText !== '') { areaVal = parseFloat(elArea.innerText.replace(/,/g, '')) || 0; }
 
             if (currentAffidavit && currentAffidavit.id) {
                 alertEl.classList.add('hidden');
@@ -948,7 +976,7 @@
                 let htmlSuffix = DB_FIELD_MAP[dbCol];
                 let el = document.getElementById(`edit-${htmlSuffix}`);
                 
-                if (el && el.innerText !== '---') { 
+                if (el) { 
                     let newVal = el.innerText.replace(/\u00A0/g, ' ').trim();
                     let oldVal = currentSelection[dbCol] ? String(currentSelection[dbCol]).trim() : '';
                     if (newVal !== oldVal) {
@@ -1268,17 +1296,21 @@
             const record = rawData.find(r => r.id === id);
             if (!record) return;
 
-            let baseNo = record.LTC_ID_NUMBER || record.ltc_no || '';
-            let newNo = '';
+            let baseNo = (record.LTC_ID_NUMBER || record.ltc_no || '').replace(/-\([A-Z]+\)$/, '');
             
-            const match = baseNo.match(/-\(([A-Z]+)\)$/);
-            if (match) {
-                let charCode = match[1].charCodeAt(0);
-                let nextChar = String.fromCharCode(charCode + 1);
-                newNo = baseNo.replace(/-\([A-Z]+\)$/, `-(${nextChar})`);
-            } else {
-                newNo = baseNo ? baseNo + '-(A)' : 'NEW-(A)';
-            }
+            let maxChar = '';
+            rawData.forEach(r => {
+                let no = r.LTC_ID_NUMBER || r.ltc_no || '';
+                if (no.startsWith(baseNo)) {
+                    let m = no.match(/-\(([A-Z]+)\)$/);
+                    if (m && m[1] > maxChar) {
+                        maxChar = m[1];
+                    }
+                }
+            });
+
+            let nextChar = maxChar === '' ? 'A' : String.fromCharCode(maxChar.charCodeAt(0) + 1);
+            let newNo = baseNo ? `${baseNo}-(${nextChar})` : `NEW-(${nextChar})`;
 
             if (!confirm(`Create a new variant for this clearance?\nNew LTC No will be: ${newNo}`)) return;
 
@@ -1400,27 +1432,52 @@
                 let htmlSuffix = DB_FIELD_MAP[dbCol];
                 let editEl = document.getElementById(`edit-${htmlSuffix}`);
                 if(editEl) {
-                    editEl.innerText = currentSelection[dbCol] || '---';
+                    let val = currentSelection[dbCol];
+                    if (!val || val === '---') val = '';
+                    
+                    if(dbCol !== 'portion_area') {
+                        editEl.innerText = val;
+                    }
                     editEl.contentEditable = isEditable ? "true" : "false";
                     editEl.onblur = () => { if(isEditable) autoSaveEdits(); }; 
                 }
 
-                let val = currentSelection[dbCol] || ' ';
+                let pdfVal = currentSelection[dbCol] || ' ';
+                if (pdfVal === '---' || pdfVal === '') pdfVal = ' ';
+                
                 let recEl = document.getElementById(`rec-${htmlSuffix}`);
                 let certEl = document.getElementById(`cert-${htmlSuffix}`);
                 let ioEl = document.getElementById(`io-${htmlSuffix}`); 
-                if(recEl) recEl.innerText = val;
-                if(certEl) certEl.innerText = val;
+                if(recEl) recEl.innerText = pdfVal;
+                if(certEl) certEl.innerText = pdfVal;
                 
                 if (ioEl) {
-                    if (htmlSuffix === 'area' && val !== ' ' && val !== '---') {
-                        let sqMeters = parseFloat(val) * 10000;
-                        ioEl.innerText = (!isNaN(sqMeters)) ? sqMeters.toLocaleString('en-US') : val;
+                    if (htmlSuffix === 'area' && pdfVal.trim() !== '') {
+                        let sqMeters = parseFloat(pdfVal) * 10000;
+                        ioEl.innerText = (!isNaN(sqMeters)) ? sqMeters.toLocaleString('en-US') : pdfVal;
                     } else {
-                        ioEl.innerText = val;
+                        ioEl.innerText = pdfVal;
                     }
                 } 
             }
+
+            let portionVal = currentSelection['portion_area'];
+            const portionToggle = document.getElementById('toggle-portion');
+            const portionEdit = document.getElementById('edit-portion_area');
+            const wholeText = document.getElementById('text-whole-area');
+            
+            if (!portionVal || portionVal.toUpperCase() === 'THE WHOLE AREA' || portionVal === '---') {
+                portionToggle.checked = false;
+                portionEdit.classList.add('hidden');
+                wholeText.classList.remove('hidden');
+                portionEdit.innerText = 'THE WHOLE AREA';
+            } else {
+                portionToggle.checked = true;
+                portionEdit.classList.remove('hidden');
+                wholeText.classList.add('hidden');
+                portionEdit.innerText = portionVal;
+            }
+            portionToggle.disabled = !isEditable;
 
             const recHeaderId = document.getElementById('rec-header-id-top');
             const certHeaderId = document.getElementById('cert-header-id');
