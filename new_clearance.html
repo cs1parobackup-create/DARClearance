@@ -7,13 +7,14 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="supabase-config.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700;900&display=swap" rel="stylesheet">
     <style>
-        :root { --color-primary: #003811; --color-secondary: #D4AF37; }
-        body { font-family: 'Segoe UI', sans-serif; background-color: #F3F4F6; color: #1F2937; }
+        :root { --dar-green: #003811; --dar-gold: #D4AF37; }
+        body { font-family: 'Roboto', 'Segoe UI', sans-serif; background-color: #F3F4F6; color: #1F2937; font-size: 13px; }
         .card { background: #FFFFFF; border-radius: 0.5rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1); border: 1px solid #E5E7EB; }
-        .form-label { display: block; font-size: 0.75rem; font-weight: 700; color: var(--color-primary); margin-bottom: 0.25rem; text-transform: uppercase; }
+        .form-label { display: block; font-size: 0.75rem; font-weight: 700; color: var(--dar-green); margin-bottom: 0.25rem; text-transform: uppercase; }
         .form-input { width: 100%; background: #F9FAFB; border: 1px solid #D1D5DB; border-radius: 0.375rem; padding: 0.6rem; font-size: 0.875rem; transition: border-color 0.2s; }
-        .form-input:focus { outline: none; border-color: var(--color-primary); ring: 1px solid var(--color-primary); }
+        .form-input:focus { outline: none; border-color: var(--dar-green); ring: 1px solid var(--dar-green); }
         textarea { font-family: inherit; resize: vertical; min-height: 70px; background-color: #fffdf5 !important; }
         .hint { font-size: 0.7rem; color: #6B7280; font-style: italic; margin-top: 2px; }
         .scroll-area::-webkit-scrollbar { width: 4px; }
@@ -80,14 +81,17 @@
                             <div>
                                 <div class="flex justify-between items-center mb-1">
                                     <label class="form-label mb-0">Area (in has.)</label>
-                                    <label class="flex items-center gap-1 cursor-pointer text-[11px] font-bold text-[#003811]">
-                                        <input type="checkbox" id="isPortionCheck" class="w-3 h-3 text-[#003811] focus:ring-[#003811]">
-                                        PORTION
-                                    </label>
+                                    <div class="flex items-center gap-2">
+                                        <span class="text-[10px] font-bold text-gray-500 uppercase">Portion</span>
+                                        <label class="relative inline-flex items-center cursor-pointer">
+                                            <input type="checkbox" id="isPortionCheck" class="sr-only peer">
+                                            <div class="w-8 h-4 bg-gray-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-[#003811]"></div>
+                                        </label>
+                                    </div>
                                 </div>
                                 <div class="flex gap-2">
-                                    <input type="text" id="portionAreaInput" name="portion_area" class="form-input hidden" placeholder="Portion Area">
                                     <input type="text" id="areaInput" name="area" class="form-input" placeholder="Total Area">
+                                    <input type="text" id="portionAreaInput" name="portion_area" class="form-input hidden" placeholder="Portion Area">
                                 </div>
                             </div>
                             <div><label class="form-label">Declared under T.D. No.</label><input type="text" name="td_no" class="form-input"></div>
@@ -98,7 +102,7 @@
                             <div><label class="form-label">Executed by</label><textarea name="executed_by" class="form-input"></textarea></div>
                             <div><label class="form-label">In favor of</label><textarea name="in_favor_of" class="form-input"></textarea></div>
                         </div>
-                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 pt-4 border-t">
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 pt-4 border-t border-gray-200">
                             <div><label class="form-label">Doc. No.</label><input type="text" name="doc_no" class="form-input"></div>
                             <div><label class="form-label">Page No.</label><input type="text" name="page_no" class="form-input"></div>
                             <div><label class="form-label">Book No.</label><input type="text" name="book_no" class="form-input"></div>
@@ -112,19 +116,30 @@
                             <label class="form-label">Retention area of vendor/transferor</label>
                             <textarea name="retention_area_n" class="form-input" placeholder="List names..."></textarea>
                         </div>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 border-t pt-4">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 border-t pt-4 border-gray-200">
                             <div><label class="form-label">O.R. No.</label><input type="text" name="or_number" class="form-input"></div>
                             <div><label class="form-label">O.R. Date</label><input type="text" name="or_date" class="form-input"></div>
                         </div>
 
-                        <!-- Certification Preview output container -->
-                        <div id="certPreviewContainer" class="hidden mt-6 bg-[#fffdf5] p-4 border border-[#D4AF37] rounded-lg">
-                            <label class="form-label text-[#D4AF37]">Affidavit Certification Note Attached</label>
-                            <p id="certPreviewText" class="text-sm font-medium text-justify mt-2"></p>
+                        <!-- AFFIDAVIT UI SECTION (Incorporated Dashboard Logic) -->
+                        <div id="affidavitSection" class="mt-8 pt-4 border-t border-[#003811]">
+                            <div class="flex justify-between items-center mb-2">
+                                <p class="text-xs font-bold text-gray-500 uppercase tracking-widest">Affidavit / Undertaking</p>
+                                <button type="button" id="btnGenericAddAffidavit" onclick="openAffidavitModal()" class="bg-gray-200 text-gray-800 px-3 py-1 rounded text-[10px] font-bold uppercase hover:bg-gray-300 hidden">Add/Edit Affidavit</button>
+                            </div>
+                            <div id="affidavitAlert" class="p-3 bg-yellow-50 border border-yellow-200 rounded flex justify-between items-center hidden">
+                                <span class="text-xs font-bold text-yellow-800">Area or Portion > 5 hectares. Affidavit of Undertaking / No Opposition is required.</span>
+                                <button type="button" onclick="openAffidavitModal()" class="bg-yellow-600 text-white px-3 py-1 rounded text-[10px] font-bold uppercase hover:bg-yellow-700">Add Now</button>
+                            </div>
+                            <div id="affidavitSuccess" class="p-3 bg-green-50 border border-green-200 rounded flex justify-between items-center hidden">
+                                <span class="text-xs font-bold text-green-800">Affidavit Attached: <span id="affidavitTypeText" class="font-black"></span></span>
+                                <button type="button" onclick="openAffidavitModal()" class="bg-green-600 text-white px-3 py-1 rounded text-[10px] font-bold uppercase hover:bg-green-700">Edit Details</button>
+                            </div>
+                            <p id="certPreviewText" class="text-xs font-medium text-justify mt-3 hidden bg-[#fffdf5] p-4 border border-[#D4AF37] rounded-lg"></p>
                         </div>
                     </div> 
 
-                    <div class="flex justify-end gap-4 border-t pt-6">
+                    <div class="flex justify-end gap-4 border-t pt-6 border-gray-200">
                         <button type="reset" class="px-6 py-2 border border-gray-300 rounded text-sm font-bold hover:bg-gray-50 uppercase">Clear Form</button>
                         <button type="submit" id="btnSubmit" class="px-8 py-2 bg-[#003811] text-white rounded text-sm font-bold shadow hover:bg-[#006400] transition-colors uppercase">Save Application</button>
                     </div>
@@ -133,20 +148,8 @@
         </div>
     </main>
 
-    <!-- Modal 1: Affidavit Prompt -->
-    <div id="areaPromptModal" class="fixed inset-0 bg-black/60 hidden flex items-center justify-center z-50">
-        <div class="bg-white p-8 rounded-lg shadow-2xl max-w-sm w-full border-t-4 border-[#D4AF37]">
-            <h3 class="text-xl font-bold text-[#003811] mb-2">Notice</h3>
-            <p id="areaPromptText" class="text-sm text-gray-700 mb-6">Do you have an Undertaking or Affidavit of No Opposition?</p>
-            <div class="flex justify-end gap-3">
-                <button type="button" onclick="handleAreaPrompt(false)" class="px-5 py-2 bg-gray-200 text-gray-800 rounded font-bold text-sm hover:bg-gray-300 transition-colors">NO</button>
-                <button type="button" onclick="handleAreaPrompt(true)" class="px-5 py-2 bg-[#003811] text-white rounded font-bold text-sm hover:bg-[#006400] transition-colors shadow-md">YES</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal 2: Affidavit Details -->
-    <div id="affidavitDetailsModal" class="fixed inset-0 bg-black/60 hidden flex items-center justify-center z-50">
+    <!-- Modal: Affidavit Details -->
+    <div id="affidavitDetailsModal" class="fixed inset-0 bg-black/60 hidden flex items-center justify-center z-[60]">
         <div class="bg-white p-8 rounded-lg shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto border-t-4 border-[#003811]">
             <h3 class="text-xl font-bold text-[#003811] mb-6 border-b pb-2">Affidavit Details</h3>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -155,7 +158,7 @@
                     <input type="text" id="m_executed_by" class="form-input" placeholder="e.g. JOEL BERMEJO CARCIDO">
                 </div>
                 <div class="md:col-span-2">
-                    <label class="form-label">Document Type (Toggle)</label>
+                    <label class="form-label">Document Type</label>
                     <div class="flex gap-6 mt-1">
                         <label class="flex items-center gap-2 cursor-pointer font-bold text-sm">
                             <input type="radio" name="m_doc_type" value="Affidavit of Undertaking" class="w-4 h-4 text-[#003811]" checked> Affidavit of Undertaking
@@ -175,7 +178,7 @@
             </div>
             <div class="flex justify-end gap-3 mt-8 pt-4 border-t">
                 <button type="button" onclick="closeAffidavitModal()" class="px-5 py-2 bg-gray-200 text-gray-800 rounded font-bold text-sm hover:bg-gray-300 transition-colors">CANCEL</button>
-                <button type="button" onclick="saveAffidavitModal()" class="px-5 py-2 bg-[#D4AF37] text-white rounded font-bold text-sm hover:bg-yellow-600 transition-colors shadow-md">GENERATE & APPEND</button>
+                <button type="button" onclick="saveAffidavitModal()" class="px-5 py-2 bg-[#D4AF37] text-white rounded font-bold text-sm hover:bg-yellow-600 transition-colors shadow-md">SAVE & APPEND</button>
             </div>
         </div>
     </div>
@@ -188,7 +191,7 @@
         document.getElementById('userRoleBadge').innerText = currentUser.role;
 
         const userRole = currentUser.role.toUpperCase().trim();
-        const isEncoder = userRole.includes('ENCODER');
+        const isEncoder = userRole.includes('ENCODER') || userRole.includes('LCMS') || userRole.includes('ODTS');
 
         if (userRole.includes('RECORDS') || userRole.includes('PARPO')) {
             alert("Access Denied: Your role is not authorized to create new clearances.");
@@ -251,8 +254,7 @@
             } catch (err) { console.error("Menu loading error:", err); }
         }
 
-        /* --- PORTION / AREA AND AFFIDAVIT LOGIC --- */
-        let hasPromptedForAffidavit = false;
+        /* --- PORTION / AREA AND INLINE AFFIDAVIT LOGIC --- */
         const affidavitData = { has_affidavit: false }; 
 
         document.getElementById('isPortionCheck').addEventListener('change', function() {
@@ -262,50 +264,62 @@
             } else {
                 portionInput.classList.add('hidden');
                 portionInput.value = '';
-                resetAffidavitTrigger();
             }
+            updateAffidavitUI();
         });
 
-        function checkAffidavitTrigger() {
-            const isPortion = document.getElementById('isPortionCheck').checked;
-            const targetInput = isPortion ? document.getElementById('portionAreaInput') : document.getElementById('areaInput');
-            const val = parseFloat(targetInput.value);
+        function updateAffidavitUI() {
+            if (isEncoder) return;
 
-            if (!isNaN(val) && val > 0 && !hasPromptedForAffidavit) {
-                const promptText = val > 5 
-                    ? "The area entered is greater than 5 hectares. Do you have an Undertaking or Affidavit of No Opposition?" 
-                    : "The area entered is less than or equal to 5 hectares. Do you have an Undertaking or Affidavit of No Opposition?";
+            const isPortion = document.getElementById('isPortionCheck').checked;
+            const areaVal = parseFloat(document.getElementById('areaInput').value) || 0;
+            const portionVal = parseFloat(document.getElementById('portionAreaInput').value) || 0;
+
+            const requiresAffidavit = (areaVal > 5 || (isPortion && portionVal > 5));
+            const alertEl = document.getElementById('affidavitAlert');
+            const successEl = document.getElementById('affidavitSuccess');
+            const btnGeneric = document.getElementById('btnGenericAddAffidavit');
+            const certText = document.getElementById('certPreviewText');
+
+            if (affidavitData.has_affidavit) {
+                alertEl.classList.add('hidden');
+                successEl.classList.remove('hidden');
+                btnGeneric.classList.add('hidden');
+                document.getElementById('affidavitTypeText').innerText = affidavitData.document_type || 'Affidavit';
                 
-                document.getElementById('areaPromptText').innerText = promptText;
-                document.getElementById('areaPromptModal').classList.remove('hidden');
-                hasPromptedForAffidavit = true; 
-            }
-        }
-
-        function resetAffidavitTrigger() {
-            const isPortion = document.getElementById('isPortionCheck').checked;
-            const targetInput = isPortion ? document.getElementById('portionAreaInput') : document.getElementById('areaInput');
-            const val = parseFloat(targetInput.value);
-
-            if (isNaN(val) || val <= 0) {
-                hasPromptedForAffidavit = false;
-                affidavitData.has_affidavit = false;
-                document.getElementById('certPreviewContainer').classList.add('hidden');
-            }
-        }
-
-        document.getElementById('areaInput').addEventListener('blur', checkAffidavitTrigger);
-        document.getElementById('portionAreaInput').addEventListener('blur', checkAffidavitTrigger);
-        document.getElementById('areaInput').addEventListener('input', resetAffidavitTrigger);
-        document.getElementById('portionAreaInput').addEventListener('input', resetAffidavitTrigger);
-
-        function handleAreaPrompt(hasAffidavit) {
-            document.getElementById('areaPromptModal').classList.add('hidden');
-            if (hasAffidavit) {
-                document.getElementById('affidavitDetailsModal').classList.remove('hidden');
+                certText.innerText = affidavitData.generated_text;
+                certText.classList.remove('hidden');
             } else {
-                affidavitData.has_affidavit = false;
+                successEl.classList.add('hidden');
+                certText.classList.add('hidden');
+                
+                if (requiresAffidavit) {
+                    alertEl.classList.remove('hidden');
+                    btnGeneric.classList.add('hidden');
+                } else {
+                    alertEl.classList.add('hidden');
+                    // Allow adding affidavit even if <= 5 hectares if area > 0
+                    if (areaVal > 0) {
+                        btnGeneric.classList.remove('hidden');
+                    } else {
+                        btnGeneric.classList.add('hidden');
+                    }
+                }
             }
+        }
+
+        document.getElementById('areaInput').addEventListener('input', updateAffidavitUI);
+        document.getElementById('portionAreaInput').addEventListener('input', updateAffidavitUI);
+
+        function openAffidavitModal() {
+            // Pre-fill owner name if empty
+            if (!document.getElementById('m_executed_by').value) {
+                document.getElementById('m_executed_by').value = document.querySelector('textarea[name="owner_name"]').value;
+            }
+            if (!document.getElementById('m_series').value) {
+                document.getElementById('m_series').value = new Date().getFullYear();
+            }
+            document.getElementById('affidavitDetailsModal').classList.remove('hidden');
         }
 
         function closeAffidavitModal() {
@@ -326,16 +340,27 @@
 
             affidavitData.generated_text = `Further, the transferee, ${affidavitData.executed_by} executed an ${affidavitData.document_type}, and manifested that he does not have Objection and no Opposition to future action by any person, entity or government agency to include, cover, process, or recognize the excess of ${affidavitData.excess_area}, as contained in the ${affidavitData.document_type} under Doc. No. ${affidavitData.doc_no}, Page No. ${affidavitData.page_no}, Book No. ${affidavitData.book_no}, Series of ${affidavitData.series_year} executed on ${affidavitData.date_executed} and notarized by ${affidavitData.notary_public}.`;
 
-            document.getElementById('certPreviewText').innerText = affidavitData.generated_text;
-            document.getElementById('certPreviewContainer').classList.remove('hidden');
-            
+            updateAffidavitUI();
             closeAffidavitModal();
         }
 
-        /* --- END PORTION / AREA AND AFFIDAVIT LOGIC --- */
+        /* --- END PORTION / AREA AND INLINE AFFIDAVIT LOGIC --- */
 
         document.getElementById('documentForm').addEventListener('submit', async function(e) {
             e.preventDefault();
+
+            if (!isEncoder) {
+                const isPortion = document.getElementById('isPortionCheck').checked;
+                const areaVal = parseFloat(document.getElementById('areaInput').value) || 0;
+                const portionVal = parseFloat(document.getElementById('portionAreaInput').value) || 0;
+                const requiresAffidavit = (areaVal > 5 || (isPortion && portionVal > 5));
+
+                if (requiresAffidavit && !affidavitData.has_affidavit) {
+                    alert("An Affidavit of Undertaking / No Opposition is strictly required for areas greater than 5 hectares. Please Add it before saving.");
+                    return;
+                }
+            }
+
             const btn = document.getElementById('btnSubmit');
             btn.innerText = "SAVING..."; btn.disabled = true;
 
@@ -347,12 +372,17 @@
                     clearance_type: formData.get('clearance_type'),
                     LTC_ID_NUMBER: formData.get('LTC_ID_NUMBER'),
                     legalOfficer: formData.get('legalOfficer'),
-                    status: 'RECEIVED'
+                    status: 'RECEIVED',
+                    encoded_by: currentUser.full_name
                 };
             } else {
-                // Incorporates all text fields including portion_area (as seen in image_e6c944.png) and LTC_ID_NUMBER directly
                 payload = Object.fromEntries(formData.entries());
                 payload.status = 'RECEIVED';
+                payload.encoded_by = currentUser.full_name;
+
+                if (!document.getElementById('isPortionCheck').checked) {
+                    payload.portion_area = 'THE WHOLE AREA';
+                }
             }
 
             try {
@@ -370,7 +400,7 @@
                         changed_at: new Date().toISOString()
                     }]);
 
-                    if (affidavitData.has_affidavit) {
+                    if (!isEncoder && affidavitData.has_affidavit) {
                         const { error: affError } = await supabaseClient.from('affidavit_details').insert([{
                             land_record_id: recordId,
                             executed_by: affidavitData.executed_by,
@@ -391,9 +421,13 @@
 
                 alert("Application Recorded Successfully.");
                 this.reset();
-                hasPromptedForAffidavit = false;
+                
+                // Reset Form UI State
+                affidavitData.has_affidavit = false;
                 document.getElementById('portionAreaInput').classList.add('hidden');
-                document.getElementById('certPreviewContainer').classList.add('hidden');
+                document.getElementById('certPreviewText').classList.add('hidden');
+                document.getElementById('isPortionCheck').checked = false;
+                updateAffidavitUI();
                 
                 if (!isEncoder) { document.getElementById('legalOfficerSelect').value = currentUser.full_name; }
             } catch (err) {
