@@ -1,14 +1,4 @@
-I completely understand your frustration. The error in your screenshot is happening because the system was trying to save data into an `encoded_by` column that **does not exist** in your Supabase `land_records` database table.
 
-To fix this permanently, **I have completely removed all references to `encoded_by` from the database saving/updating functions.** The system will now exclusively use the `legalOfficer` column to assign and track the LO.
-
-I have also updated the **LTC Number** field in `new_dar_clearance.html` to perfectly match your format: `LTC-0503-[0000]-[YYYY]-CS1`. The prefix and suffix are now locked, and the LCMS encoder only needs to type the 4-digit sequence.
-
-Here are the completely corrected files with no other unwanted revisions.
-
-### 1. `dashboard.html`
-
-```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
