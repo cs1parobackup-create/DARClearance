@@ -1006,7 +1006,12 @@
 
             await fetchClearanceData();
             btn.innerText = '✅ SAVED';
-            setTimeout(() => { btn.innerText = originalText; btn.disabled = false; }, 2000);
+            
+            setTimeout(() => { 
+                btn.innerText = originalText; 
+                btn.disabled = false; 
+                closeReviewModalOnly();
+            }, 1000);
         }
 
         async function autoSaveEdits() {
@@ -1229,17 +1234,17 @@
                         }
                     }
                     if (isLegal && !isParpo) {
-                        if (['ASSIGNED TO LEGAL', 'RETURNED FROM LTSP', 'DRAFT', 'WITH INTERLOCK', 'COMPLIED', 'RECEIVED'].includes(st)) {
-                            if (['ASSIGNED TO LEGAL', 'RETURNED FROM LTSP', 'RECEIVED'].includes(st)) {
-                                actions += `<button onclick='showReview("${item.id}", "REVIEW")' class="bg-[#003811] text-white w-full py-1 rounded shadow text-[9px] font-bold tracking-wide hover:bg-black uppercase transition-colors text-center mb-1">UPDATE</button>`;
-                            } else {
-                                actions += `<button onclick='showReview("${item.id}", "REVIEW")' class="bg-blue-800 text-white w-full py-1 rounded shadow text-[9px] font-bold tracking-wide hover:bg-blue-900 uppercase transition-colors text-center mb-1">REVIEW</button>`;
-                            }
+                        if (['ASSIGNED TO LEGAL', 'RETURNED FROM LTSP', 'RECEIVED'].includes(st)) {
+                            actions += `<button onclick='showReview("${item.id}", "REVIEW")' class="bg-[#003811] text-white w-full py-1 rounded shadow text-[9px] font-bold tracking-wide hover:bg-black uppercase transition-colors text-center mb-1">UPDATE / REVIEW</button>`;
+                        }
+                        
+                        if (['ASSIGNED TO LEGAL', 'RETURNED FROM LTSP', 'RECEIVED', 'DRAFT', 'WITH INTERLOCK', 'COMPLIED'].includes(st)) {
                             actions += `<button onclick='openPrint("${item.id}", "rec")' class="bg-[#8b5cf6] text-white w-full py-1 rounded shadow text-[9px] font-bold hover:bg-purple-800 uppercase transition-colors text-center mb-1">Print Reco</button>`;
                             actions += `<button onclick='openPrint("${item.id}", "cert")' class="bg-[#d97706] text-white w-full py-1 rounded shadow text-[9px] font-bold hover:bg-amber-700 uppercase transition-colors text-center mb-1">Print Cert</button>`;
                             actions += `<button onclick='processToNext("${item.id}", "FORWARDED TO PARPO", "${st}")' class="bg-green-700 text-white w-full py-1 rounded shadow text-[9px] font-bold hover:bg-green-800 uppercase transition-colors text-center mb-1">Fwd to PARPO</button>`;
-                            actions += `<button onclick='createVariant("${item.id}")' class="bg-white text-gray-800 border border-gray-300 w-full py-1 rounded shadow text-[9px] font-bold hover:bg-gray-100 uppercase transition-colors text-center">+ Variant</button>`;
+                            actions += `<button onclick='createVariant("${item.id}")' class="bg-white text-gray-800 border border-gray-300 w-full py-1 rounded shadow text-[9px] font-bold hover:bg-gray-100 uppercase transition-colors text-center mb-1">+ Variant</button>`;
                         }
+
                         if (st === 'RETURNED TO LEGAL (SIGNED)') {
                             actions += `<button onclick='processToNext("${item.id}", "FORWARDED TO RECORDS", "${st}")' class="bg-cyan-600 text-white w-full py-1.5 rounded shadow text-[10px] font-bold hover:bg-cyan-700 uppercase transition-colors text-center mt-1">Fwd to Records</button>`;
                         }
@@ -1254,6 +1259,9 @@
                             actions += `<button onclick='openPrint("${item.id}", "rec")' class="bg-[#8b5cf6] text-white w-full py-1 rounded shadow text-[9px] font-bold hover:bg-purple-800 uppercase transition-colors text-center mb-1">Print Reco</button>`;
                             actions += `<button onclick='openPrint("${item.id}", "cert")' class="bg-[#d97706] text-white w-full py-1 rounded shadow text-[9px] font-bold hover:bg-amber-700 uppercase transition-colors text-center mb-1">Print Cert</button>`;
                         }
+                        if (st === 'SIGNED BY PARPO') {
+                            actions += `<button onclick='processToNext("${item.id}", "RETURN TO LEGAL (SIGNED)", "${st}")' class="bg-red-600 text-white w-full py-1.5 rounded shadow text-[10px] font-bold hover:bg-red-700 uppercase transition-colors text-center mb-1">Return to Legal</button>`;
+                        }
                     }
                     if (isRecords) {
                         if (st === 'FORWARDED TO RECORDS') {
@@ -1265,8 +1273,8 @@
                         actions += `<button onclick='withdrawRecord("${item.id}")' class="bg-gray-400 text-white w-full py-1 mt-1 rounded shadow text-[9px] font-bold hover:bg-gray-600 uppercase transition-colors text-center">Withdraw</button>`;
                     }
 
-                    if (['FORWARDED TO PARPO', 'SIGNED BY PARPO', 'RETURNED TO LEGAL (SIGNED)', 'FORWARDED TO RECORDS', 'RELEASED TO CLIENT', 'CORRECTED', 'RE-ISSUED'].includes(st)) {
-                        actions += `<button onclick='showReview("${item.id}", "VIEW_CERT")' class="bg-gray-500 text-white w-full py-1.5 mt-1 rounded shadow text-[10px] font-bold hover:bg-gray-600 uppercase transition-colors text-center">View</button>`;
+                    if (['DRAFT', 'WITH INTERLOCK', 'COMPLIED', 'FORWARDED TO PARPO', 'SIGNED BY PARPO', 'RETURNED TO LEGAL (SIGNED)', 'FORWARDED TO RECORDS', 'RELEASED TO CLIENT', 'CORRECTED', 'RE-ISSUED'].includes(st)) {
+                        actions += `<button onclick='showReview("${item.id}", "VIEW_CERT")' class="bg-gray-500 text-white w-full py-1.5 mt-1 rounded shadow text-[10px] font-bold hover:bg-gray-600 uppercase transition-colors text-center mb-1">View</button>`;
                     }
 
                     actions += `</div>`;
@@ -1311,7 +1319,7 @@
                                 btns += `<button onclick="decideStatus('COMPLIED')" class="bg-teal-600 text-white px-4 py-2 rounded text-[10px] font-black shadow hover:bg-teal-700 transition-colors">MARK COMPLIED</button>`;
                             }
                         }
-                        if (currentSt === 'RETURNED TO LEGAL (SIGNED)') {
+                        if (currentSt === 'RETURN TO LEGAL (SIGNED)') {
                             btns += `<button onclick="decideStatus('FORWARDED TO RECORDS')" class="bg-cyan-600 text-white px-6 py-2 rounded text-xs font-black shadow hover:bg-cyan-700 transition-colors">FORWARD TO RECORDS</button>`;
                         }
                     }
@@ -1322,7 +1330,7 @@
                             btns += `<button onclick="decideStatus('SIGNED BY PARPO')" class="bg-orange-600 text-white px-4 py-2 rounded text-[10px] font-black shadow hover:bg-orange-700 transition-colors">SIGN APPROVAL</button>`;
                         }
                         if (currentSt === 'SIGNED BY PARPO') {
-                            btns += `<button onclick="decideStatus('RETURNED TO LEGAL (SIGNED)')" class="bg-red-600 text-white px-6 py-2 rounded text-xs font-black shadow hover:bg-red-700 transition-colors">RETURN TO LEGAL</button>`;
+                            btns += `<button onclick="decideStatus('RETURN TO LEGAL (SIGNED)')" class="bg-red-600 text-white px-6 py-2 rounded text-xs font-black shadow hover:bg-red-700 transition-colors">RETURN TO LEGAL</button>`;
                         }
                     }
                     btns += `</div>`;
