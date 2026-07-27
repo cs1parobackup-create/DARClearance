@@ -820,7 +820,7 @@
                     const {data, error} = await supabaseClient.from('land_records').insert([newRecord]).select();
                     if (!error && data) {
                         await fetchClearanceData();
-                        setTimeout(() => showReview(data[0].id, 'REVIEW'), 1000);
+                        alert("New DAR Clearance created successfully with LTC Number.");
                     } else {
                         alert("Error creating docket: " + (error ? error.message : 'Unknown error'));
                     }
@@ -976,6 +976,15 @@
             btn.innerText = 'SAVING...';
             btn.disabled = true;
             await autoSaveEdits();
+
+            if (currentSelection && ['RECEIVED', 'ASSIGNED TO LEGAL', 'RETURNED FROM LTSP'].includes(currentSelection.status)) {
+                const oldStatus = currentSelection.status;
+                const { error } = await supabaseClient.from('land_records').update({ status: 'DRAFT', updated_at: new Date().toISOString() }).eq('id', currentSelection.id);
+                if (!error) {
+                    await logStatusChange(currentSelection.id, oldStatus, 'DRAFT');
+                }
+            }
+
             await fetchClearanceData();
             btn.innerText = '✅ SAVED';
             setTimeout(() => { btn.innerText = originalText; btn.disabled = false; }, 2000);
@@ -1188,19 +1197,22 @@
                     
                     if (isEncoder) {
                         if (st === 'RECEIVED' || st === 'ASSIGNED TO LEGAL') {
-                            actions += `<button onclick='showReview("${item.id}", "REVIEW")' class="bg-[#003811] text-white w-full py-1.5 rounded shadow text-[9px] font-bold tracking-wide hover:bg-black uppercase transition-colors text-center">Update Details</button>`;
                             actions += `<button onclick='openAssignLO("${item.id}")' class="bg-blue-600 text-white w-full py-1 mt-1 rounded shadow text-[9px] font-bold hover:bg-blue-800 uppercase transition-colors text-center">Assign LO</button>`;
                             actions += `<button onclick='processToNext("${item.id}", "FORWARDED TO LTSP", "${st}")' class="bg-indigo-600 text-white w-full py-1 mt-1 rounded shadow text-[9px] font-bold hover:bg-indigo-800 uppercase transition-colors text-center">Forward to LTSP</button>`;
                         }
                     }
                     if (isLTSP) {
                         if (st === 'FORWARDED TO LTSP') {
-                            actions += `<button onclick='processToNext("${item.id}", "RETURNED FROM LTSP", "${st}")' class="bg-indigo-600 text-white w-full py-1.5 rounded shadow text-[10px] font-bold hover:bg-indigo-700 uppercase transition-colors text-center">Return to Legal</button>`;
+                            actions += `<button onclick='processToNext("${item.id}", "RETURNED FROM LTSP", "${st}")' class="bg-indigo-600 text-white w-full py-1.5 rounded shadow text-[10px] font-bold hover:bg-indigo-700 uppercase transition-colors text-center">Release to Legal</button>`;
                         }
                     }
                     if (isLegal && !isParpo) {
                         if (['ASSIGNED TO LEGAL', 'RETURNED FROM LTSP', 'DRAFT', 'WITH INTERLOCK', 'COMPLIED', 'RECEIVED'].includes(st)) {
-                            actions += `<button onclick='showReview("${item.id}", "REVIEW")' class="bg-[#003811] text-white w-full py-1 rounded shadow text-[9px] font-bold tracking-wide hover:bg-black uppercase transition-colors text-center mb-1">Review / Process</button>`;
+                            if (['ASSIGNED TO LEGAL', 'RETURNED FROM LTSP', 'RECEIVED'].includes(st)) {
+                                actions += `<button onclick='showReview("${item.id}", "REVIEW")' class="bg-[#003811] text-white w-full py-1 rounded shadow text-[9px] font-bold tracking-wide hover:bg-black uppercase transition-colors text-center mb-1">UPDATE</button>`;
+                            } else {
+                                actions += `<button onclick='showReview("${item.id}", "REVIEW")' class="bg-blue-800 text-white w-full py-1 rounded shadow text-[9px] font-bold tracking-wide hover:bg-blue-900 uppercase transition-colors text-center mb-1">REVIEW</button>`;
+                            }
                             actions += `<button onclick='openPrint("${item.id}", "rec")' class="bg-[#8b5cf6] text-white w-full py-1 rounded shadow text-[9px] font-bold hover:bg-purple-800 uppercase transition-colors text-center mb-1">Print Reco</button>`;
                             actions += `<button onclick='openPrint("${item.id}", "cert")' class="bg-[#d97706] text-white w-full py-1 rounded shadow text-[9px] font-bold hover:bg-amber-700 uppercase transition-colors text-center mb-1">Print Cert</button>`;
                             actions += `<button onclick='processToNext("${item.id}", "FORWARDED TO PARPO", "${st}")' class="bg-green-700 text-white w-full py-1 rounded shadow text-[9px] font-bold hover:bg-green-800 uppercase transition-colors text-center mb-1">Fwd to PARPO</button>`;
