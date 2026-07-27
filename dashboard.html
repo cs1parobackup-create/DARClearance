@@ -1169,15 +1169,17 @@
                         }
                     }
                     if (isParpo) {
-                        if (st === 'FORWARDED TO PARPO' || st === 'SIGNED BY PARPO') {
+                        if (st === 'FORWARDED TO PARPO') {
                             actions += `<button onclick='showReview("${item.id}", "UPDATE")' class="bg-[#003811] text-white w-full py-1.5 rounded shadow text-[9px] font-black tracking-wide hover:bg-black uppercase transition-colors text-center mb-1">Review & Sign</button>`;
                             actions += `<button onclick='openPrint("${item.id}", "rec")' class="bg-[#8b5cf6] text-white w-full py-1 rounded shadow text-[9px] font-bold hover:bg-purple-800 uppercase transition-colors text-center mb-1">Print Reco</button>`;
                             actions += `<button onclick='openPrint("${item.id}", "cert")' class="bg-[#d97706] text-white w-full py-1 rounded shadow text-[9px] font-bold hover:bg-amber-700 uppercase transition-colors text-center mb-1">Print Cert</button>`;
                         }
                         if (st === 'SIGNED BY PARPO') {
+                            actions += `<button onclick='openPrint("${item.id}", "rec")' class="bg-[#8b5cf6] text-white w-full py-1 rounded shadow text-[9px] font-bold hover:bg-purple-800 uppercase transition-colors text-center mb-1">Print Reco</button>`;
+                            actions += `<button onclick='openPrint("${item.id}", "cert")' class="bg-[#d97706] text-white w-full py-1 rounded shadow text-[9px] font-bold hover:bg-amber-700 uppercase transition-colors text-center mb-1">Print Cert</button>`;
                             actions += `<button onclick='processToNext("${item.id}", "RETURNED TO LEGAL (SIGNED)", "${st}")' class="bg-red-600 text-white w-full py-1.5 rounded shadow text-[10px] font-bold hover:bg-red-700 uppercase transition-colors text-center mb-1">Return to Legal</button>`;
                         }
-                        if (['RETURNED TO LEGAL (SIGNED)', 'FORWARDED TO RECORDS', 'RELEASED TO CLIENT'].includes(st)) {
+                        if (['SIGNED BY PARPO', 'RETURNED TO LEGAL (SIGNED)', 'FORWARDED TO RECORDS', 'RELEASED TO CLIENT'].includes(st)) {
                             actions += `<button onclick='showReview("${item.id}", "VIEW")' class="bg-gray-500 text-white w-full py-1.5 mt-1 rounded shadow text-[10px] font-bold hover:bg-gray-600 uppercase transition-colors text-center mb-1">View</button>`;
                         }
                     }
@@ -1242,9 +1244,8 @@
                             btns += `<button onclick='openPrint("${currentSelection.id}", "cert")' class="bg-[#d97706] text-white px-4 py-2 rounded text-[10px] font-black uppercase shadow hover:bg-amber-700 transition-colors">PRINT CERT</button>`;
                             btns += `<button onclick="decideStatus('SIGNED BY PARPO')" class="bg-orange-600 text-white px-4 py-2 rounded text-[10px] font-black shadow hover:bg-orange-700 transition-colors">SIGN APPROVAL</button>`;
                         }
-                        if (currentSt === 'SIGNED BY PARPO') {
-                            btns += `<button onclick="decideStatus('RETURNED TO LEGAL (SIGNED)')" class="bg-red-600 text-white px-6 py-2 rounded text-xs font-black shadow hover:bg-red-700 transition-colors">RETURN TO LEGAL</button>`;
-                        }
+                        // SIGNED BY PARPO logic is removed from UPDATE modal mode because when signed, 
+                        // the record becomes read-only and uses VIEW mode (handled via table buttons).
                     }
                     btns += `</div>`;
                     actionDiv.innerHTML = btns;
