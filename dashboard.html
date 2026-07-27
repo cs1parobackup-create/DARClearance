@@ -183,8 +183,7 @@
                         <div id="edit-owner" class="edit-big"></div>
                         <div class="font-bold text-gray-600 uppercase text-sm">Registered under:</div>
                         <div id="edit-tct" class="edit-big"></div>
-                        <div class="font-bold text-gray-600 uppercase text-sm">Area (in has.):</div>
-                        <div id="edit-area" class="edit-big"></div>
+                        
                         <div class="font-bold text-gray-600 uppercase text-sm flex items-center justify-between pr-4">
                             Portion Area:
                             <label class="relative inline-flex items-center cursor-pointer ml-2">
@@ -196,6 +195,10 @@
                             <div id="edit-portion_area" class="edit-big w-full hidden"></div>
                             <div id="text-whole-area" class="text-[1.25rem] leading-[1.75rem] font-black text-gray-400 uppercase hidden py-[6px] px-[12px]">THE WHOLE AREA</div>
                         </div>
+
+                        <div class="font-bold text-gray-600 uppercase text-sm">Total Area (in has.):</div>
+                        <div id="edit-area" class="edit-big"></div>
+                        
                         <div class="font-bold text-gray-600 uppercase text-sm">Declared under T.D. No:</div>
                         <div id="edit-td" class="edit-big"></div>
                         <div class="font-bold text-gray-600 uppercase text-sm">Located at:</div>
@@ -668,13 +671,22 @@
                 editEl.classList.remove('hidden');
                 wholeText.classList.add('hidden');
                 if (editEl.innerText === 'THE WHOLE AREA') editEl.innerText = '';
+                editEl.focus();
             } else {
                 editEl.classList.add('hidden');
                 wholeText.classList.remove('hidden');
                 editEl.innerText = 'THE WHOLE AREA';
             }
             if (currentReviewMode !== 'VIEW' && currentReviewMode !== 'VIEW_CERT') {
-                autoSaveEdits();
+                autoSaveEdits().then(() => {
+                    let areaVal = parseFloat(document.getElementById('edit-area').innerText.replace(/,/g, '')) || 0;
+                    let isPortionActive = isChecked;
+                    let req = isPortionActive ? false : (areaVal > 5);
+
+                    if (req && !currentAffidavit) {
+                        openAffidavitModal();
+                    }
+                });
             }
         }
 
@@ -860,30 +872,38 @@
             }
         }
 
-        function updateAffidavitUI() {
+        function updateAffidavitUI(triggerPopup = false) {
             const alertEl = document.getElementById('affidavitAlert');
             const successEl = document.getElementById('affidavitSuccess');
             const certAff = document.getElementById('cert-affidavit-para');
+            const btnGeneric = document.getElementById('btnGenericAddAffidavit');
             
-            // Extract the Main Area value
             let areaVal = parseFloat(currentSelection.area) || 0;
             let elArea = document.getElementById('edit-area');
             if(elArea && elArea.innerText !== '') { 
                 areaVal = parseFloat(elArea.innerText.replace(/,/g, '')) || 0; 
             }
 
-            // Extract the Portion Area value (if available)
             let portionVal = 0;
             let elPortion = document.getElementById('edit-portion_area');
-            if (elPortion && !elPortion.classList.contains('hidden') && elPortion.innerText !== '' && elPortion.innerText.toUpperCase() !== 'THE WHOLE AREA') {
-                portionVal = parseFloat(elPortion.innerText.replace(/,/g, '')) || 0;
+            let isPortionActive = false;
+            
+            if (elPortion && !elPortion.classList.contains('hidden')) {
+                isPortionActive = true;
+                if (elPortion.innerText !== '' && elPortion.innerText.toUpperCase() !== 'THE WHOLE AREA') {
+                    portionVal = parseFloat(elPortion.innerText.replace(/,/g, '')) || 0;
+                }
             } else if (currentSelection.portion_area && currentSelection.portion_area.toUpperCase() !== 'THE WHOLE AREA') {
+                isPortionActive = true;
                 portionVal = parseFloat(currentSelection.portion_area) || 0;
             }
+
+            const requiresAffidavit = isPortionActive ? (portionVal > 5) : (areaVal > 5);
 
             if (currentAffidavit && currentAffidavit.id) {
                 alertEl.classList.add('hidden');
                 successEl.classList.remove('hidden');
+                if(btnGeneric) btnGeneric.classList.add('hidden');
                 document.getElementById('affidavitTypeText').innerText = currentAffidavit.document_type || 'Affidavit';
                 
                 if(certAff) {
@@ -897,11 +917,15 @@
                     certAff.classList.add('hidden');
                 }
                 
-                // Alert triggers if either the Total Area OR the Portion Area is greater than 5 Hectares
-                if (areaVal > 5 || portionVal > 5) { 
-                    alertEl.classList.remove('hidden'); 
-                } else { 
-                    alertEl.classList.add('hidden'); 
+                if (requiresAffidavit) {
+                    alertEl.classList.remove('hidden');
+                    if(btnGeneric) btnGeneric.classList.add('hidden');
+                    if (triggerPopup && currentReviewMode === 'UPDATE') {
+                        openAffidavitModal();
+                    }
+                } else {
+                    alertEl.classList.add('hidden');
+                    if(btnGeneric) btnGeneric.classList.remove('hidden');
                 }
             }
         }
@@ -1044,7 +1068,7 @@
                         if(certFooterId) certFooterId.innerText = newLtc;
                         if(ioHeaderId) ioHeaderId.innerText = newLtc;
                     }
-                    if (areaChanged) updateAffidavitUI();
+                    if (areaChanged) updateAffidavitUI(false); // Do not aggressively popup here again unless onblur directs it
                 }
             }
             return hasChanges;
@@ -1183,13 +1207,11 @@
                         }
                     }
                     if (isLegal && !isParpo) {
-                        // Editable Statuses
                         if (['ASSIGNED TO LEGAL', 'RETURNED FROM LTSP', 'RECEIVED', 'DRAFT', 'WITH INTERLOCK', 'COMPLIED'].includes(st)) {
                             actions += `<button onclick='showReview("${item.id}", "UPDATE")' class="bg-[#003811] text-white w-full py-1 rounded shadow text-[9px] font-bold tracking-wide hover:bg-black uppercase transition-colors text-center mb-1">UPDATE / REVIEW</button>`;
                             actions += `<button onclick='createVariant("${item.id}")' class="bg-white text-gray-800 border border-gray-300 w-full py-1 rounded shadow text-[9px] font-bold hover:bg-gray-100 uppercase transition-colors text-center mb-1">+ Variant</button>`;
                         }
                         
-                        // Finalized Phase (REVIEW button disappears, replaced by View and Prints)
                         if (st === 'FINALIZED') {
                             actions += `<button onclick='showReview("${item.id}", "VIEW")' class="bg-gray-600 text-white w-full py-1 rounded shadow text-[9px] font-bold hover:bg-gray-800 uppercase transition-colors text-center mb-1">VIEW</button>`;
                             actions += `<button onclick='openPrint("${item.id}", "rec")' class="bg-[#8b5cf6] text-white w-full py-1 rounded shadow text-[9px] font-bold hover:bg-purple-800 uppercase transition-colors text-center mb-1">Print Reco</button>`;
@@ -1213,7 +1235,6 @@
                             actions += `<button onclick='handleDuplicate("${item.id}", "RE-ISSUANCE")' class="bg-blue-500 text-white w-full py-1.5 rounded shadow text-[10px] font-bold hover:bg-blue-600 uppercase transition-colors text-center mb-1">Re-Issue</button>`;
                         }
                         
-                        // View mode for other uneditable states
                         if (['FORWARDED TO PARPO', 'SIGNED BY PARPO', 'FORWARDED TO RECORDS', 'CORRECTED', 'RE-ISSUED'].includes(st)) {
                             actions += `<button onclick='showReview("${item.id}", "VIEW")' class="bg-gray-500 text-white w-full py-1.5 mt-1 rounded shadow text-[10px] font-bold hover:bg-gray-600 uppercase transition-colors text-center mb-1">View</button>`;
                         }
@@ -1456,7 +1477,24 @@
                         editEl.innerText = val;
                     }
                     editEl.contentEditable = isEditable ? "true" : "false";
-                    editEl.onblur = () => { if(isEditable) autoSaveEdits(); }; 
+                    
+                    // Bind blur events to checking logic
+                    editEl.onblur = () => { 
+                        if(isEditable) {
+                            autoSaveEdits().then(() => {
+                                if (dbCol === 'area' || dbCol === 'portion_area') {
+                                    let areaVal = parseFloat(document.getElementById('edit-area').innerText.replace(/,/g, '')) || 0;
+                                    let isPortionActive = !document.getElementById('edit-portion_area').classList.contains('hidden');
+                                    let portionVal = parseFloat(document.getElementById('edit-portion_area').innerText.replace(/,/g, '')) || 0;
+                                    let req = isPortionActive ? (portionVal > 5) : (areaVal > 5);
+
+                                    if (req && !currentAffidavit) {
+                                        openAffidavitModal();
+                                    }
+                                }
+                            });
+                        } 
+                    }; 
                 }
 
                 let pdfVal = currentSelection[dbCol] || ' ';
