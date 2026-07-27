@@ -781,7 +781,7 @@
                     
                     const newRecord = { 
                         LTC_ID_NUMBER: docketNo, status: statusInit,
-                        legalOfficer: isEncoder ? null : currentUser.full_name, encoded_by: currentUser.full_name
+                        legalOfficer: isEncoder ? null : currentUser.full_name
                     };
                     const {data, error} = await supabaseClient.from('land_records').insert([newRecord]).select();
                     if (!error && data) {
@@ -1196,6 +1196,10 @@
                         if (st === 'RELEASED TO CLIENT') {
                             actions += `<button onclick='showReview("${item.id}", "VIEW")' class="bg-gray-500 text-white w-full py-1.5 mt-1 rounded shadow text-[10px] font-bold hover:bg-gray-600 uppercase transition-colors text-center mb-1">View</button>`;
                         }
+                    }
+                    
+                    if (isChief && st !== 'WITHDRAWN') {
+                        actions += `<button onclick='withdrawRecord("${item.id}")' class="bg-gray-400 text-white w-full py-1 mt-1 rounded shadow text-[9px] font-bold hover:bg-gray-600 uppercase transition-colors text-center">Withdraw</button>`;
                     }
 
                     actions += `</div>`;
