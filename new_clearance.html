@@ -61,19 +61,18 @@
                 </div>
 
                 <form id="documentForm" class="space-y-6">
+                    <!-- Hidden field to preserve database clearance_type consistency -->
+                    <input type="hidden" name="clearance_type" value="AO4">
+
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 bg-green-50 p-4 rounded-lg border border-green-100">
-                        <div class="md:col-span-2">
-                            <label class="form-label">Clearance Type</label>
-                            <div class="flex flex-wrap items-center gap-6 mt-1">
-                                <label class="flex items-center gap-2 cursor-pointer text-sm font-bold text-[#1F2937]">
-                                    <input type="radio" name="clearance_type" value="AO4" required class="w-4 h-4 text-[#003811] focus:ring-[#003811]">
-                                    AO4
-                                </label>
-                            </div>
-                        </div>
                         <div>
                             <label class="form-label">LTC Number</label>
-                            <input type="text" name="LTC_ID_NUMBER" class="form-input text-lg font-black text-red-800 bg-white border-red-200 shadow-sm" placeholder="e.g. 2026-LTC-001" required>
+                            <div class="flex items-center rounded-md border border-red-200 bg-white shadow-sm overflow-hidden focus-within:ring-2 focus-within:ring-[#003811] focus-within:border-[#003811]">
+                                <span class="bg-red-50 px-3 py-2.5 text-base font-black text-red-800 border-r border-red-200 select-none">LTC-0503-</span>
+                                <input type="text" id="ltcDigitsInput" maxlength="4" pattern="\d{1,4}" class="w-full bg-transparent px-3 py-2 text-lg font-black text-red-800 text-center focus:outline-none" placeholder="0001" required>
+                                <span id="ltcSuffixDisplay" class="bg-red-50 px-3 py-2.5 text-base font-black text-red-800 border-l border-red-200 select-none">-2026-CS1</span>
+                            </div>
+                            <p class="hint">Enter only the 4-digit series number (e.g. 0001)</p>
                         </div>
                         <div>
                             <label class="form-label">Assigned Legal Officer</label>
@@ -132,7 +131,7 @@
                             <div><label class="form-label">O.R. Date</label><input type="text" name="or_date" class="form-input"></div>
                         </div>
 
-                        <!-- AFFIDAVIT UI SECTION (Incorporated Dashboard Logic) -->
+                        <!-- AFFIDAVIT UI SECTION -->
                         <div id="affidavitSection" class="mt-8 pt-4 border-t border-[#003811]">
                             <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-2 mb-2">
                                 <p class="text-xs font-bold text-gray-500 uppercase tracking-widest">Affidavit / Undertaking</p>
@@ -222,6 +221,24 @@
             overlay.classList.toggle('hidden');
         };
 
+        // Initialize Dynamic LTC-0503-XXXX-2026-CS1 format and Auto-pad script
+        const ltcDigitsInput = document.getElementById('ltcDigitsInput');
+        const ltcSuffixDisplay = document.getElementById('ltcSuffixDisplay');
+        const currentYear = new Date().getFullYear();
+        const ltcPrefix = "LTC-0503-";
+        const ltcSuffix = `-${currentYear}-CS1`;
+        ltcSuffixDisplay.innerText = ltcSuffix;
+
+        ltcDigitsInput.addEventListener('input', function() {
+            this.value = this.value.replace(/\D/g, ''); // Ensure digits only
+        });
+
+        ltcDigitsInput.addEventListener('blur', function() {
+            if (this.value.length > 0 && this.value.length < 4) {
+                this.value = this.value.padStart(4, '0');
+            }
+        });
+
         async function fetchLegalOfficers() {
             try {
                 const { data, error } = await supabaseClient.from('users').select('full_name').in('role', ['CHIEF, LEGAL DIVISION', 'ATTORNEY IV', 'SARPO', 'ARPO II', 'ARPT']);
@@ -285,7 +302,6 @@
                 portionInput.classList.add('hidden');
                 portionInput.value = '';
                 
-                // Trigger check on Area when portion is unchecked
                 const areaVal = parseFloat(document.getElementById('areaInput').value) || 0;
                 if (areaVal > 5 && !affidavitData.has_affidavit) {
                     openAffidavitModal();
@@ -325,7 +341,6 @@
                     btnGeneric.classList.add('hidden');
                 } else {
                     alertEl.classList.add('hidden');
-                    // Allow adding affidavit even if <= 5 hectares if area > 0
                     if (areaVal > 0) {
                         btnGeneric.classList.remove('hidden');
                     } else {
@@ -335,7 +350,6 @@
             }
         }
 
-        // Add blur listener to popup affidavit modal automatically if conditions are met
         document.getElementById('areaInput').addEventListener('blur', function() {
             if (isEncoder) return;
             const isPortion = document.getElementById('isPortionCheck').checked;
@@ -357,7 +371,6 @@
         document.getElementById('portionAreaInput').addEventListener('input', updateAffidavitUI);
 
         function openAffidavitModal() {
-            // Pre-fill owner name if empty
             if (!document.getElementById('m_executed_by').value) {
                 document.getElementById('m_executed_by').value = document.querySelector('textarea[name="owner_name"]').value;
             }
@@ -410,18 +423,22 @@
             btn.innerText = "SAVING..."; btn.disabled = true;
 
             const formData = new FormData(this);
+            const ltcDigits = ltcDigitsInput.value.padStart(4, '0');
+            const fullLtcNumber = `${ltcPrefix}${ltcDigits}${ltcSuffix}`; // Generates e.g. LTC-0503-0001-2026-CS1
+
             let payload = {};
 
             if (isEncoder) {
                 payload = {
                     clearance_type: formData.get('clearance_type'),
-                    LTC_ID_NUMBER: formData.get('LTC_ID_NUMBER'),
+                    LTC_ID_NUMBER: fullLtcNumber,
                     legalOfficer: formData.get('legalOfficer'),
                     status: 'RECEIVED',
                     encoded_by: currentUser.full_name
                 };
             } else {
                 payload = Object.fromEntries(formData.entries());
+                payload.LTC_ID_NUMBER = fullLtcNumber;
                 payload.status = 'RECEIVED';
                 payload.encoded_by = currentUser.full_name;
 
@@ -464,10 +481,11 @@
                     }
                 }
 
-                alert("Application Recorded Successfully.");
+                alert("Application Recorded Successfully. LTC Number assigned: " + fullLtcNumber);
                 this.reset();
                 
                 // Reset Form UI State
+                ltcDigitsInput.value = '';
                 affidavitData.has_affidavit = false;
                 document.getElementById('portionAreaInput').classList.add('hidden');
                 document.getElementById('certPreviewText').classList.add('hidden');
