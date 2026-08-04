@@ -248,7 +248,7 @@
                 if (error) throw error;
                 const datalist = document.getElementById('legalOfficersList');
                 datalist.innerHTML = data.map(u => `<option value="${u.full_name}">`).join('');
-                if (!isEncoder) { document.getElementById('legalOfficerSelect').value = currentUser.full_name; }
+                document.getElementById('legalOfficerSelect').value = currentUser.full_name;
             } catch (err) { console.error("Officer fetch error:", err); }
         }
 
@@ -453,15 +453,14 @@
                 payload = {
                     clearance_type: formData.get('clearance_type'),
                     LTC_ID_NUMBER: fullLtcNumber,
-                    legalOfficer: formData.get('legalOfficer'),
-                    status: 'RECEIVED',
-                    encoded_by: currentUser.full_name
+                    legalOfficer: currentUser.full_name,
+                    status: 'RECEIVED'
                 };
             } else {
                 payload = Object.fromEntries(formData.entries());
                 payload.LTC_ID_NUMBER = fullLtcNumber;
                 payload.status = 'RECEIVED';
-                payload.encoded_by = currentUser.full_name;
+                payload.legalOfficer = currentUser.full_name;
 
                 if (!document.getElementById('isPortionCheck').checked) {
                     payload.portion_area = 'THE WHOLE AREA';
