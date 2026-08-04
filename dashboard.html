@@ -686,30 +686,37 @@
         };
 
         function updatePrintAreaDisplay() {
-            const elArea = document.getElementById('edit-area');
-            const elPortion = document.getElementById('edit-portion_area');
-            const portionToggle = document.getElementById('toggle-portion');
-
-            let totalVal = elArea ? elArea.innerText.replace(/\u00A0/g, ' ').trim() : '';
-            let portionVal = elPortion ? elPortion.innerText.replace(/\u00A0/g, ' ').trim() : '';
-            let isPortion = (portionToggle && portionToggle.checked) && 
-                            portionVal && 
-                            portionVal.toUpperCase() !== 'THE WHOLE AREA' && 
-                            portionVal !== '---';
-
-            let displayText = totalVal;
-            if (isPortion) {
-                let cleanTotal = totalVal.replace(/hectares?|has\.?/gi, '').trim();
-                let cleanPortion = portionVal.replace(/hectares?|has\.?/gi, '').trim();
-                displayText = `${cleanPortion} hectares of ${cleanTotal} hectares (PORTION)`;
-            } else if (totalVal && !totalVal.toLowerCase().includes('hectare') && totalVal !== '---') {
-                displayText = `${totalVal} hectares`;
+            if (!currentSelection) return;
+            let totalArea = currentSelection.area ? String(currentSelection.area).trim() : '';
+            let portionArea = currentSelection.portion_area ? String(currentSelection.portion_area).trim() : '';
+            
+            // Also check UI edit fields in case user edited them live
+            let editAreaEl = document.getElementById('edit-area');
+            let editPortionEl = document.getElementById('edit-portion_area');
+            if (editAreaEl && editAreaEl.innerText.trim() !== '') totalArea = editAreaEl.innerText.trim();
+            if (editPortionEl && !editPortionEl.classList.contains('hidden') && editPortionEl.innerText.trim() !== '') {
+                portionArea = editPortionEl.innerText.trim();
             }
 
-            const recEl = document.getElementById('rec-area');
-            const certEl = document.getElementById('cert-area');
-            if (recEl) recEl.innerText = displayText;
-            if (certEl) certEl.innerText = displayText;
+            let isPortion = portionArea && 
+                            portionArea.toUpperCase() !== 'THE WHOLE AREA' && 
+                            portionArea !== '---' && 
+                            portionArea !== '';
+
+            let cleanTotal = totalArea.replace(/hectares?|has\.?/gi, '').trim();
+            let cleanPortion = portionArea.replace(/hectares?|has\.?/gi, '').trim();
+
+            let formattedText = cleanTotal;
+            if (isPortion && cleanPortion) {
+                formattedText = `${cleanPortion} hectares of ${cleanTotal} hectares (PORTION)`;
+            } else if (cleanTotal && cleanTotal !== '---') {
+                formattedText = `${cleanTotal} hectares`;
+            }
+
+            let recEl = document.getElementById('rec-area');
+            let certEl = document.getElementById('cert-area');
+            if (recEl) recEl.innerText = formattedText;
+            if (certEl) certEl.innerText = formattedText;
         }
 
         window.togglePortionField = function() {
@@ -1102,8 +1109,8 @@
                         let recEl = document.getElementById(`rec-${htmlSuffix}`);
                         let certEl = document.getElementById(`cert-${htmlSuffix}`);
                         let ioEl = document.getElementById(`io-${htmlSuffix}`); 
-                        if(recEl) recEl.innerText = newVal;
-                        if(certEl) certEl.innerText = newVal;
+                        if(recEl && dbCol !== 'area' && dbCol !== 'portion_area') recEl.innerText = newVal;
+                        if(certEl && dbCol !== 'area' && dbCol !== 'portion_area') certEl.innerText = newVal;
                         if(ioEl) ioEl.innerText = newVal; 
                     }
                 }
@@ -1321,6 +1328,76 @@
                             actions += `<button onclick='openPrint("${item.id}", "cert")' class="bg-[#d97706] text-white w-full py-1 rounded shadow text-[9px] font-bold hover:bg-amber-700 uppercase transition-colors text-center mb-1">Print Cert</button>`;
                             actions += `<button onclick="decideStatus('SIGNED BY PARPO')" class="flex-1 md:flex-none bg-orange-600 text-white px-4 py-2 rounded text-[10px] font-black shadow hover:bg-orange-700 transition-colors whitespace-nowrap">SIGN APPROVAL</button>`;
                         }
+                        if (st === 'SIGNED BY PARPO') {
+                            actions += `<button onclick='openPrint("${item.id}", "rec")' class="bg-[#8b5cf6] text-white w-full py-1 rounded shadow text-[9px] font-bold hover:bg-purple-800 uppercase transition-colors text-center mb-1">Print Reco</button>`;
+                            actions += `<button onclick='openPrint("${item.id}", "cert")' class="bg-[#d97706] text-white w-full py-1 rounded shadow text-[9px] font-bold hover:bg-amber-700 uppercase transition-colors text-center mb-1">Print Cert</button>`;
+                            actions += `<button onclick='processToNext("${item.id}", "RETURNED TO LEGAL (SIGNED)", "${st}")' class="bg-red-600 text-white w-full py-1.5 rounded shadow text-[10px] font-bold hover:bg-red-700 uppercase transition-colors text-center mb-1">Return to Legal</button>`;
+                        }
+                        if (['RETURNED TO LEGAL (SIGNED)', 'FORWARDED TO RECORDS', 'RELEASED TO CLIENT'].includes(st)) {
+                            actions += `<button onclick='showReview("${item.id}", "VIEW")' class="bg-gray-500 text-white w-full py-1.5 mt-1 rounded shadow text-[10px] font-bold hover:bg-gray-600 uppercase transition-colors text-center mb-1">View</button>`;
+                        }
+                    }
+                    if (isRecords) {
+                        if (st === 'FORWARDED TO RECORDS') {
+                            actions += `<button onclick='showReview("${item.id}", "VIEW")' class="bg-gray-500 text-white w-full py-1.5 mt-1 rounded shadow text-[10px] font-bold hover:bg-gray-600 uppercase transition-colors text-center mb-1">View</button>`;
+                            actions += `<button onclick='processToNext("${item.id}", "RELEASED TO CLIENT", "${st}")' class="bg-cyan-600 text-white w-full py-1.5 rounded shadow text-[10px] font-bold hover:bg-cyan-700 uppercase transition-colors text-center mb-1">Release to Client</button>`;
+                        }
+                        if (st === 'RELEASED TO CLIENT') {
+                            actions += `<button onclick='showReview("${item.id}", "VIEW")' class="bg-gray-500 text-white w-full py-1.5 mt-1 rounded shadow text-[10px] font-bold hover:bg-gray-600 uppercase transition-colors text-center mb-1">View</button>`;
+                        }
+                    }
+                    
+                    if (isChief && st !== 'WITHDRAWN') {
+                        actions += `<button onclick='withdrawRecord("${item.id}")' class="bg-gray-400 text-white w-full py-1 mt-1 rounded shadow text-[9px] font-bold hover:bg-gray-600 uppercase transition-colors text-center">Withdraw</button>`;
+                    }
+
+                    actions += `</div>`;
+
+                    let legalOfficerName = item.legalOfficer || item.legalofficer || '---'; 
+                    let ownerNameDisplay = item.owner_name || '<span class="text-gray-400 italic">Pending Encoding</span>';
+
+                    if (query !== '' || displayCount < 30) {
+                        tbody.innerHTML += `
+                            <tr class="hover:bg-gray-50 transition-colors">
+                                <td class="font-bold">${item.LTC_ID_NUMBER || item.ltc_no || '---'}</td>
+                                <td class="uppercase font-semibold">${ownerNameDisplay}</td>
+                                <td class="text-xs text-gray-500">${legalOfficerName}</td>
+                                <td><span class="px-2 py-1 rounded text-[8px] shadow-sm font-black uppercase ${getStatusStyle(st)}">${st}</span>${warningHTML}</td>
+                                <td class="text-center align-middle">${actions}</td>
+                                <td class="text-right font-mono text-gray-500">${item.updated_at ? new Date(item.updated_at).toLocaleString('en-US', { hour12: true }) : '---'}</td>
+                            </tr>`;
+                        displayCount++;
+                    }
+                }
+            });
+            
+            const actionDiv = document.getElementById('actionButtons');
+            if (currentSelection) {
+                let currentSt = (currentSelection.status || 'RECEIVED').trim().toUpperCase();
+                
+                // Modal Action Buttons Control
+                if (currentReviewMode === 'VIEW' || currentReviewMode === 'VIEW_CERT') {
+                    actionDiv.innerHTML = '';
+                } else {
+                    let btns = `<div class="flex flex-wrap gap-2 w-full justify-center md:justify-end">`;
+                    
+                    if (isLegal && !isParpo) {
+                        if (['RECEIVED', 'ASSIGNED TO LEGAL', 'RETURNED FROM LTSP', 'DRAFT', 'COMPLIED'].includes(currentSt)) {
+                            btns += `<button onclick="decideStatus('DRAFT')" class="flex-1 md:flex-none bg-blue-600 text-white px-4 py-2 rounded text-[10px] font-black shadow hover:bg-blue-700 transition-colors whitespace-nowrap">SAVE DRAFT</button>`;
+                            btns += `<button onclick="decideStatus('FINALIZED')" class="flex-1 md:flex-none bg-indigo-600 text-white px-4 py-2 rounded text-[10px] font-black shadow hover:bg-indigo-700 transition-colors whitespace-nowrap">SAVE FINAL</button>`;
+                            btns += `<button onclick="issueInterlocutory()" class="flex-1 md:flex-none bg-yellow-600 text-white px-4 py-2 rounded text-[10px] font-black shadow hover:bg-yellow-700 transition-colors whitespace-nowrap">INTERLOCUTORY ORDER</button>`;
+                        }
+                        if (currentSt === 'WITH INTERLOCK') {
+                            btns += `<button onclick="decideStatus('COMPLIED')" class="flex-1 md:flex-none bg-teal-600 text-white px-4 py-2 rounded text-[10px] font-black shadow hover:bg-teal-700 transition-colors whitespace-nowrap">MARK COMPLIED</button>`;
+                        }
+                    }
+                    if (isParpo) {
+                        if (currentSt === 'FORWARDED TO PARPO') {
+                            btns += `<button onclick="decideStatus('FORWARDED TO PARPO')" class="flex-1 md:flex-none bg-blue-600 text-white px-4 py-2 rounded text-[10px] font-black uppercase shadow hover:bg-blue-800 transition-colors whitespace-nowrap">SAVE UPDATES</button>`;
+                            btns += `<button onclick='openPrint("${currentSelection.id}", "rec")' class="flex-1 md:flex-none bg-[#8b5cf6] text-white px-4 py-2 rounded text-[10px] font-black uppercase shadow hover:bg-purple-800 transition-colors whitespace-nowrap">PRINT RECO</button>`;
+                            btns += `<button onclick='openPrint("${currentSelection.id}", "cert")' class="flex-1 md:flex-none bg-[#d97706] text-white px-4 py-2 rounded text-[10px] font-black uppercase shadow hover:bg-amber-700 transition-colors whitespace-nowrap">PRINT CERT</button>`;
+                            btns += `<button onclick="decideStatus('SIGNED BY PARPO')" class="flex-1 md:flex-none bg-orange-600 text-white px-4 py-2 rounded text-[10px] font-black shadow hover:bg-orange-700 transition-colors whitespace-nowrap">SIGN APPROVAL</button>`;
+                        }
                     }
                     btns += `</div>`;
                     actionDiv.innerHTML = btns;
@@ -1440,25 +1517,24 @@
             const query = document.getElementById('searchInput').value.toLowerCase();
             
             let userRole = (currentUser.role || '').toUpperCase();
-            let isParpo = userRole === 'PARPO II' || userRole === 'PARPO';
             let isChief = userRole === 'CHIEF, LEGAL DIVISION' || userRole === 'DIVISION CHIEF' || userRole === 'CHIEF';
-            let isLegal = (userRole.includes('LEGAL') || userRole.includes('SARPO') || userRole.includes('ARPT') || userRole.includes('ARPO') || userRole.includes('ATTORNEY')) && !isParpo;
-            let userFullName = currentUser.full_name || '';
+            let isParpo = userRole === 'PARPO II' || userRole === 'PARPO';
+            let isLegal = (userRole.includes('LEGAL') || userRole.includes('SARPO') || userRole.includes('ARPT') || userRole.includes('ARPO') || userRole.includes('ATTORNEY')) && !isParpo && !isChief;
+            let userFullName = (currentUser.full_name || '').toLowerCase().trim();
 
             currentNavList = rawData.filter(item => {
                 let matchesSearch = false;
                 if (query === '') { matchesSearch = true; } 
                 else { matchesSearch = Object.values(item).some(val => val !== null && String(val).toLowerCase().includes(query)); }
-                
-                // RESTRICT NEXT/PREV NAVIGATION TO OWN ASSIGNED CLEARANCES ONLY
-                if (isLegal && !isChief) {
-                    let loName = (item.legalOfficer || item.legalofficer || '').toLowerCase();
-                    if (loName !== userFullName.toLowerCase()) matchesSearch = false;
+
+                // RESTRICT NEXT/PREV TO LO'S OWN ASSIGNED CLEARANCES
+                if (isLegal) {
+                    let loName = (item.legalOfficer || item.legalofficer || '').toLowerCase().trim();
+                    if (loName !== userFullName) matchesSearch = false;
                 }
-                
+
                 return matchesSearch;
             });
-
             currentNavIndex = currentNavList.findIndex(r => r.id === id);
             currentSelection = currentNavList[currentNavIndex];
 
@@ -1525,8 +1601,8 @@
                 let recEl = document.getElementById(`rec-${htmlSuffix}`);
                 let certEl = document.getElementById(`cert-${htmlSuffix}`);
                 let ioEl = document.getElementById(`io-${htmlSuffix}`); 
-                if(recEl && htmlSuffix !== 'area') recEl.innerText = pdfVal;
-                if(certEl && htmlSuffix !== 'area') certEl.innerText = pdfVal;
+                if(recEl && dbCol !== 'area' && dbCol !== 'portion_area') recEl.innerText = pdfVal;
+                if(certEl && dbCol !== 'area' && dbCol !== 'portion_area') certEl.innerText = pdfVal;
                 
                 if (ioEl) {
                     if (htmlSuffix === 'area' && pdfVal.trim() !== '') {
