@@ -686,7 +686,7 @@
         };
 
         // ==========================================
-        // UPDATED: AUTOMATED AREA & PORTION FORMATTING
+        // AUTOMATED AREA & PORTION FORMATTING
         // ==========================================
         function updatePrintAreaDisplay() {
             if (!currentSelection) return;
@@ -1656,9 +1656,12 @@
             document.querySelectorAll('.sys-chief-name').forEach(el => el.innerText = chiefLegalName && chiefLegalName !== "---" ? chiefLegalName : "ATTY. JAIME G. RESOCO, JR.");
             document.querySelectorAll('.sys-parpo-name').forEach(el => el.innerText = parpoName);
 
-            const now = new Date();
+            // ==========================================
+            // UPDATED: DOCUMENT DATE ISSUED LOGIC
+            // ==========================================
+            const targetDate = currentSelection.date_issued ? new Date(currentSelection.date_issued) : new Date();
             const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
-            const dateStrOrdinal = `${monthNames[now.getMonth()]} ${now.getDate()}, ${now.getFullYear()}`;
+            const dateStrOrdinal = `${monthNames[targetDate.getMonth()]} ${targetDate.getDate()}, ${targetDate.getFullYear()}`;
             document.querySelectorAll('.pdf-today-ordinal').forEach(el => el.innerText = dateStrOrdinal);
 
             if (currentReviewMode === 'VIEW_CERT') {
@@ -1849,6 +1852,9 @@
             });
         }
 
+        // ==========================================
+        // UPDATED: PERSIST DATE ON SAVE FINAL
+        // ==========================================
         async function decideStatus(newSt) {
             const remarks = document.getElementById('reviewRemarks').value;
             if (newSt === 'DISAPPROVED' && !remarks.trim()) { alert('Please provide remarks for disapproval / lacking documents.'); return; }
@@ -1856,6 +1862,13 @@
             await autoSaveEdits(); 
 
             const updateData = { status: newSt, updated_at: new Date().toISOString() };
+            
+            // Set date_issued when SAVE FINAL is clicked
+            if (newSt === 'FINALIZED') {
+                updateData.date_issued = new Date().toISOString();
+                currentSelection.date_issued = updateData.date_issued;
+            }
+
             const oldStatus = currentSelection.status;
             
             for (let dbCol in DB_FIELD_MAP) {
