@@ -685,6 +685,9 @@
             overlay.classList.toggle('hidden');
         };
 
+        // ==========================================
+        // UPDATED: AUTOMATED AREA & PORTION FORMATTING
+        // ==========================================
         function updatePrintAreaDisplay() {
             if (!currentSelection) return;
             let totalArea = currentSelection.area ? String(currentSelection.area).trim() : '';
@@ -703,14 +706,21 @@
                             portionArea !== '---' && 
                             portionArea !== '';
 
+            // Clean any manually typed units by LO
             let cleanTotal = totalArea.replace(/hectares?|has\.?/gi, '').trim();
             let cleanPortion = portionArea.replace(/hectares?|has\.?/gi, '').trim();
 
+            // Helper to determine whether to append HECTARE (<= 1) or HECTARES (> 1)
+            let getUnit = (valStr) => {
+                let num = parseFloat(String(valStr).replace(/,/g, ''));
+                return (num > 1) ? 'HECTARES' : 'HECTARE';
+            };
+
             let formattedText = cleanTotal;
             if (isPortion && cleanPortion) {
-                formattedText = `${cleanPortion} hectares of ${cleanTotal} hectares (PORTION)`;
+                formattedText = `${cleanPortion} ${getUnit(cleanPortion)} OF ${cleanTotal} ${getUnit(cleanTotal)} (PORTION)`;
             } else if (cleanTotal && cleanTotal !== '---') {
-                formattedText = `${cleanTotal} hectares`;
+                formattedText = `${cleanTotal} ${getUnit(cleanTotal)}`;
             }
 
             let recEl = document.getElementById('rec-area');
@@ -1150,7 +1160,7 @@
                         if(certFooterId) certFooterId.innerText = newLtc;
                         if(ioHeaderId) ioHeaderId.innerText = newLtc;
                     }
-                    if (areaChanged) updateAffidavitUI(false); // Do not aggressively popup here again unless onblur directs it
+                    if (areaChanged) updateAffidavitUI(false);
                 }
             }
             return hasChanges;
@@ -1375,7 +1385,6 @@
             if (currentSelection) {
                 let currentSt = (currentSelection.status || 'RECEIVED').trim().toUpperCase();
                 
-                // Modal Action Buttons Control
                 if (currentReviewMode === 'VIEW' || currentReviewMode === 'VIEW_CERT') {
                     actionDiv.innerHTML = '';
                 } else {
@@ -1527,7 +1536,6 @@
                 if (query === '') { matchesSearch = true; } 
                 else { matchesSearch = Object.values(item).some(val => val !== null && String(val).toLowerCase().includes(query)); }
 
-                // RESTRICT NEXT/PREV TO LO'S OWN ASSIGNED CLEARANCES
                 if (isLegal) {
                     let loName = (item.legalOfficer || item.legalofficer || '').toLowerCase().trim();
                     if (loName !== userFullName) matchesSearch = false;
@@ -1575,7 +1583,6 @@
                     }
                     editEl.contentEditable = isEditable ? "true" : "false";
                     
-                    // Bind blur events to checking logic
                     editEl.onblur = () => { 
                         if(isEditable) {
                             autoSaveEdits().then(() => {
@@ -1705,7 +1712,7 @@
         }
 
         async function openPrint(id, type) {
-            await showReview(id, 'VIEW'); // Force strict view mode for printing
+            await showReview(id, 'VIEW');
             
             document.getElementById('reviewSection').classList.add('hidden');
             document.getElementById('actionButtons').classList.add('hidden');
