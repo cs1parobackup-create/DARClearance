@@ -1099,6 +1099,9 @@
             setTimeout(() => { btn.innerText = originalText; btn.disabled = false; }, 1000);
         }
 
+        // ==========================================
+        // UPDATED: AUTO-NOTE "CORRECTED BY PARPO II"
+        // ==========================================
         async function autoSaveEdits() {
             if (!currentSelection || currentReviewMode === 'VIEW' || currentReviewMode === 'VIEW_CERT') return false;
             const updateData = {};
@@ -1143,6 +1146,19 @@
             }
 
             if (hasChanges) {
+                let userRole = (currentUser.role || '').toUpperCase();
+                let isParpo = userRole === 'PARPO II' || userRole === 'PARPO';
+                if (isParpo) {
+                    let colRemarks = currentSelection.hasOwnProperty('Remarks') ? 'Remarks' : 'remarks';
+                    let oldRemarks = currentSelection[colRemarks] ? String(currentSelection[colRemarks]).trim() : '';
+                    if (!oldRemarks.includes('CORRECTED BY PARPO II')) {
+                        let newRemarks = oldRemarks ? `${oldRemarks} | CORRECTED BY PARPO II` : 'CORRECTED BY PARPO II';
+                        updateData[colRemarks] = newRemarks;
+                        currentSelection[colRemarks] = newRemarks;
+                        if (remarksEl) remarksEl.value = newRemarks;
+                    }
+                }
+
                 updateData.updated_at = new Date().toISOString();
                 const { error } = await supabaseClient.from('land_records').update(updateData).eq('id', currentSelection.id);
                 if(error) { console.error('Auto-save error:', error); }
@@ -1165,6 +1181,22 @@
             }
             return hasChanges;
         }
+
+        window.markParpoCorrection = async function() {
+            if (!currentSelection) return;
+            let colRemarks = currentSelection.hasOwnProperty('Remarks') ? 'Remarks' : 'remarks';
+            let oldRem = document.getElementById('reviewRemarks').value.trim();
+            if (!oldRem.includes('CORRECTED BY PARPO II')) {
+                let newRem = oldRem ? `${oldRem} | CORRECTED BY PARPO II` : 'CORRECTED BY PARPO II';
+                document.getElementById('reviewRemarks').value = newRem;
+                currentSelection[colRemarks] = newRem;
+                await autoSaveEdits();
+                await fetchClearanceData();
+                alert('Noted "CORRECTED BY PARPO II" in remarks.');
+            } else {
+                alert('Already noted as "CORRECTED BY PARPO II".');
+            }
+        };
 
         window.checkPreviousRecords = function() {
             if(!currentSelection) return;
@@ -1385,6 +1417,7 @@
             if (currentSelection) {
                 let currentSt = (currentSelection.status || 'RECEIVED').trim().toUpperCase();
                 
+                // Modal Action Buttons Control
                 if (currentReviewMode === 'VIEW' || currentReviewMode === 'VIEW_CERT') {
                     actionDiv.innerHTML = '';
                 } else {
@@ -1403,6 +1436,7 @@
                     if (isParpo) {
                         if (currentSt === 'FORWARDED TO PARPO') {
                             btns += `<button onclick="decideStatus('FORWARDED TO PARPO')" class="flex-1 md:flex-none bg-blue-600 text-white px-4 py-2 rounded text-[10px] font-black uppercase shadow hover:bg-blue-800 transition-colors whitespace-nowrap">SAVE UPDATES</button>`;
+                            btns += `<button onclick="markParpoCorrection()" class="flex-1 md:flex-none bg-yellow-500 text-white px-4 py-2 rounded text-[10px] font-black uppercase shadow hover:bg-yellow-600 transition-colors whitespace-nowrap">NOTE CORRECTION</button>`;
                             btns += `<button onclick='openPrint("${currentSelection.id}", "rec")' class="flex-1 md:flex-none bg-[#8b5cf6] text-white px-4 py-2 rounded text-[10px] font-black uppercase shadow hover:bg-purple-800 transition-colors whitespace-nowrap">PRINT RECO</button>`;
                             btns += `<button onclick='openPrint("${currentSelection.id}", "cert")' class="flex-1 md:flex-none bg-[#d97706] text-white px-4 py-2 rounded text-[10px] font-black uppercase shadow hover:bg-amber-700 transition-colors whitespace-nowrap">PRINT CERT</button>`;
                             btns += `<button onclick="decideStatus('SIGNED BY PARPO')" class="flex-1 md:flex-none bg-orange-600 text-white px-4 py-2 rounded text-[10px] font-black shadow hover:bg-orange-700 transition-colors whitespace-nowrap">SIGN APPROVAL</button>`;
