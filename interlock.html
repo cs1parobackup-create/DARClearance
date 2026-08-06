@@ -390,6 +390,12 @@
         let parpoName = "---";
         let backgroundImageUrl = "";
 
+        // Field mapping for easy access
+        const NON_FINAL_STATUSES = [
+            'RECEIVED', 'ASSIGNED TO LEGAL', 'FORWARDED TO LTSP',
+            'RETURNED FROM LTSP', 'DRAFT', 'WITH INTERLOCK', 'COMPLIED'
+        ];
+
         window.toggleSidebar = function() {
             const sidebar = document.getElementById('sidebar');
             const overlay = document.getElementById('mobileOverlay');
@@ -417,7 +423,7 @@
         };
 
         // ==========================================
-        // DYNAMIC MENU LOADER FROM clearance_menu TABLE
+        // DYNAMIC MENU LOADER FROM clearance_menu TABLE (Req 5)
         // ==========================================
         async function loadMenu() {
             const menuContainer = document.getElementById('dynamicMenu');
@@ -542,8 +548,10 @@
                             <td class="text-xs text-gray-500">${item.created_at ? new Date(item.created_at).toLocaleDateString() : '---'}</td>
                             <td class="text-center">
                                 <div class="flex justify-center gap-1">
-                                    <button onclick='editRequirement("${item.id}")' class="bg-indigo-600 text-white px-2.5 py-1 rounded text-[10px] font-bold uppercase hover:bg-indigo-700 shadow">Edit</button>
-                                    <button onclick='deleteRequirement("${item.id}")' class="bg-red-600 text-white px-2.5 py-1 rounded text-[10px] font-bold uppercase hover:bg-red-700 shadow">Delete</button>
+                                    <button onclick='editRequirement("${item.id}")' class="bg-indigo-600 text-white px-2 py-1 rounded text-[10px] font-bold uppercase hover:bg-indigo-700 shadow">Edit</button>
+                                    <button onclick='toggleActiveRequirement("${item.id}", ${!isActive})' class="bg-gray-200 text-gray-800 px-2 py-1 rounded text-[10px] font-bold uppercase hover:bg-gray-300">
+                                        ${isActive ? 'Disable' : 'Enable'}
+                                    </button>
                                 </div>
                             </td>
                         </tr>
@@ -609,19 +617,13 @@
             }
         };
 
-        window.deleteRequirement = async function(id) {
-            if (!confirm('Are you sure you want to permanently delete this requirement item?')) return;
-            
+        window.toggleActiveRequirement = async function(id, nextStatus) {
             const { error } = await supabaseClient
                 .from('ltc_requirements')
-                .delete()
+                .update({ is_active: nextStatus, updated_at: new Date().toISOString() })
                 .eq('id', id);
 
-            if (error) {
-                alert('Error deleting requirement: ' + error.message);
-            } else {
-                fetchRequirementsData();
-            }
+            if (!error) { fetchRequirementsData(); }
         };
 
         // ==========================================
@@ -712,6 +714,10 @@
             const container = document.getElementById('ltcSearchResults');
             container.innerHTML = '';
 
+            const userRole = (currentUser.role || '').toUpperCase().trim();
+            const isChief = userRole === 'CHIEF, LEGAL DIVISION' || userRole === 'DIVISION CHIEF' || userRole === 'CHIEF' || userRole.includes('CHIEF');
+            const userFullName = (currentUser.full_name || '').toLowerCase().trim();
+
             const eligible = rawRecords.filter(r => {
                 const st = (r.status || '').toUpperCase().trim();
                 const isFinalizedOrDone = [
@@ -720,6 +726,12 @@
                     'RELEASED TO CLIENT', 'WITHDRAWN', 'DISAPPROVED'
                 ].includes(st);
                 if (isFinalizedOrDone) return false;
+
+                // LO can only issue interlock on their own LTC except Chief Legal
+                if (!isChief) {
+                    const loName = (r.legalOfficer || r.legalofficer || '').toLowerCase().trim();
+                    if (loName !== userFullName) return false;
+                }
 
                 if (!query) return true;
                 return Object.values(r).some(val => val && String(val).toLowerCase().includes(query));
@@ -751,7 +763,7 @@
         window.openIssueInterlocutoryModal = function() {
             selectedRecordForInterlock = null;
             document.getElementById('ltcSearchInput').value = '';
-            document.getElementById('inputApplicants').value = ''; // Always leave blank by default
+            document.getElementById('inputApplicants').value = ''; // Always leave blank by default (Req 3)
             document.getElementById('inputOtherRemarks').value = '';
             document.getElementById('lbl-owner-name').innerText = '---';
             document.getElementById('lbl-tct-no').innerText = '---';
@@ -798,12 +810,14 @@
                 document.getElementById('lbl-lot-no').innerText = record.lot || record.lot_no || '---';
                 document.getElementById('lbl-ltc-status').innerText = record.status || '---';
 
+                // REQUIREMENT 3: Always leave the applicant field blank by default
                 document.getElementById('inputApplicants').value = '';
                 
+                // If it already has interlocutory remarks saved, preload them in textarea
                 if (record.interlocutory_details) {
                     document.getElementById('inputOtherRemarks').value = record.interlocutory_details;
                 }
-                filterLtcRecords();
+                filterLtcRecords(); // Re-render to highlight selected row
             }
         };
 
@@ -821,6 +835,7 @@
             let lackingList = Array.from(checkboxes).map(cb => cb.value);
             const otherRemarks = document.getElementById('inputOtherRemarks').value.trim();
 
+            // REQUIREMENT 4: Split additional remarks by newline so each line becomes its own bullet
             if (otherRemarks) {
                 const extraBulletLines = otherRemarks.split(/\r?\n/).map(line => line.trim()).filter(line => line);
                 lackingList.push(...extraBulletLines);
@@ -907,6 +922,7 @@
             document.getElementById('io-area').innerText = (!isNaN(sqMeters) && sqMeters > 0) ? sqMeters.toLocaleString('en-US') : areaVal;
             document.getElementById('io-location').innerText = record.location || '---';
 
+            // REQUIREMENT 4: Render every lacking item / newline as an individual bullet point
             const lackingStr = record.interlocutory_details || record.remarks || 'No specific lacking documents listed.';
             const listItems = lackingStr.split(/\r?\n/).map(s => s.trim()).filter(s => s);
             const listContainer = document.getElementById('io-remarks-list');
