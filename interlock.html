@@ -78,10 +78,8 @@
             <button class="md:hidden text-white focus:outline-none" onclick="toggleSidebar()">&times;</button>
         </div>
         
-        <div id="dynamicMenu" class="flex-1 overflow-y-auto py-2">
-            <a href="dashboard.html" class="block px-6 py-4 text-[11px] font-black uppercase border-l-4 border-transparent hover:bg-[#006400]">Dashboard</a>
-            <a href="interlocutory.html" class="block px-6 py-4 text-[11px] font-black uppercase border-l-4 bg-[#006400] border-[#D4AF37]">Interlocutory & Requirements</a>
-        </div>
+        <!-- Dynamic Menu loaded from clearance_menu -->
+        <div id="dynamicMenu" class="flex-1 overflow-y-auto py-2"></div>
 
         <div class="p-4 bg-black/20">
             <p id="activeUser" class="text-xs text-gray-300 truncate mb-2 font-bold"></p>
@@ -102,17 +100,14 @@
                 <button onclick="openIssueInterlocutoryModal()" class="flex-1 md:flex-none bg-yellow-600 text-white px-3 md:px-4 py-1.5 rounded text-xs font-bold uppercase shadow hover:bg-yellow-700 whitespace-nowrap">
                     + Issue Interlocutory Order
                 </button>
-                <button onclick="openRequirementModal()" class="flex-1 md:flex-none bg-indigo-600 text-white px-3 md:px-4 py-1.5 rounded text-xs font-bold uppercase shadow hover:bg-indigo-700 whitespace-nowrap">
-                    + Add Requirement Item
-                </button>
                 <button onclick="refreshAllData()" class="bg-[#003811] text-white px-3 md:px-4 py-1.5 rounded text-xs font-bold uppercase shadow hover:bg-[#006400]">Refresh</button>
             </div>
         </header>
 
         <div class="flex-1 overflow-y-auto p-4 md:p-6 space-y-6 no-print scroll-area">
             
-            <!-- Statistical Summary Cards -->
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <!-- Statistical Summary Cards (Removed Active Requirement Items card) -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div class="bg-white p-4 rounded-lg border-l-4 border-yellow-500 shadow-sm flex justify-between items-center">
                     <div>
                         <p class="text-[10px] font-bold text-gray-400 uppercase">Active Interlock Orders</p>
@@ -133,13 +128,6 @@
                         <h3 id="stat-total-interlock" class="text-2xl font-black text-indigo-600">0</h3>
                     </div>
                     <div class="text-indigo-500 text-3xl">📁</div>
-                </div>
-                <div class="bg-white p-4 rounded-lg border-l-4 border-purple-500 shadow-sm flex justify-between items-center">
-                    <div>
-                        <p class="text-[10px] font-bold text-gray-400 uppercase">Active Requirement Items</p>
-                        <h3 id="stat-active-reqs" class="text-2xl font-black text-purple-600">0</h3>
-                    </div>
-                    <div class="text-purple-500 text-3xl">📋</div>
                 </div>
             </div>
 
@@ -184,7 +172,10 @@
             <div id="tab-content-requirements" class="space-y-4 hidden">
                 <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-2">
                     <h3 class="text-sm font-bold uppercase text-[#003811]">Manage Standard Lacking Documents Checklist</h3>
-                    <input type="text" id="searchRequirements" placeholder="Search requirement item or category..." class="border border-gray-300 rounded px-3 py-1.5 text-xs focus:outline-none focus:border-[#003811] w-full md:w-72" onkeyup="renderRequirementsTable()">
+                    <div class="flex gap-2 w-full md:w-auto">
+                        <input type="text" id="searchRequirements" placeholder="Search requirement item or category..." class="border border-gray-300 rounded px-3 py-1.5 text-xs focus:outline-none focus:border-[#003811] w-full md:w-72" onkeyup="renderRequirementsTable()">
+                        <button onclick="openRequirementModal()" class="bg-indigo-600 text-white px-3 py-1.5 rounded text-xs font-bold uppercase shadow hover:bg-indigo-700 whitespace-nowrap">+ Add Requirement Item</button>
+                    </div>
                 </div>
 
                 <div class="bg-white rounded-lg shadow-sm overflow-hidden border border-gray-200 w-full overflow-x-auto">
@@ -207,7 +198,7 @@
     </main>
 
     <!-- ========================================================= -->
-    <!-- MODAL 1: ISSUE / EDIT INTERLOCUTORY ORDER (CUSTOM APPLICANTS) -->
+    <!-- MODAL 1: ISSUE / EDIT INTERLOCUTORY ORDER -->
     <!-- ========================================================= -->
     <div id="issueInterlocutoryModal" class="fixed inset-0 bg-black/60 hidden flex items-center justify-center z-[70] p-4 no-print">
         <div class="bg-white p-6 rounded-lg shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto border-t-4 border-yellow-600">
@@ -217,20 +208,22 @@
             </div>
             
             <p class="text-xs text-gray-600 mb-4">
-                Select an eligible DAR Clearance (not yet <span class="font-bold text-red-600">SAVED FINAL</span>) to issue an Interlocutory Order and specify manual applicants.
+                Search and select an eligible DAR Clearance (not yet <span class="font-bold text-red-600">SAVED FINAL</span>) to issue an Interlocutory Order.
             </p>
             
             <div class="space-y-4 text-sm">
+                <!-- 1. LIVE SEARCH & FLEXIBLE SELECTION (Req 2) -->
                 <div>
-                    <label class="form-label">1. Select Eligible DAR Clearance (LTC No / Owner)</label>
-                    <select id="selectLtcRecord" class="form-input" onchange="onLtcSelectionChange()">
-                        <option value="">-- Select Clearance Record --</option>
-                    </select>
+                    <label class="form-label">1. Search Eligible DAR Clearance (LTC No / Owner / Lot / TCT)</label>
+                    <input type="text" id="ltcSearchInput" class="form-input mb-2" placeholder="Type to search LTC Number, Owner Name, TCT, or Lot..." oninput="filterLtcRecords()">
+                    <div id="ltcSearchResults" class="max-h-44 overflow-y-auto border rounded bg-gray-50 divide-y divide-gray-200 text-xs">
+                        <!-- Matching records dynamically populate here -->
+                    </div>
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-3 bg-gray-50 p-3 rounded border border-gray-200">
                     <div>
-                        <span class="text-[10px] uppercase font-bold text-gray-500">Owner Name:</span>
+                        <span class="text-[10px] uppercase font-bold text-gray-500">Selected Owner Name:</span>
                         <p id="lbl-owner-name" class="font-bold text-[#003811] truncate">---</p>
                     </div>
                     <div>
@@ -247,10 +240,11 @@
                     </div>
                 </div>
 
+                <!-- 2. APPLICANT ALWAYS LEAVES BLANK (Req 3) -->
                 <div>
                     <label class="form-label">2. Applicants (Manual Input)</label>
                     <input type="text" id="inputApplicants" class="form-input" placeholder="e.g. JOEL BERMEJO CARCIDO & MARIA CARCIDO">
-                    <p class="text-[10px] text-gray-500 mt-1">These names will appear in the Interlocutory header as the formal Applicants.</p>
+                    <p class="text-[10px] text-gray-500 mt-1">Leave blank or enter names. Always starts blank when selecting an LTC record.</p>
                 </div>
 
                 <div>
@@ -260,9 +254,11 @@
                     </div>
                 </div>
 
+                <!-- 4. ADDITIONAL REMARKS MULTI-LINE BULLETS (Req 4) -->
                 <div>
-                    <label class="form-label">4. Additional / Specific Remarks</label>
-                    <textarea id="inputOtherRemarks" class="form-input text-xs" rows="2" placeholder="Specify any other lacking requirements or custom instructions..."></textarea>
+                    <label class="form-label">4. Additional / Specific Remarks (Bulleted List)</label>
+                    <textarea id="inputOtherRemarks" class="form-input text-xs" rows="3" placeholder="Enter each custom instruction or lacking requirement on a NEW LINE. Each line will appear as an individual bullet point."></textarea>
+                    <p class="text-[10px] text-gray-500 mt-1">Tip: Press Enter to create a new bullet point for each instruction.</p>
                 </div>
             </div>
 
@@ -394,12 +390,6 @@
         let parpoName = "---";
         let backgroundImageUrl = "";
 
-        // Field mapping for easy access
-        const NON_FINAL_STATUSES = [
-            'RECEIVED', 'ASSIGNED TO LEGAL', 'FORWARDED TO LTSP',
-            'RETURNED FROM LTSP', 'DRAFT', 'WITH INTERLOCK', 'COMPLIED'
-        ];
-
         window.toggleSidebar = function() {
             const sidebar = document.getElementById('sidebar');
             const overlay = document.getElementById('mobileOverlay');
@@ -425,6 +415,49 @@
                 contentRecords.classList.add('hidden');
             }
         };
+
+        // ==========================================
+        // DYNAMIC MENU LOADER FROM clearance_menu TABLE (Req 5)
+        // ==========================================
+        async function loadMenu() {
+            const menuContainer = document.getElementById('dynamicMenu');
+            if (!currentUser || !currentUser.role) return;
+            const userRole = currentUser.role.toUpperCase().trim();
+
+            try {
+                const { data: menuItems, error } = await supabaseClient
+                    .from('clearance_menu')
+                    .select('*')
+                    .order('sort_order', { ascending: true });
+
+                if (error) throw error;
+
+                menuContainer.innerHTML = '';
+                menuItems.forEach(item => {
+                    if (item.is_active === false || item.is_active === 'FALSE') return;
+                    let roles = [];
+                    if (item.required_roles) {
+                        if (Array.isArray(item.required_roles)) { roles = item.required_roles; } 
+                        else {
+                            try { roles = JSON.parse(item.required_roles); } 
+                            catch(e) { roles = item.required_roles.replace(/[\[\]"']/g, '').split(',').map(r => r.trim()); }
+                        }
+                    }
+
+                    const hasRole = roles.length === 0 || roles.some(r => userRole.includes(String(r).toUpperCase().trim()));
+                    if (hasRole) {
+                        const isCurrent = window.location.pathname.includes(item.url);
+                        const link = document.createElement('a');
+                        link.href = item.url;
+                        link.className = `block px-6 py-4 text-[11px] font-black uppercase border-l-4 transition-all ${isCurrent ? 'bg-[#006400] border-[#D4AF37]' : 'border-transparent hover:bg-[#006400]'}`;
+                        link.innerText = item.label;
+                        menuContainer.appendChild(link);
+                    }
+                });
+            } catch (err) {
+                console.error("Error loading clearance_menu:", err);
+            }
+        }
 
         // ==========================================
         // DATA FETCHING FUNCTIONS
@@ -459,7 +492,6 @@
                 if (!error && data) {
                     requirementsList = data;
                     renderRequirementsTable();
-                    updateRequirementsSummaryStats();
                 }
             } catch (e) { console.error(e); }
         }
@@ -475,7 +507,7 @@
                     rawRecords = data;
                     renderInterlockTable();
                     updateInterlockStats();
-                    populateEligibleLtcDropdown();
+                    filterLtcRecords();
                 }
             } catch (e) { console.error(e); }
         }
@@ -520,11 +552,6 @@
                     `;
                 }
             });
-        }
-
-        function updateRequirementsSummaryStats() {
-            const activeCount = requirementsList.filter(r => r.is_active === true || String(r.is_active).toUpperCase() === 'TRUE' || r.is_active === 1).length;
-            document.getElementById('stat-active-reqs').innerText = activeCount;
         }
 
         window.openRequirementModal = function(id = null) {
@@ -617,7 +644,6 @@
             const query = document.getElementById('searchInterlock').value.toLowerCase();
             tbody.innerHTML = '';
 
-            // Filter for records that are either "WITH INTERLOCK", "COMPLIED" or have saved interlocutory details
             const interlockRecords = rawRecords.filter(r => {
                 const st = (r.status || '').toUpperCase().trim();
                 const hasInterlock = st === 'WITH INTERLOCK' || st === 'COMPLIED' || (r.interlocutory_details && r.interlocutory_details.trim() !== '');
@@ -675,33 +701,53 @@
         }
 
         // ==========================================
-        // MODAL: ISSUE INTERLOCUTORY ORDER (MANUAL APPLICANTS)
+        // MODAL 1: LIVE SEARCH, BLANK APPLICANT & MULTI-LINE BULLETS (Req 2, 3, 4)
         // ==========================================
-        function populateEligibleLtcDropdown() {
-            const dropdown = document.getElementById('selectLtcRecord');
-            dropdown.innerHTML = '<option value="">-- Select Clearance Record --</option>';
+        function filterLtcRecords() {
+            const query = document.getElementById('ltcSearchInput').value.toLowerCase().trim();
+            const container = document.getElementById('ltcSearchResults');
+            container.innerHTML = '';
 
-            // RULE: LO could select any DAR Clearance to issue Interlocutory Order as long as it is not yet SAVED FINAL from the list.
-            rawRecords.forEach(r => {
+            const eligible = rawRecords.filter(r => {
                 const st = (r.status || '').toUpperCase().trim();
                 const isFinalizedOrDone = [
                     'FINALIZED', 'FORWARDED TO PARPO', 'SIGNED BY PARPO', 
                     'RETURNED TO LEGAL (SIGNED)', 'FORWARDED TO RECORDS', 
                     'RELEASED TO CLIENT', 'WITHDRAWN', 'DISAPPROVED'
                 ].includes(st);
+                if (isFinalizedOrDone) return false;
 
-                if (!isFinalizedOrDone) {
-                    const ltcNo = r.LTC_ID_NUMBER || r.ltc_no || 'Pending No';
-                    const owner = r.owner_name || 'No Owner Name';
-                    dropdown.innerHTML += `<option value="${r.id}">${ltcNo} - ${owner} (${st})</option>`;
-                }
+                if (!query) return true;
+                return Object.values(r).some(val => val && String(val).toLowerCase().includes(query));
+            });
+
+            if (eligible.length === 0) {
+                container.innerHTML = '<p class="p-3 text-gray-400 italic">No matching eligible records found.</p>';
+                return;
+            }
+
+            eligible.slice(0, 30).forEach(r => {
+                const ltcNo = r.LTC_ID_NUMBER || r.ltc_no || 'Pending No';
+                const owner = r.owner_name || 'No Owner Name';
+                const st = r.status || 'DRAFT';
+                const isSelected = selectedRecordForInterlock && selectedRecordForInterlock.id === r.id;
+
+                container.innerHTML += `
+                    <div onclick="onLtcSelectionChange('${r.id}')" class="p-2.5 cursor-pointer hover:bg-yellow-50 transition-colors flex justify-between items-center ${isSelected ? 'bg-yellow-100 font-bold border-l-4 border-yellow-600' : ''}">
+                        <div>
+                            <p class="font-bold text-gray-900">${ltcNo}</p>
+                            <p class="text-gray-600 uppercase text-[11px]">${owner}</p>
+                        </div>
+                        <span class="px-2 py-0.5 rounded text-[9px] font-bold bg-gray-200 text-gray-800 uppercase">${st}</span>
+                    </div>
+                `;
             });
         }
 
         window.openIssueInterlocutoryModal = function() {
-            populateEligibleLtcDropdown();
-            document.getElementById('selectLtcRecord').value = '';
-            document.getElementById('inputApplicants').value = '';
+            selectedRecordForInterlock = null;
+            document.getElementById('ltcSearchInput').value = '';
+            document.getElementById('inputApplicants').value = ''; // Always leave blank by default (Req 3)
             document.getElementById('inputOtherRemarks').value = '';
             document.getElementById('lbl-owner-name').innerText = '---';
             document.getElementById('lbl-tct-no').innerText = '---';
@@ -709,6 +755,7 @@
             document.getElementById('lbl-ltc-status').innerText = '---';
 
             renderModalChecklistItems();
+            filterLtcRecords();
             document.getElementById('issueInterlocutoryModal').classList.remove('hidden');
         };
 
@@ -737,8 +784,7 @@
             });
         }
 
-        window.onLtcSelectionChange = function() {
-            const selectedId = document.getElementById('selectLtcRecord').value;
+        window.onLtcSelectionChange = function(selectedId) {
             const record = rawRecords.find(r => r.id === selectedId);
             
             if (record) {
@@ -748,26 +794,20 @@
                 document.getElementById('lbl-lot-no').innerText = record.lot || record.lot_no || '---';
                 document.getElementById('lbl-ltc-status').innerText = record.status || '---';
 
-                // Default applicant input to existing manual applicants or owner name
-                document.getElementById('inputApplicants').value = record.applicants || record.owner_name || '';
+                // REQUIREMENT 3: Always leave the applicant field blank by default
+                document.getElementById('inputApplicants').value = '';
                 
                 // If it already has interlocutory remarks saved, preload them in textarea
                 if (record.interlocutory_details) {
                     document.getElementById('inputOtherRemarks').value = record.interlocutory_details;
                 }
-            } else {
-                selectedRecordForInterlock = null;
-                document.getElementById('inputApplicants').value = '';
-                document.getElementById('lbl-owner-name').innerText = '---';
-                document.getElementById('lbl-tct-no').innerText = '---';
-                document.getElementById('lbl-lot-no').innerText = '---';
-                document.getElementById('lbl-ltc-status').innerText = '---';
+                filterLtcRecords(); // Re-render to highlight selected row
             }
         };
 
         window.confirmIssueInterlocutory = async function() {
             if (!selectedRecordForInterlock) {
-                return alert('Please select a DAR Clearance record first.');
+                return alert('Please select a DAR Clearance record from the search results first.');
             }
 
             const applicantsText = document.getElementById('inputApplicants').value.trim();
@@ -779,8 +819,10 @@
             let lackingList = Array.from(checkboxes).map(cb => cb.value);
             const otherRemarks = document.getElementById('inputOtherRemarks').value.trim();
 
+            // REQUIREMENT 4: Split additional remarks by newline so each line becomes its own bullet
             if (otherRemarks) {
-                lackingList.push(otherRemarks);
+                const extraBulletLines = otherRemarks.split(/\r?\n/).map(line => line.trim()).filter(line => line);
+                lackingList.push(...extraBulletLines);
             }
 
             if (lackingList.length === 0) {
@@ -790,7 +832,6 @@
             const lackingFormattedText = lackingList.join('\n');
             const oldStatus = selectedRecordForInterlock.status;
 
-            // Update database record: status -> WITH INTERLOCK, applicants -> manual input, interlocutory_details -> selected lacking items
             const updatePayload = {
                 status: 'WITH INTERLOCK',
                 applicants: applicantsText,
@@ -808,12 +849,10 @@
             if (error) {
                 alert('Error updating record: ' + error.message);
             } else {
-                // Log status transition
                 await logStatusChange(selectedRecordForInterlock.id, oldStatus, 'WITH INTERLOCK', lackingFormattedText);
                 closeIssueInterlocutoryModal();
                 await fetchClearanceRecords();
 
-                // Trigger print view of Interlocutory Order immediately
                 printInterlocutoryOrder(selectedRecordForInterlock.id);
             }
         };
@@ -855,7 +894,6 @@
             const record = rawRecords.find(r => r.id === id);
             if (!record) return;
 
-            // Populate formal Interlocutory Order fields
             const ltcNum = record.LTC_ID_NUMBER || record.ltc_no || 'LTC-PENDING';
             document.getElementById('io-header-id').innerText = ltcNum;
             document.getElementById('io-applicants').innerText = record.applicants || record.owner_name || '---';
@@ -863,31 +901,27 @@
             document.getElementById('io-tct').innerText = record.tct || record.registered_under || '---';
             document.getElementById('io-lot').innerText = record.lot || record.lot_no || '---';
             
-            // Format Area to square meters if stored in hectares
             let areaVal = record.area || '';
             let sqMeters = parseFloat(areaVal) * 10000;
             document.getElementById('io-area').innerText = (!isNaN(sqMeters) && sqMeters > 0) ? sqMeters.toLocaleString('en-US') : areaVal;
             document.getElementById('io-location').innerText = record.location || '---';
 
-            // Populate lacking list items
+            // REQUIREMENT 4: Render every lacking item / newline as an individual bullet point
             const lackingStr = record.interlocutory_details || record.remarks || 'No specific lacking documents listed.';
-            const listItems = lackingStr.split(/\n|,/).map(s => s.trim()).filter(s => s);
+            const listItems = lackingStr.split(/\r?\n/).map(s => s.trim()).filter(s => s);
             const listContainer = document.getElementById('io-remarks-list');
             listContainer.innerHTML = listItems.length > 0 
                 ? listItems.map(item => `<li class="mb-1.5 font-bold">${item}</li>`).join('') 
                 : '<li>---</li>';
 
-            // Date formatting
             const targetDate = record.interlocutory_date ? new Date(record.interlocutory_date) : new Date();
             const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
             document.getElementById('io-today-date').innerText = `${monthNames[targetDate.getMonth()]} ${targetDate.getDate()}, ${targetDate.getFullYear()}`;
 
-            // Signatory & Legal Officer info
             const loName = record.legalOfficer || record.legalofficer || currentUser.full_name || '---';
             document.querySelectorAll('.preparedByName').forEach(el => el.innerText = loName);
             document.querySelectorAll('.preparedByPosition').forEach(el => el.innerText = 'Legal Officer / Encoder');
 
-            // Generate Verification QR Code
             const qrDiv = document.getElementById('qr-io');
             if (qrDiv) {
                 qrDiv.innerHTML = '';
@@ -896,7 +930,6 @@
                 new QRCode(qrDiv, { text: scanUrl, width: 55, height: 55, correctLevel: QRCode.CorrectLevel.L });
             }
 
-            // Execute PDF rendering overlay and download
             const cleanFilename = `interlocutory_${ltcNum.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.pdf`;
             generatePDFDocument('docInterlocutoryOrder', cleanFilename);
         };
@@ -956,6 +989,7 @@
         window.onload = async () => {
             await fetchDynamicSignatories();
             await fetchBackgroundImage();
+            loadMenu();
             fetchRequirementsData();
             fetchClearanceRecords();
         };
