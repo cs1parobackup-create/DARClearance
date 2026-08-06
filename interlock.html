@@ -645,11 +645,21 @@
         };
 
         // ==========================================
-        // INTERLOCUTORY ORDERS DASHBOARD FUNCTIONS
+        // INTERLOCUTORY ORDERS DASHBOARD FUNCTIONS (LO VIEW FILTER APPLIED)
         // ==========================================
         function updateInterlockStats() {
+            const userRole = (currentUser.role || '').toUpperCase().trim();
+            const isChief = userRole === 'CHIEF, LEGAL DIVISION' || userRole === 'DIVISION CHIEF' || userRole === 'CHIEF' || userRole.includes('CHIEF');
+            const userFullName = (currentUser.full_name || '').toLowerCase().trim();
+
             let active = 0, released = 0, total = 0;
             rawRecords.forEach(r => {
+                // Enforce: LO can only view their own INTERLOCK
+                if (!isChief) {
+                    const loName = (r.legalOfficer || r.legalofficer || '').toLowerCase().trim();
+                    if (loName !== userFullName) return;
+                }
+
                 const st = (r.status || '').toUpperCase().trim();
                 const hasInterlockHistory = st === 'WITH INTERLOCK' || st === 'COMPLIED' || (r.interlocutory_details && r.interlocutory_details.trim() !== '') || (r.Remarks && r.Remarks.trim() !== '') || (r.remarks && r.remarks.trim() !== '');
                 if (hasInterlockHistory) {
@@ -668,7 +678,17 @@
             const query = document.getElementById('searchInterlock').value.toLowerCase();
             tbody.innerHTML = '';
 
+            const userRole = (currentUser.role || '').toUpperCase().trim();
+            const isChief = userRole === 'CHIEF, LEGAL DIVISION' || userRole === 'DIVISION CHIEF' || userRole === 'CHIEF' || userRole.includes('CHIEF');
+            const userFullName = (currentUser.full_name || '').toLowerCase().trim();
+
             const interlockRecords = rawRecords.filter(r => {
+                // Enforce: LO can only view their own INTERLOCK
+                if (!isChief) {
+                    const loName = (r.legalOfficer || r.legalofficer || '').toLowerCase().trim();
+                    if (loName !== userFullName) return false;
+                }
+
                 const st = (r.status || '').toUpperCase().trim();
                 const hasInterlock = st === 'WITH INTERLOCK' || st === 'COMPLIED' || (r.interlocutory_details && r.interlocutory_details.trim() !== '') || (r.Remarks && r.Remarks.trim() !== '') || (r.remarks && r.remarks.trim() !== '');
                 if (!hasInterlock) return false;
