@@ -106,7 +106,7 @@
 
         <div class="flex-1 overflow-y-auto p-4 md:p-6 space-y-6 no-print scroll-area">
             
-            <!-- Statistical Summary Cards (Removed Active Requirement Items card) -->
+            <!-- Statistical Summary Cards -->
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div class="bg-white p-4 rounded-lg border-l-4 border-yellow-500 shadow-sm flex justify-between items-center">
                     <div>
@@ -212,7 +212,7 @@
             </p>
             
             <div class="space-y-4 text-sm">
-                <!-- 1. LIVE SEARCH & FLEXIBLE SELECTION (Req 2) -->
+                <!-- 1. LIVE SEARCH & FLEXIBLE SELECTION -->
                 <div>
                     <label class="form-label">1. Search Eligible DAR Clearance (LTC No / Owner / Lot / TCT)</label>
                     <input type="text" id="ltcSearchInput" class="form-input mb-2" placeholder="Type to search LTC Number, Owner Name, TCT, or Lot..." oninput="filterLtcRecords()">
@@ -240,7 +240,7 @@
                     </div>
                 </div>
 
-                <!-- 2. APPLICANT ALWAYS LEAVES BLANK (Req 3) -->
+                <!-- 2. APPLICANT ALWAYS LEAVES BLANK -->
                 <div>
                     <label class="form-label">2. Applicants (Manual Input)</label>
                     <input type="text" id="inputApplicants" class="form-input" placeholder="e.g. JOEL BERMEJO CARCIDO & MARIA CARCIDO">
@@ -254,7 +254,7 @@
                     </div>
                 </div>
 
-                <!-- 4. ADDITIONAL REMARKS MULTI-LINE BULLETS (Req 4) -->
+                <!-- 4. ADDITIONAL REMARKS MULTI-LINE BULLETS -->
                 <div>
                     <label class="form-label">4. Additional / Specific Remarks (Bulleted List)</label>
                     <textarea id="inputOtherRemarks" class="form-input text-xs" rows="3" placeholder="Enter each custom instruction or lacking requirement on a NEW LINE. Each line will appear as an individual bullet point."></textarea>
@@ -417,7 +417,7 @@
         };
 
         // ==========================================
-        // DYNAMIC MENU LOADER FROM clearance_menu TABLE (Req 5)
+        // DYNAMIC MENU LOADER FROM clearance_menu TABLE
         // ==========================================
         async function loadMenu() {
             const menuContainer = document.getElementById('dynamicMenu');
@@ -542,10 +542,8 @@
                             <td class="text-xs text-gray-500">${item.created_at ? new Date(item.created_at).toLocaleDateString() : '---'}</td>
                             <td class="text-center">
                                 <div class="flex justify-center gap-1">
-                                    <button onclick='editRequirement("${item.id}")' class="bg-indigo-600 text-white px-2 py-1 rounded text-[10px] font-bold uppercase hover:bg-indigo-700 shadow">Edit</button>
-                                    <button onclick='toggleActiveRequirement("${item.id}", ${!isActive})' class="bg-gray-200 text-gray-800 px-2 py-1 rounded text-[10px] font-bold uppercase hover:bg-gray-300">
-                                        ${isActive ? 'Disable' : 'Enable'}
-                                    </button>
+                                    <button onclick='editRequirement("${item.id}")' class="bg-indigo-600 text-white px-2.5 py-1 rounded text-[10px] font-bold uppercase hover:bg-indigo-700 shadow">Edit</button>
+                                    <button onclick='deleteRequirement("${item.id}")' class="bg-red-600 text-white px-2.5 py-1 rounded text-[10px] font-bold uppercase hover:bg-red-700 shadow">Delete</button>
                                 </div>
                             </td>
                         </tr>
@@ -611,13 +609,19 @@
             }
         };
 
-        window.toggleActiveRequirement = async function(id, nextStatus) {
+        window.deleteRequirement = async function(id) {
+            if (!confirm('Are you sure you want to permanently delete this requirement item?')) return;
+            
             const { error } = await supabaseClient
                 .from('ltc_requirements')
-                .update({ is_active: nextStatus, updated_at: new Date().toISOString() })
+                .delete()
                 .eq('id', id);
 
-            if (!error) { fetchRequirementsData(); }
+            if (error) {
+                alert('Error deleting requirement: ' + error.message);
+            } else {
+                fetchRequirementsData();
+            }
         };
 
         // ==========================================
@@ -701,7 +705,7 @@
         }
 
         // ==========================================
-        // MODAL 1: LIVE SEARCH, BLANK APPLICANT & MULTI-LINE BULLETS (Req 2, 3, 4)
+        // MODAL 1: LIVE SEARCH, BLANK APPLICANT & MULTI-LINE BULLETS
         // ==========================================
         function filterLtcRecords() {
             const query = document.getElementById('ltcSearchInput').value.toLowerCase().trim();
@@ -747,7 +751,7 @@
         window.openIssueInterlocutoryModal = function() {
             selectedRecordForInterlock = null;
             document.getElementById('ltcSearchInput').value = '';
-            document.getElementById('inputApplicants').value = ''; // Always leave blank by default (Req 3)
+            document.getElementById('inputApplicants').value = ''; // Always leave blank by default
             document.getElementById('inputOtherRemarks').value = '';
             document.getElementById('lbl-owner-name').innerText = '---';
             document.getElementById('lbl-tct-no').innerText = '---';
@@ -794,14 +798,12 @@
                 document.getElementById('lbl-lot-no').innerText = record.lot || record.lot_no || '---';
                 document.getElementById('lbl-ltc-status').innerText = record.status || '---';
 
-                // REQUIREMENT 3: Always leave the applicant field blank by default
                 document.getElementById('inputApplicants').value = '';
                 
-                // If it already has interlocutory remarks saved, preload them in textarea
                 if (record.interlocutory_details) {
                     document.getElementById('inputOtherRemarks').value = record.interlocutory_details;
                 }
-                filterLtcRecords(); // Re-render to highlight selected row
+                filterLtcRecords();
             }
         };
 
@@ -819,7 +821,6 @@
             let lackingList = Array.from(checkboxes).map(cb => cb.value);
             const otherRemarks = document.getElementById('inputOtherRemarks').value.trim();
 
-            // REQUIREMENT 4: Split additional remarks by newline so each line becomes its own bullet
             if (otherRemarks) {
                 const extraBulletLines = otherRemarks.split(/\r?\n/).map(line => line.trim()).filter(line => line);
                 lackingList.push(...extraBulletLines);
@@ -906,7 +907,6 @@
             document.getElementById('io-area').innerText = (!isNaN(sqMeters) && sqMeters > 0) ? sqMeters.toLocaleString('en-US') : areaVal;
             document.getElementById('io-location').innerText = record.location || '---';
 
-            // REQUIREMENT 4: Render every lacking item / newline as an individual bullet point
             const lackingStr = record.interlocutory_details || record.remarks || 'No specific lacking documents listed.';
             const listItems = lackingStr.split(/\r?\n/).map(s => s.trim()).filter(s => s);
             const listContainer = document.getElementById('io-remarks-list');
