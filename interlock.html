@@ -26,6 +26,7 @@
                 height: 13in !important;
                 padding: 0 !important;
                 margin: 0 !important;
+                background: white !important;
             }
         }
 
@@ -61,6 +62,14 @@
         .form-label { display: block; font-size: 0.75rem; font-weight: 700; color: var(--dar-green); margin-bottom: 0.25rem; text-transform: uppercase; }
         .form-input { width: 100%; background: #F9FAFB; border: 1px solid #D1D5DB; border-radius: 0.375rem; padding: 0.6rem; font-size: 0.875rem; transition: border-color 0.2s; }
         .form-input:focus { outline: none; border-color: var(--dar-green); ring: 1px solid var(--dar-green); }
+
+        /* Legal Document Standard Typography & Clear Background */
+        #docInterlocutoryOrder {
+            font-family: 'Roboto', sans-serif !important;
+            font-size: 11pt !important;
+            color: #000000 !important;
+            background-color: #ffffff !important;
+        }
     </style>
 </head>
 <body class="flex h-screen overflow-hidden text-[#1F2937]">
@@ -309,59 +318,67 @@
     </div>
 
     <!-- ========================================================= -->
-    <!-- PRINT AREA: INTERLOCUTORY ORDER FORMAL DOCUMENT -->
+    <!-- PRINT AREA: INTERLOCUTORY ORDER FORMAL DOCUMENT (ROBOTO 11, LEGAL STANDARD) -->
     <!-- ========================================================= -->
-    <div id="docInterlocutoryOrder" class="doc-print-area mx-auto hidden pt-8">
-        <div class="doc-content px-8">
-            <div class="flex justify-between items-start mb-10 text-[10pt] font-bold uppercase tracking-tight">
-                <div class="w-[340px] leading-tight">
-                    IN RE: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;APPLICATION FOR LAND TRANSFER CLEARANCE PURSUANT TO DAR A. O. NO. 4, SERIES OF 2021,
-                    <br><br><br>
-                    <span id="io-applicants" class="underline underline-offset-4"> </span>,
-                    <br>
-                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Applicants.
-                    <br>
-                    x - - - - - - - - - - - - - x
-                </div>
-                <div class="text-right">
-                    <span class="underline underline-offset-4 font-bold" id="io-header-id">LTC-PENDING</span>
-                </div>
-            </div>
-
-            <div class="text-center mb-8 page-break-avoid">
-                <div class="font-black text-[13pt] tracking-widest uppercase">INTERLOCUTORY ORDER</div>
-            </div>
+    <div id="docInterlocutoryOrder" class="doc-print-area mx-auto hidden pt-8 bg-white text-black">
+        <div class="doc-content px-10 py-6" style="font-family: 'Roboto', sans-serif; font-size: 11pt; line-height: 1.5; color: #000000; background: #ffffff;">
             
-            <p class="mb-4 text-justify indent-12 page-break-avoid leading-relaxed">
-                For review and resolution by this Office is the above-mentioned application for DAR Land Transfer Clearance involving a parcel of agricultural land declared in the name of <span class="font-bold uppercase" id="io-owner-body"> </span>, embraced by TCT/OCT No. <span class="font-bold uppercase" id="io-tct"> </span>, Lot <span class="font-bold uppercase" id="io-lot"> </span>, with an area of <span class="font-bold uppercase" id="io-area"> </span> square meters and located at <span class="font-bold uppercase" id="io-location"> </span>.
-            </p>
-
-            <p class="mb-4 text-justify indent-12 page-break-avoid leading-relaxed">
-                However, upon evaluation of the submitted documents, the following document/s is/are lacking, to wit:
-            </p>
-
-            <ul id="io-remarks-list" class="mb-6 ml-16 list-disc list-outside text-justify leading-relaxed page-break-avoid pr-8 font-bold">
-                <li>---</li>
-            </ul>
-
-            <p class="mb-8 text-justify indent-12 page-break-avoid leading-relaxed">
-                <span class="font-bold">IN VIEW OF THE FOREGOING</span>, Order is hereby issued DENYING the instant application without prejudice. Let the entire records be returned to the applicant/s for compliance.
-            </p>
-
-            <div class="mb-16 font-bold page-break-avoid">
-                SO ORDERED. <span id="io-today-date" class="pdf-today-ordinal">---</span>; Naga City.
-            </div>
-
-            <div class="w-full flex justify-end mb-16 page-break-avoid">
-                <div class="flex flex-col items-center">
-                    <div class="text-center w-60">
-                        <p class="sys-parpo-name font-bold uppercase inline-block text-[11pt]">---</p>
-                        <p class="text-[10pt]">PARPO II</p>
+            <!-- Standard Legal Document Caption[cite: 1] -->
+            <div class="flex justify-between items-start mb-8 font-bold uppercase">
+                <div class="flex w-[70%]">
+                    <div class="w-20 shrink-0">IN RE:</div>
+                    <div class="flex-1 leading-normal">
+                        APPLICATION FOR LAND TRANSFER CLEARANCE PURSUANT TO DAR A. O. NO. 4, SERIES OF 2021,
+                        <div class="mt-8 mb-2 font-black" id="io-applicants">---</div>
+                        <div class="text-center font-normal italic lowercase mb-2">Applicants.</div>
+                        <div>X - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - X</div>
                     </div>
                 </div>
+                <div class="w-[28%] text-right font-bold tracking-tight">
+                    <span id="io-header-id">LTC-PENDING</span>
+                </div>
             </div>
 
-            <div class="w-full mt-10 page-break-avoid text-[8pt] leading-tight italic text-gray-700 flex justify-between items-end">
+            <!-- Centered Spaced Legal Title[cite: 1] -->
+            <div class="text-center my-8 page-break-avoid">
+                <div class="font-bold text-[13pt] tracking-[0.25em] uppercase">O R D E R</div>
+            </div>
+            
+            <!-- Body Paragraph 1 (Legal Standard Wording & Indentation)[cite: 1] -->
+            <p class="mb-4 text-justify indent-12 page-break-avoid leading-relaxed">
+                For review and resolution by this Office is the instant application for issuance of Land Transfer Clearance (LTC) pursuant to DAR Administrative Order No. 4, series of 2021. The subject property is embraced by TCT No. <span class="font-bold uppercase" id="io-tct">---</span>, registered in the name of <span class="font-bold uppercase" id="io-owner-body">---</span>, with an area of <span class="font-bold uppercase" id="io-area">---</span> square meters and located at <span class="font-bold uppercase" id="io-location">---</span>.
+            </p>
+
+            <!-- Body Paragraph 2[cite: 1] -->
+            <p class="mb-4 text-justify indent-12 page-break-avoid leading-relaxed">
+                Upon review of the instant application it was found out that the following documents were not submitted, to wit;
+            </p>
+
+            <!-- Numbered List of Requirements (Legal Standard 1, 2, 3...)[cite: 1] -->
+            <ol id="io-remarks-list" class="mb-6 ml-16 list-decimal list-outside text-justify leading-relaxed page-break-avoid pr-6">
+                <li>---</li>
+            </ol>
+
+            <!-- Body Paragraph 3 (Closing Order Clause)[cite: 1] -->
+            <p class="mb-8 text-justify indent-12 page-break-avoid leading-relaxed">
+                <span class="font-bold">IN VIEW OF THE FOREGOING</span>, Order is hereby issued <span class="font-bold">DENYING</span> the instant application for issuance of Land Transfer Clearance (LTC) without prejudice. Let the entire records be returned to the applicant.
+            </p>
+
+            <!-- SO ORDERED Date Line[cite: 1] -->
+            <div class="mb-14 page-break-avoid indent-12">
+                <span class="font-bold">SO ORDERED.</span> <span id="io-today-date">---</span>. Naga City.
+            </div>
+
+            <!-- PARPO Signatory Right-Aligned[cite: 1] -->
+            <div class="w-full flex justify-end mb-16 page-break-avoid pr-8">
+                <div class="text-center min-w-[240px]">
+                    <p class="sys-parpo-name font-bold uppercase inline-block text-[11pt]">---</p>
+                    <p class="text-[11pt]">PARPO II</p>
+                </div>
+            </div>
+
+            <!-- Footer / Copy Furnished -->
+            <div class="w-full mt-10 page-break-avoid text-[9pt] leading-tight italic text-gray-700 flex justify-between items-end">
                 <div>
                     <p class="mb-2">Copy Furnished:</p>
                     <p class="font-bold uppercase preparedByName">---</p>
@@ -835,7 +852,7 @@
             let lackingList = Array.from(checkboxes).map(cb => cb.value);
             const otherRemarks = document.getElementById('inputOtherRemarks').value.trim();
 
-            // REQUIREMENT 4: Split additional remarks by newline so each line becomes its own bullet
+            // REQUIREMENT 4: Split additional remarks by newline so each line becomes its own bullet/number
             if (otherRemarks) {
                 const extraBulletLines = otherRemarks.split(/\r?\n/).map(line => line.trim()).filter(line => line);
                 lackingList.push(...extraBulletLines);
@@ -904,7 +921,7 @@
         }
 
         // ==========================================
-        // PDF / PRINT GENERATION (HTML2PDF)
+        // PDF / AUTOMATIC PRINT & DOWNLOAD GENERATION
         // ==========================================
         window.printInterlocutoryOrder = function(id) {
             const record = rawRecords.find(r => r.id === id);
@@ -915,19 +932,18 @@
             document.getElementById('io-applicants').innerText = record.applicants || record.owner_name || '---';
             document.getElementById('io-owner-body').innerText = record.owner_name || '---';
             document.getElementById('io-tct').innerText = record.tct || record.registered_under || '---';
-            document.getElementById('io-lot').innerText = record.lot || record.lot_no || '---';
             
             let areaVal = record.area || '';
             let sqMeters = parseFloat(areaVal) * 10000;
             document.getElementById('io-area').innerText = (!isNaN(sqMeters) && sqMeters > 0) ? sqMeters.toLocaleString('en-US') : areaVal;
             document.getElementById('io-location').innerText = record.location || '---';
 
-            // REQUIREMENT 4: Render every lacking item / newline as an individual bullet point
+            // Numbered list format (1, 2, 3...) per legal document standard[cite: 1]
             const lackingStr = record.interlocutory_details || record.remarks || 'No specific lacking documents listed.';
             const listItems = lackingStr.split(/\r?\n/).map(s => s.trim()).filter(s => s);
             const listContainer = document.getElementById('io-remarks-list');
             listContainer.innerHTML = listItems.length > 0 
-                ? listItems.map(item => `<li class="mb-1.5 font-bold">${item}</li>`).join('') 
+                ? listItems.map(item => `<li class="mb-1.5 pl-1">${item}</li>`).join('') 
                 : '<li>---</li>';
 
             const targetDate = record.interlocutory_date ? new Date(record.interlocutory_date) : new Date();
@@ -955,11 +971,11 @@
             const overlay = document.createElement('div');
             overlay.id = 'pdf-loading-overlay';
             overlay.style.cssText = 'position: absolute; top: 0; left: 0; width: 100%; min-height: 100vh; background: #1F2937; z-index: 999999; display: flex; align-items: center; justify-content: flex-start; flex-direction: column; color: white; font-family: sans-serif; padding: 2rem 0; overflow: auto;';
-            overlay.innerHTML = '<div class="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-[#D4AF37] mb-4"></div><h2 class="text-2xl font-black tracking-widest uppercase mb-6">Rendering Interlocutory Order...</h2>';
+            overlay.innerHTML = '<div class="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-[#D4AF37] mb-4"></div><h2 class="text-2xl font-black tracking-widest uppercase mb-6">Rendering Legal Order...</h2>';
             
             const wrapper = document.createElement('div');
             wrapper.id = 'aiPrintWrapper';
-            wrapper.style.cssText = 'width: 8.5in; display: flex; flex-direction: column; align-items: center; background: transparent;';
+            wrapper.style.cssText = 'width: 8.5in; display: flex; flex-direction: column; align-items: center; background: white;';
             
             overlay.appendChild(wrapper);
             document.body.appendChild(overlay);
@@ -969,7 +985,7 @@
             page.style.cssText = 'width: 8.5in; height: 13in; min-height: 13in; max-height: 13in; position: relative; background: white; margin-bottom: 0px; overflow: hidden; flex-shrink: 0;';
 
             const content = document.createElement('div');
-            content.style.cssText = 'position: absolute; top: 1.15in; left: 1in; right: 1in; bottom: 1.15in; z-index: 10; display: flex; flex-direction: column; font-family: Arial, sans-serif; font-size: 9pt; color: black; line-height: 1.5; overflow: hidden;';
+            content.style.cssText = 'position: absolute; top: 1.15in; left: 1in; right: 1in; bottom: 1.15in; z-index: 10; display: flex; flex-direction: column; font-family: "Roboto", sans-serif; font-size: 11pt; color: black; line-height: 1.5; overflow: hidden;';
             
             Array.from(sourceContent.children).forEach(child => {
                 if (!child.classList.contains('hidden')) {
@@ -984,16 +1000,40 @@
                 margin: 0,
                 filename: filename,
                 image: { type: 'jpeg', quality: 1.0 },
-                html2canvas: { scale: 3, useCORS: true },
+                html2canvas: { scale: 3, useCORS: true, backgroundColor: '#ffffff' },
                 jsPDF: { unit: 'in', format: [8.5, 13], orientation: 'portrait' }
             };
 
-            html2pdf().set(opt).from(wrapper).toPdf().save().then(() => {
-                document.body.removeChild(overlay);
+            // Automatic DOWNLOAD and PRINT
+            html2pdf().set(opt).from(wrapper).toPdf().output('bloburl').then(function(pdfUrl) {
+                // 1. Automatically download the file
+                const link = document.createElement('a');
+                link.href = pdfUrl;
+                link.download = filename;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+
+                // 2. Automatically trigger system print dialog
+                const iframe = document.createElement('iframe');
+                iframe.style.display = 'none';
+                iframe.src = pdfUrl;
+                document.body.appendChild(iframe);
+                iframe.onload = function() {
+                    setTimeout(function() {
+                        iframe.contentWindow.focus();
+                        iframe.contentWindow.print();
+                        if (document.body.contains(overlay)) {
+                            document.body.removeChild(overlay);
+                        }
+                    }, 500);
+                };
             }).catch(err => {
                 console.error(err);
                 alert("PDF Generation Error: " + err.message);
-                document.body.removeChild(overlay);
+                if (document.body.contains(overlay)) {
+                    document.body.removeChild(overlay);
+                }
             });
         }
 
