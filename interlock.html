@@ -1,0 +1,964 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interlocutory & Requirements - DAR Clearance Monitor</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-config.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root { --dar-green: #003811; --dar-gold: #D4AF37; }
+        body { font-family: 'Segoe UI', sans-serif; background-color: #F3F4F6; font-size: 13px; color: #1F2937; }
+        .compact-table td, .compact-table th { padding: 0.5rem 1rem !important; }
+
+        @media print {
+            @page { size: 8.5in 13in; margin: 0; }
+            body { background: white !important; }
+            nav, header, .no-print, #actionButtons, .modal-header-actions { display: none !important; }
+            #docInterlocutoryOrder {
+                visibility: visible !important;
+                display: block !important;
+                width: 8.5in !important; 
+                height: 13in !important;
+                padding: 0 !important;
+                margin: 0 !important;
+            }
+        }
+
+        .doc-print-area { display: none; }
+        
+        .data-value { 
+            font-weight: bold; 
+            border-bottom: 1.5px solid black; 
+            display: inline-block; 
+            min-width: 40px; 
+            text-transform: uppercase; 
+            line-height: 1.1; 
+            padding-bottom: 1px;
+        }
+        
+        .page-break-avoid { 
+            page-break-inside: avoid !important;
+            break-inside: avoid !important;
+        }
+        
+        .scroll-area::-webkit-scrollbar { width: 4px; }
+        .scroll-area::-webkit-scrollbar-track { background: #f1f1f1; }
+        .scroll-area::-webkit-scrollbar-thumb { background: #c1c1c1; border-radius: 4px; }
+
+        .edit-big {
+            font-size: 1.1rem !important; line-height: 1.5rem !important; font-weight: 900 !important;
+            color: #1e3a8a !important; background-color: #fefce8 !important; border-bottom: 3px solid #fde047 !important;
+            padding: 6px 12px !important; border-radius: 4px; display: inline-block; min-width: 200px; min-height: 38px;
+            text-transform: uppercase; outline: none; transition: all 0.2s; vertical-align: middle;
+        }
+        .edit-big:focus { background-color: #fef08a !important; border-bottom: 3px solid #eab308 !important; }
+        
+        .form-label { display: block; font-size: 0.75rem; font-weight: 700; color: var(--dar-green); margin-bottom: 0.25rem; text-transform: uppercase; }
+        .form-input { width: 100%; background: #F9FAFB; border: 1px solid #D1D5DB; border-radius: 0.375rem; padding: 0.6rem; font-size: 0.875rem; transition: border-color 0.2s; }
+        .form-input:focus { outline: none; border-color: var(--dar-green); ring: 1px solid var(--dar-green); }
+    </style>
+</head>
+<body class="flex h-screen overflow-hidden text-[#1F2937]">
+
+    <!-- Mobile Sidebar Overlay -->
+    <div id="mobileOverlay" class="fixed inset-0 bg-black/50 z-20 hidden md:hidden" onclick="toggleSidebar()"></div>
+
+    <!-- Navigation Sidebar -->
+    <nav id="sidebar" class="bg-[#003811] w-64 flex flex-col text-white flex-shrink-0 shadow-xl z-30 no-print fixed inset-y-0 left-0 transform -translate-x-full md:relative md:translate-x-0 transition-transform duration-200 ease-in-out">
+        <div class="p-6 border-b border-[#006400] flex justify-between items-center">
+            <div>
+                <h2 class="text-xl font-bold text-[#D4AF37]">DARPO-CS</h2>
+                <p id="userRoleBadge" class="text-[10px] text-gray-300 uppercase tracking-widest mt-1 font-bold">---</p>
+            </div>
+            <button class="md:hidden text-white focus:outline-none" onclick="toggleSidebar()">&times;</button>
+        </div>
+        
+        <div id="dynamicMenu" class="flex-1 overflow-y-auto py-2">
+            <a href="dashboard.html" class="block px-6 py-4 text-[11px] font-black uppercase border-l-4 border-transparent hover:bg-[#006400]">Dashboard</a>
+            <a href="interlocutory.html" class="block px-6 py-4 text-[11px] font-black uppercase border-l-4 bg-[#006400] border-[#D4AF37]">Interlocutory & Requirements</a>
+        </div>
+
+        <div class="p-4 bg-black/20">
+            <p id="activeUser" class="text-xs text-gray-300 truncate mb-2 font-bold"></p>
+            <button onclick="logout()" class="w-full bg-red-800 py-2 text-xs font-bold rounded shadow hover:bg-red-700 transition-colors uppercase">Logout</button>
+        </div>
+    </nav>
+
+    <!-- Main Content Area -->
+    <main class="flex-1 flex flex-col overflow-hidden w-full relative">
+        <header class="bg-white shadow-sm border-b px-4 md:px-6 py-4 flex flex-col md:flex-row md:justify-between items-start md:items-center gap-4 no-print z-10 w-full">
+            <div class="flex items-center gap-3 w-full md:w-auto">
+                <button class="md:hidden text-[#003811] focus:outline-none" onclick="toggleSidebar()">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+                </button>
+                <h1 class="text-base md:text-lg font-bold text-[#003811] uppercase tracking-tight truncate">Interlocutory & Requirements Manager</h1>
+            </div>
+            <div class="flex flex-wrap md:flex-nowrap gap-2 w-full md:w-auto">
+                <button onclick="openIssueInterlocutoryModal()" class="flex-1 md:flex-none bg-yellow-600 text-white px-3 md:px-4 py-1.5 rounded text-xs font-bold uppercase shadow hover:bg-yellow-700 whitespace-nowrap">
+                    + Issue Interlocutory Order
+                </button>
+                <button onclick="openRequirementModal()" class="flex-1 md:flex-none bg-indigo-600 text-white px-3 md:px-4 py-1.5 rounded text-xs font-bold uppercase shadow hover:bg-indigo-700 whitespace-nowrap">
+                    + Add Requirement Item
+                </button>
+                <button onclick="refreshAllData()" class="bg-[#003811] text-white px-3 md:px-4 py-1.5 rounded text-xs font-bold uppercase shadow hover:bg-[#006400]">Refresh</button>
+            </div>
+        </header>
+
+        <div class="flex-1 overflow-y-auto p-4 md:p-6 space-y-6 no-print scroll-area">
+            
+            <!-- Statistical Summary Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div class="bg-white p-4 rounded-lg border-l-4 border-yellow-500 shadow-sm flex justify-between items-center">
+                    <div>
+                        <p class="text-[10px] font-bold text-gray-400 uppercase">Active Interlock Orders</p>
+                        <h3 id="stat-active-interlock" class="text-2xl font-black text-yellow-600">0</h3>
+                    </div>
+                    <div class="text-yellow-500 text-3xl">⚠️</div>
+                </div>
+                <div class="bg-white p-4 rounded-lg border-l-4 border-teal-500 shadow-sm flex justify-between items-center">
+                    <div>
+                        <p class="text-[10px] font-bold text-gray-400 uppercase">Complied / Released Interlock</p>
+                        <h3 id="stat-released-interlock" class="text-2xl font-black text-teal-600">0</h3>
+                    </div>
+                    <div class="text-teal-500 text-3xl">✅</div>
+                </div>
+                <div class="bg-white p-4 rounded-lg border-l-4 border-indigo-500 shadow-sm flex justify-between items-center">
+                    <div>
+                        <p class="text-[10px] font-bold text-gray-400 uppercase">Total LTCs with Interlock History</p>
+                        <h3 id="stat-total-interlock" class="text-2xl font-black text-indigo-600">0</h3>
+                    </div>
+                    <div class="text-indigo-500 text-3xl">📁</div>
+                </div>
+                <div class="bg-white p-4 rounded-lg border-l-4 border-purple-500 shadow-sm flex justify-between items-center">
+                    <div>
+                        <p class="text-[10px] font-bold text-gray-400 uppercase">Active Requirement Items</p>
+                        <h3 id="stat-active-reqs" class="text-2xl font-black text-purple-600">0</h3>
+                    </div>
+                    <div class="text-purple-500 text-3xl">📋</div>
+                </div>
+            </div>
+
+            <!-- Tab Navigation for Interlock Records & Requirements Table -->
+            <div class="border-b border-gray-200">
+                <nav class="-mb-px flex space-x-8">
+                    <button onclick="switchTab('records')" id="tab-btn-records" class="border-b-2 border-[#003811] text-[#003811] py-3 px-1 text-xs font-black uppercase tracking-wider">
+                        Interlocutory Records Monitor
+                    </button>
+                    <button onclick="switchTab('requirements')" id="tab-btn-requirements" class="border-b-2 border-transparent text-gray-500 hover:text-gray-700 py-3 px-1 text-xs font-black uppercase tracking-wider">
+                        LTC Requirements Table (ltc_requirements)
+                    </button>
+                </nav>
+            </div>
+
+            <!-- TAB 1: INTERLOCUTORY ORDERS RECORD -->
+            <div id="tab-content-records" class="space-y-4">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-2">
+                    <h3 class="text-sm font-bold uppercase text-[#003811]">All LTC Applications with Interlocutory Order History</h3>
+                    <input type="text" id="searchInterlock" placeholder="Search LTC No, Owner, Applicant..." class="border border-gray-300 rounded px-3 py-1.5 text-xs focus:outline-none focus:border-[#003811] w-full md:w-72" onkeyup="renderInterlockTable()">
+                </div>
+
+                <div class="bg-white rounded-lg shadow-sm overflow-hidden border border-gray-200 w-full overflow-x-auto">
+                    <table class="w-full text-left border-collapse text-[11px] compact-table min-w-[850px]">
+                        <thead class="bg-gray-50 border-b uppercase font-bold text-[#003811] tracking-wider">
+                            <tr>
+                                <th class="w-[15%]">LTC Number</th>
+                                <th class="w-[18%]">Land Owner</th>
+                                <th class="w-[18%]">Applicant(s)</th>
+                                <th class="w-[14%]">Legal Officer</th>
+                                <th class="w-[12%]">Current Status</th>
+                                <th class="w-[10%]">Date Issued</th>
+                                <th class="w-[13%] text-center">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="interlockTableBody" class="divide-y divide-gray-100"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- TAB 2: LTC REQUIREMENTS TABLE (ltc_requirements) -->
+            <div id="tab-content-requirements" class="space-y-4 hidden">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-2">
+                    <h3 class="text-sm font-bold uppercase text-[#003811]">Manage Standard Lacking Documents Checklist</h3>
+                    <input type="text" id="searchRequirements" placeholder="Search requirement item or category..." class="border border-gray-300 rounded px-3 py-1.5 text-xs focus:outline-none focus:border-[#003811] w-full md:w-72" onkeyup="renderRequirementsTable()">
+                </div>
+
+                <div class="bg-white rounded-lg shadow-sm overflow-hidden border border-gray-200 w-full overflow-x-auto">
+                    <table class="w-full text-left border-collapse text-[11px] compact-table min-w-[700px]">
+                        <thead class="bg-gray-50 border-b uppercase font-bold text-[#003811] tracking-wider">
+                            <tr>
+                                <th class="w-[45%]">Requirement / Document Name</th>
+                                <th class="w-[20%]">Category</th>
+                                <th class="w-[12%] text-center">Status</th>
+                                <th class="w-[13%]">Created At</th>
+                                <th class="w-[10%] text-center">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="requirementsTableBody" class="divide-y divide-gray-100"></tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- ========================================================= -->
+    <!-- MODAL 1: ISSUE / EDIT INTERLOCUTORY ORDER (CUSTOM APPLICANTS) -->
+    <!-- ========================================================= -->
+    <div id="issueInterlocutoryModal" class="fixed inset-0 bg-black/60 hidden flex items-center justify-center z-[70] p-4 no-print">
+        <div class="bg-white p-6 rounded-lg shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto border-t-4 border-yellow-600">
+            <div class="flex justify-between items-center border-b pb-3 mb-4">
+                <h3 class="text-lg font-black text-[#003811] uppercase tracking-wide">Issue Interlocutory Order</h3>
+                <button onclick="closeIssueInterlocutoryModal()" class="text-gray-400 hover:text-black text-2xl">&times;</button>
+            </div>
+            
+            <p class="text-xs text-gray-600 mb-4">
+                Select an eligible DAR Clearance (not yet <span class="font-bold text-red-600">SAVED FINAL</span>) to issue an Interlocutory Order and specify manual applicants.
+            </p>
+            
+            <div class="space-y-4 text-sm">
+                <div>
+                    <label class="form-label">1. Select Eligible DAR Clearance (LTC No / Owner)</label>
+                    <select id="selectLtcRecord" class="form-input" onchange="onLtcSelectionChange()">
+                        <option value="">-- Select Clearance Record --</option>
+                    </select>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3 bg-gray-50 p-3 rounded border border-gray-200">
+                    <div>
+                        <span class="text-[10px] uppercase font-bold text-gray-500">Owner Name:</span>
+                        <p id="lbl-owner-name" class="font-bold text-[#003811] truncate">---</p>
+                    </div>
+                    <div>
+                        <span class="text-[10px] uppercase font-bold text-gray-500">TCT / OCT No:</span>
+                        <p id="lbl-tct-no" class="font-bold text-[#003811] truncate">---</p>
+                    </div>
+                    <div>
+                        <span class="text-[10px] uppercase font-bold text-gray-500">Lot No:</span>
+                        <p id="lbl-lot-no" class="font-bold text-[#003811] truncate">---</p>
+                    </div>
+                    <div>
+                        <span class="text-[10px] uppercase font-bold text-gray-500">Current Status:</span>
+                        <p id="lbl-ltc-status" class="font-bold text-yellow-700 truncate">---</p>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="form-label">2. Applicants (Manual Input)</label>
+                    <input type="text" id="inputApplicants" class="form-input" placeholder="e.g. JOEL BERMEJO CARCIDO & MARIA CARCIDO">
+                    <p class="text-[10px] text-gray-500 mt-1">These names will appear in the Interlocutory header as the formal Applicants.</p>
+                </div>
+
+                <div>
+                    <label class="form-label">3. Select Lacking Documents / Requirements</label>
+                    <div id="modalChecklistContainer" class="max-h-48 overflow-y-auto space-y-2 border p-3 rounded bg-gray-50 text-xs">
+                        <p class="text-gray-400 italic">Loading requirements...</p>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="form-label">4. Additional / Specific Remarks</label>
+                    <textarea id="inputOtherRemarks" class="form-input text-xs" rows="2" placeholder="Specify any other lacking requirements or custom instructions..."></textarea>
+                </div>
+            </div>
+
+            <div class="flex justify-end gap-3 mt-6 pt-4 border-t">
+                <button type="button" onclick="closeIssueInterlocutoryModal()" class="px-4 py-2 bg-gray-200 text-gray-800 rounded font-bold text-xs uppercase hover:bg-gray-300">Cancel</button>
+                <button type="button" onclick="confirmIssueInterlocutory()" class="px-5 py-2 bg-yellow-600 text-white rounded font-bold text-xs uppercase hover:bg-yellow-700 shadow">Save & Generate Order</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================================= -->
+    <!-- MODAL 2: ADD / EDIT REQUIREMENT ITEM (ltc_requirements) -->
+    <!-- ========================================================= -->
+    <div id="requirementModal" class="fixed inset-0 bg-black/60 hidden flex items-center justify-center z-[70] p-4 no-print">
+        <div class="bg-white p-6 rounded-lg shadow-2xl max-w-md w-full border-t-4 border-indigo-600">
+            <h3 id="reqModalTitle" class="text-lg font-black text-[#003811] uppercase mb-4 border-b pb-2">Add New Requirement</h3>
+            
+            <input type="hidden" id="reqId">
+            <div class="space-y-4">
+                <div>
+                    <label class="form-label">Requirement / Document Name *</label>
+                    <input type="text" id="reqName" class="form-input" placeholder="e.g. Certified True Copy of Tax Declaration">
+                </div>
+                <div>
+                    <label class="form-label">Category</label>
+                    <select id="reqCategory" class="form-input">
+                        <option value="Title & Ownership">Title & Ownership</option>
+                        <option value="Tax & Assessment">Tax & Assessment</option>
+                        <option value="Affidavits">Affidavits</option>
+                        <option value="DAR Reports">DAR Reports</option>
+                        <option value="Technical Documents">Technical Documents</option>
+                        <option value="General">General</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="flex items-center gap-2 cursor-pointer text-sm font-bold mt-2">
+                        <input type="checkbox" id="reqIsActive" class="w-4 h-4 text-indigo-600" checked>
+                        Active (Visible in Interlocutory Checklist)
+                    </label>
+                </div>
+            </div>
+
+            <div class="flex justify-end gap-3 mt-6 pt-4 border-t">
+                <button type="button" onclick="closeRequirementModal()" class="px-4 py-2 bg-gray-200 text-gray-800 rounded font-bold text-xs uppercase">Cancel</button>
+                <button type="button" onclick="saveRequirement()" id="btnSaveReq" class="px-5 py-2 bg-indigo-600 text-white rounded font-bold text-xs uppercase shadow hover:bg-indigo-700">Save Requirement</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================================= -->
+    <!-- PRINT AREA: INTERLOCUTORY ORDER FORMAL DOCUMENT -->
+    <!-- ========================================================= -->
+    <div id="docInterlocutoryOrder" class="doc-print-area mx-auto hidden pt-8">
+        <div class="doc-content px-8">
+            <div class="flex justify-between items-start mb-10 text-[10pt] font-bold uppercase tracking-tight">
+                <div class="w-[340px] leading-tight">
+                    IN RE: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;APPLICATION FOR LAND TRANSFER CLEARANCE PURSUANT TO DAR A. O. NO. 4, SERIES OF 2021,
+                    <br><br><br>
+                    <span id="io-applicants" class="underline underline-offset-4"> </span>,
+                    <br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Applicants.
+                    <br>
+                    x - - - - - - - - - - - - - x
+                </div>
+                <div class="text-right">
+                    <span class="underline underline-offset-4 font-bold" id="io-header-id">LTC-PENDING</span>
+                </div>
+            </div>
+
+            <div class="text-center mb-8 page-break-avoid">
+                <div class="font-black text-[13pt] tracking-widest uppercase">INTERLOCUTORY ORDER</div>
+            </div>
+            
+            <p class="mb-4 text-justify indent-12 page-break-avoid leading-relaxed">
+                For review and resolution by this Office is the above-mentioned application for DAR Land Transfer Clearance involving a parcel of agricultural land declared in the name of <span class="font-bold uppercase" id="io-owner-body"> </span>, embraced by TCT/OCT No. <span class="font-bold uppercase" id="io-tct"> </span>, Lot <span class="font-bold uppercase" id="io-lot"> </span>, with an area of <span class="font-bold uppercase" id="io-area"> </span> square meters and located at <span class="font-bold uppercase" id="io-location"> </span>.
+            </p>
+
+            <p class="mb-4 text-justify indent-12 page-break-avoid leading-relaxed">
+                However, upon evaluation of the submitted documents, the following document/s is/are lacking, to wit:
+            </p>
+
+            <ul id="io-remarks-list" class="mb-6 ml-16 list-disc list-outside text-justify leading-relaxed page-break-avoid pr-8 font-bold">
+                <li>---</li>
+            </ul>
+
+            <p class="mb-8 text-justify indent-12 page-break-avoid leading-relaxed">
+                <span class="font-bold">IN VIEW OF THE FOREGOING</span>, Order is hereby issued DENYING the instant application without prejudice. Let the entire records be returned to the applicant/s for compliance.
+            </p>
+
+            <div class="mb-16 font-bold page-break-avoid">
+                SO ORDERED. <span id="io-today-date" class="pdf-today-ordinal">---</span>; Naga City.
+            </div>
+
+            <div class="w-full flex justify-end mb-16 page-break-avoid">
+                <div class="flex flex-col items-center">
+                    <div class="text-center w-60">
+                        <p class="sys-parpo-name font-bold uppercase inline-block text-[11pt]">---</p>
+                        <p class="text-[10pt]">PARPO II</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="w-full mt-10 page-break-avoid text-[8pt] leading-tight italic text-gray-700 flex justify-between items-end">
+                <div>
+                    <p class="mb-2">Copy Furnished:</p>
+                    <p class="font-bold uppercase preparedByName">---</p>
+                    <p class="uppercase preparedByPosition">---</p>
+                    <p>DAR Municipal Office</p>
+                    <p>Camarines Sur</p>
+                    <p class="mt-4">File/Records</p>
+                </div>
+                <div id="qr-io" class="w-[55px] h-[55px] shrink-0"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Authentication & Session Validation
+        const userData = sessionStorage.getItem('currentUser');
+        if (!userData) { window.location.href = 'index.html'; }
+        const currentUser = JSON.parse(userData);
+        document.getElementById('activeUser').innerText = currentUser.full_name;
+        document.getElementById('userRoleBadge').innerText = currentUser.role;
+
+        // Global State Variables
+        let rawRecords = [];
+        let requirementsList = [];
+        let selectedRecordForInterlock = null;
+        let parpoName = "---";
+        let backgroundImageUrl = "";
+
+        // Field mapping for easy access
+        const NON_FINAL_STATUSES = [
+            'RECEIVED', 'ASSIGNED TO LEGAL', 'FORWARDED TO LTSP',
+            'RETURNED FROM LTSP', 'DRAFT', 'WITH INTERLOCK', 'COMPLIED'
+        ];
+
+        window.toggleSidebar = function() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('mobileOverlay');
+            sidebar.classList.toggle('-translate-x-full');
+            overlay.classList.toggle('hidden');
+        };
+
+        window.switchTab = function(tabName) {
+            const btnRecords = document.getElementById('tab-btn-records');
+            const btnReqs = document.getElementById('tab-btn-requirements');
+            const contentRecords = document.getElementById('tab-content-records');
+            const contentReqs = document.getElementById('tab-content-requirements');
+
+            if (tabName === 'records') {
+                btnRecords.className = 'border-b-2 border-[#003811] text-[#003811] py-3 px-1 text-xs font-black uppercase tracking-wider';
+                btnReqs.className = 'border-b-2 border-transparent text-gray-500 hover:text-gray-700 py-3 px-1 text-xs font-black uppercase tracking-wider';
+                contentRecords.classList.remove('hidden');
+                contentReqs.classList.add('hidden');
+            } else {
+                btnReqs.className = 'border-b-2 border-[#003811] text-[#003811] py-3 px-1 text-xs font-black uppercase tracking-wider';
+                btnRecords.className = 'border-b-2 border-transparent text-gray-500 hover:text-gray-700 py-3 px-1 text-xs font-black uppercase tracking-wider';
+                contentReqs.classList.remove('hidden');
+                contentRecords.classList.add('hidden');
+            }
+        };
+
+        // ==========================================
+        // DATA FETCHING FUNCTIONS
+        // ==========================================
+        async function fetchDynamicSignatories() {
+            try {
+                const { data } = await supabaseClient.from('users').select('full_name, role');
+                if (data) {
+                    data.forEach(u => {
+                        if (u.role && String(u.role).toUpperCase().includes('PARPO')) {
+                            parpoName = u.full_name;
+                        }
+                    });
+                    document.querySelectorAll('.sys-parpo-name').forEach(el => el.innerText = parpoName);
+                }
+            } catch (e) { console.error(e); }
+        }
+
+        async function fetchBackgroundImage() {
+            const { data } = supabaseClient.storage.from('bg').getPublicUrl('ltc_bg.jpg');
+            if (data && data.publicUrl) { backgroundImageUrl = data.publicUrl; }
+        }
+
+        async function fetchRequirementsData() {
+            try {
+                const { data, error } = await supabaseClient
+                    .from('ltc_requirements')
+                    .select('*')
+                    .order('category', { ascending: true })
+                    .order('requirement_name', { ascending: true });
+                
+                if (!error && data) {
+                    requirementsList = data;
+                    renderRequirementsTable();
+                    updateRequirementsSummaryStats();
+                }
+            } catch (e) { console.error(e); }
+        }
+
+        async function fetchClearanceRecords() {
+            try {
+                const { data, error } = await supabaseClient
+                    .from('land_records')
+                    .select('*')
+                    .order('updated_at', { ascending: false });
+
+                if (!error && data) {
+                    rawRecords = data;
+                    renderInterlockTable();
+                    updateInterlockStats();
+                    populateEligibleLtcDropdown();
+                }
+            } catch (e) { console.error(e); }
+        }
+
+        function refreshAllData() {
+            fetchRequirementsData();
+            fetchClearanceRecords();
+        }
+
+        // ==========================================
+        // REQUIREMENTS TABLE (ltc_requirements) CRUD
+        // ==========================================
+        function renderRequirementsTable() {
+            const tbody = document.getElementById('requirementsTableBody');
+            const query = document.getElementById('searchRequirements').value.toLowerCase();
+            tbody.innerHTML = '';
+
+            requirementsList.forEach(item => {
+                const name = (item.requirement_name || '').toLowerCase();
+                const cat = (item.category || '').toLowerCase();
+                if (query === '' || name.includes(query) || cat.includes(query)) {
+                    const isActive = item.is_active === true || String(item.is_active).toUpperCase() === 'TRUE' || item.is_active === 1;
+                    const statusBadge = isActive 
+                        ? `<span class="bg-green-100 text-green-800 px-2 py-0.5 rounded text-[10px] font-bold uppercase">Active</span>`
+                        : `<span class="bg-gray-200 text-gray-700 px-2 py-0.5 rounded text-[10px] font-bold uppercase">Inactive</span>`;
+
+                    tbody.innerHTML += `
+                        <tr class="hover:bg-gray-50 transition-colors">
+                            <td class="font-bold text-gray-800">${item.requirement_name}</td>
+                            <td class="text-xs text-gray-600">${item.category || 'General'}</td>
+                            <td class="text-center">${statusBadge}</td>
+                            <td class="text-xs text-gray-500">${item.created_at ? new Date(item.created_at).toLocaleDateString() : '---'}</td>
+                            <td class="text-center">
+                                <div class="flex justify-center gap-1">
+                                    <button onclick='editRequirement("${item.id}")' class="bg-indigo-600 text-white px-2 py-1 rounded text-[10px] font-bold uppercase hover:bg-indigo-700 shadow">Edit</button>
+                                    <button onclick='toggleActiveRequirement("${item.id}", ${!isActive})' class="bg-gray-200 text-gray-800 px-2 py-1 rounded text-[10px] font-bold uppercase hover:bg-gray-300">
+                                        ${isActive ? 'Disable' : 'Enable'}
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                }
+            });
+        }
+
+        function updateRequirementsSummaryStats() {
+            const activeCount = requirementsList.filter(r => r.is_active === true || String(r.is_active).toUpperCase() === 'TRUE' || r.is_active === 1).length;
+            document.getElementById('stat-active-reqs').innerText = activeCount;
+        }
+
+        window.openRequirementModal = function(id = null) {
+            const modal = document.getElementById('requirementModal');
+            document.getElementById('reqId').value = '';
+            document.getElementById('reqName').value = '';
+            document.getElementById('reqCategory').value = 'Title & Ownership';
+            document.getElementById('reqIsActive').checked = true;
+            document.getElementById('reqModalTitle').innerText = 'Add New Requirement';
+            modal.classList.remove('hidden');
+        };
+
+        window.closeRequirementModal = function() {
+            document.getElementById('requirementModal').classList.add('hidden');
+        };
+
+        window.editRequirement = function(id) {
+            const req = requirementsList.find(r => r.id === id);
+            if (!req) return;
+            document.getElementById('reqId').value = req.id;
+            document.getElementById('reqName').value = req.requirement_name || '';
+            document.getElementById('reqCategory').value = req.category || 'General';
+            document.getElementById('reqIsActive').checked = req.is_active === true || String(req.is_active).toUpperCase() === 'TRUE' || req.is_active === 1;
+            document.getElementById('reqModalTitle').innerText = 'Edit Requirement Item';
+            document.getElementById('requirementModal').classList.remove('hidden');
+        };
+
+        window.saveRequirement = async function() {
+            const id = document.getElementById('reqId').value;
+            const name = document.getElementById('reqName').value.trim();
+            const category = document.getElementById('reqCategory').value;
+            const isActive = document.getElementById('reqIsActive').checked;
+
+            if (!name) return alert('Requirement Name is required.');
+
+            const payload = {
+                requirement_name: name,
+                category: category,
+                is_active: isActive,
+                updated_at: new Date().toISOString()
+            };
+
+            let op;
+            if (id) {
+                op = supabaseClient.from('ltc_requirements').update(payload).eq('id', id);
+            } else {
+                payload.created_by = currentUser.full_name;
+                op = supabaseClient.from('ltc_requirements').insert([payload]);
+            }
+
+            const { error } = await op;
+            if (error) {
+                alert('Error saving requirement: ' + error.message);
+            } else {
+                closeRequirementModal();
+                fetchRequirementsData();
+            }
+        };
+
+        window.toggleActiveRequirement = async function(id, nextStatus) {
+            const { error } = await supabaseClient
+                .from('ltc_requirements')
+                .update({ is_active: nextStatus, updated_at: new Date().toISOString() })
+                .eq('id', id);
+
+            if (!error) { fetchRequirementsData(); }
+        };
+
+        // ==========================================
+        // INTERLOCUTORY ORDERS DASHBOARD FUNCTIONS
+        // ==========================================
+        function updateInterlockStats() {
+            let active = 0, released = 0, total = 0;
+            rawRecords.forEach(r => {
+                const st = (r.status || '').toUpperCase().trim();
+                const hasInterlockHistory = st === 'WITH INTERLOCK' || st === 'COMPLIED' || (r.interlocutory_details && r.interlocutory_details.trim() !== '');
+                if (hasInterlockHistory) {
+                    total++;
+                    if (st === 'WITH INTERLOCK') active++;
+                    else if (st === 'COMPLIED' || st === 'FINALIZED' || st === 'SIGNED BY PARPO' || st === 'RELEASED TO CLIENT') released++;
+                }
+            });
+            document.getElementById('stat-active-interlock').innerText = active;
+            document.getElementById('stat-released-interlock').innerText = released;
+            document.getElementById('stat-total-interlock').innerText = total;
+        }
+
+        function renderInterlockTable() {
+            const tbody = document.getElementById('interlockTableBody');
+            const query = document.getElementById('searchInterlock').value.toLowerCase();
+            tbody.innerHTML = '';
+
+            // Filter for records that are either "WITH INTERLOCK", "COMPLIED" or have saved interlocutory details
+            const interlockRecords = rawRecords.filter(r => {
+                const st = (r.status || '').toUpperCase().trim();
+                const hasInterlock = st === 'WITH INTERLOCK' || st === 'COMPLIED' || (r.interlocutory_details && r.interlocutory_details.trim() !== '');
+                if (!hasInterlock) return false;
+
+                if (query === '') return true;
+                return Object.values(r).some(val => val && String(val).toLowerCase().includes(query));
+            });
+
+            if (interlockRecords.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="7" class="text-center py-6 text-gray-400 font-bold italic">No Interlocutory Order records found.</td></tr>`;
+                return;
+            }
+
+            interlockRecords.forEach(r => {
+                const st = (r.status || 'RECEIVED').toUpperCase().trim();
+                const ltcNum = r.LTC_ID_NUMBER || r.ltc_no || '---';
+                const owner = r.owner_name || '---';
+                const applicants = r.applicants || r.owner_name || '---';
+                const lo = r.legalOfficer || r.legalofficer || '---';
+                const dateIssued = r.interlocutory_date ? new Date(r.interlocutory_date).toLocaleDateString() : (r.updated_at ? new Date(r.updated_at).toLocaleDateString() : '---');
+
+                const statusBadge = getStatusBadgeStyle(st);
+
+                let actions = `<div class="flex flex-wrap justify-center gap-1">`;
+                actions += `<button onclick='printInterlocutoryOrder("${r.id}")' class="bg-yellow-600 text-white px-2.5 py-1 rounded text-[10px] font-bold uppercase hover:bg-yellow-700 shadow">Print Order</button>`;
+                
+                if (st === 'WITH INTERLOCK') {
+                    actions += `<button onclick='markInterlockReleased("${r.id}")' class="bg-teal-600 text-white px-2.5 py-1 rounded text-[10px] font-bold uppercase hover:bg-teal-700 shadow">Mark Complied</button>`;
+                }
+                actions += `</div>`;
+
+                tbody.innerHTML += `
+                    <tr class="hover:bg-gray-50 transition-colors">
+                        <td class="font-bold text-gray-900">${ltcNum}</td>
+                        <td class="uppercase font-semibold text-gray-800">${owner}</td>
+                        <td class="uppercase font-semibold text-indigo-900">${applicants}</td>
+                        <td class="text-xs text-gray-600">${lo}</td>
+                        <td>${statusBadge}</td>
+                        <td class="text-xs font-mono text-gray-500">${dateIssued}</td>
+                        <td class="text-center">${actions}</td>
+                    </tr>
+                `;
+            });
+        }
+
+        function getStatusBadgeStyle(st) {
+            if (st === 'WITH INTERLOCK') {
+                return `<span class="bg-yellow-100 text-yellow-800 border border-yellow-400 px-2 py-0.5 rounded text-[10px] font-black uppercase">WITH INTERLOCK</span>`;
+            } else if (st === 'COMPLIED') {
+                return `<span class="bg-teal-100 text-teal-800 border border-teal-300 px-2 py-0.5 rounded text-[10px] font-black uppercase">COMPLIED (RELEASED)</span>`;
+            } else {
+                return `<span class="bg-gray-200 text-gray-800 border border-gray-300 px-2 py-0.5 rounded text-[10px] font-black uppercase">${st}</span>`;
+            }
+        }
+
+        // ==========================================
+        // MODAL: ISSUE INTERLOCUTORY ORDER (MANUAL APPLICANTS)
+        // ==========================================
+        function populateEligibleLtcDropdown() {
+            const dropdown = document.getElementById('selectLtcRecord');
+            dropdown.innerHTML = '<option value="">-- Select Clearance Record --</option>';
+
+            // RULE: LO could select any DAR Clearance to issue Interlocutory Order as long as it is not yet SAVED FINAL from the list.
+            rawRecords.forEach(r => {
+                const st = (r.status || '').toUpperCase().trim();
+                const isFinalizedOrDone = [
+                    'FINALIZED', 'FORWARDED TO PARPO', 'SIGNED BY PARPO', 
+                    'RETURNED TO LEGAL (SIGNED)', 'FORWARDED TO RECORDS', 
+                    'RELEASED TO CLIENT', 'WITHDRAWN', 'DISAPPROVED'
+                ].includes(st);
+
+                if (!isFinalizedOrDone) {
+                    const ltcNo = r.LTC_ID_NUMBER || r.ltc_no || 'Pending No';
+                    const owner = r.owner_name || 'No Owner Name';
+                    dropdown.innerHTML += `<option value="${r.id}">${ltcNo} - ${owner} (${st})</option>`;
+                }
+            });
+        }
+
+        window.openIssueInterlocutoryModal = function() {
+            populateEligibleLtcDropdown();
+            document.getElementById('selectLtcRecord').value = '';
+            document.getElementById('inputApplicants').value = '';
+            document.getElementById('inputOtherRemarks').value = '';
+            document.getElementById('lbl-owner-name').innerText = '---';
+            document.getElementById('lbl-tct-no').innerText = '---';
+            document.getElementById('lbl-lot-no').innerText = '---';
+            document.getElementById('lbl-ltc-status').innerText = '---';
+
+            renderModalChecklistItems();
+            document.getElementById('issueInterlocutoryModal').classList.remove('hidden');
+        };
+
+        window.closeIssueInterlocutoryModal = function() {
+            document.getElementById('issueInterlocutoryModal').classList.add('hidden');
+        };
+
+        function renderModalChecklistItems() {
+            const container = document.getElementById('modalChecklistContainer');
+            container.innerHTML = '';
+
+            const activeReqs = requirementsList.filter(r => r.is_active === true || String(r.is_active).toUpperCase() === 'TRUE' || r.is_active === 1);
+            
+            if (activeReqs.length === 0) {
+                container.innerHTML = '<p class="text-gray-400 italic">No active requirements available in catalog.</p>';
+                return;
+            }
+
+            activeReqs.forEach(item => {
+                container.innerHTML += `
+                    <label class="flex items-start gap-2 cursor-pointer p-1.5 hover:bg-gray-100 rounded transition-colors">
+                        <input type="checkbox" value="${item.requirement_name}" class="mt-0.5 lacking-item-chk w-4 h-4 text-yellow-600">
+                        <span class="text-gray-800 font-medium">${item.requirement_name}</span>
+                    </label>
+                `;
+            });
+        }
+
+        window.onLtcSelectionChange = function() {
+            const selectedId = document.getElementById('selectLtcRecord').value;
+            const record = rawRecords.find(r => r.id === selectedId);
+            
+            if (record) {
+                selectedRecordForInterlock = record;
+                document.getElementById('lbl-owner-name').innerText = record.owner_name || '---';
+                document.getElementById('lbl-tct-no').innerText = record.tct || record.registered_under || '---';
+                document.getElementById('lbl-lot-no').innerText = record.lot || record.lot_no || '---';
+                document.getElementById('lbl-ltc-status').innerText = record.status || '---';
+
+                // Default applicant input to existing manual applicants or owner name
+                document.getElementById('inputApplicants').value = record.applicants || record.owner_name || '';
+                
+                // If it already has interlocutory remarks saved, preload them in textarea
+                if (record.interlocutory_details) {
+                    document.getElementById('inputOtherRemarks').value = record.interlocutory_details;
+                }
+            } else {
+                selectedRecordForInterlock = null;
+                document.getElementById('inputApplicants').value = '';
+                document.getElementById('lbl-owner-name').innerText = '---';
+                document.getElementById('lbl-tct-no').innerText = '---';
+                document.getElementById('lbl-lot-no').innerText = '---';
+                document.getElementById('lbl-ltc-status').innerText = '---';
+            }
+        };
+
+        window.confirmIssueInterlocutory = async function() {
+            if (!selectedRecordForInterlock) {
+                return alert('Please select a DAR Clearance record first.');
+            }
+
+            const applicantsText = document.getElementById('inputApplicants').value.trim();
+            if (!applicantsText) {
+                return alert('Please input the Applicant(s) name.');
+            }
+
+            const checkboxes = document.querySelectorAll('.lacking-item-chk:checked');
+            let lackingList = Array.from(checkboxes).map(cb => cb.value);
+            const otherRemarks = document.getElementById('inputOtherRemarks').value.trim();
+
+            if (otherRemarks) {
+                lackingList.push(otherRemarks);
+            }
+
+            if (lackingList.length === 0) {
+                return alert('Please check or specify at least one lacking requirement.');
+            }
+
+            const lackingFormattedText = lackingList.join('\n');
+            const oldStatus = selectedRecordForInterlock.status;
+
+            // Update database record: status -> WITH INTERLOCK, applicants -> manual input, interlocutory_details -> selected lacking items
+            const updatePayload = {
+                status: 'WITH INTERLOCK',
+                applicants: applicantsText,
+                interlocutory_details: lackingFormattedText,
+                remarks: lackingFormattedText,
+                interlocutory_date: new Date().toISOString(),
+                updated_at: new Date().toISOString()
+            };
+
+            const { error } = await supabaseClient
+                .from('land_records')
+                .update(updatePayload)
+                .eq('id', selectedRecordForInterlock.id);
+
+            if (error) {
+                alert('Error updating record: ' + error.message);
+            } else {
+                // Log status transition
+                await logStatusChange(selectedRecordForInterlock.id, oldStatus, 'WITH INTERLOCK', lackingFormattedText);
+                closeIssueInterlocutoryModal();
+                await fetchClearanceRecords();
+
+                // Trigger print view of Interlocutory Order immediately
+                printInterlocutoryOrder(selectedRecordForInterlock.id);
+            }
+        };
+
+        window.markInterlockReleased = async function(id) {
+            if (!confirm('Mark this Interlocutory Order as COMPLIED and release the interlock? Status will transition to COMPLIED.')) return;
+            
+            const record = rawRecords.find(r => r.id === id);
+            const oldSt = record ? record.status : 'WITH INTERLOCK';
+
+            const { error } = await supabaseClient
+                .from('land_records')
+                .update({ status: 'COMPLIED', updated_at: new Date().toISOString() })
+                .eq('id', id);
+
+            if (!error) {
+                await logStatusChange(id, oldSt, 'COMPLIED', 'Interlocutory lacking documents complied by applicant');
+                fetchClearanceRecords();
+            }
+        };
+
+        async function logStatusChange(recordId, oldSt, newSt, remarks = '') {
+            try {
+                await supabaseClient.from('status_logs').insert([{
+                    record_id: recordId,
+                    previous_status: oldSt || 'UNKNOWN',
+                    new_status: newSt,
+                    remarks: remarks,
+                    changed_by: currentUser.full_name || 'SYSTEM',
+                    changed_at: new Date().toISOString()
+                }]);
+            } catch (e) { console.error(e); }
+        }
+
+        // ==========================================
+        // PDF / PRINT GENERATION (HTML2PDF)
+        // ==========================================
+        window.printInterlocutoryOrder = function(id) {
+            const record = rawRecords.find(r => r.id === id);
+            if (!record) return;
+
+            // Populate formal Interlocutory Order fields
+            const ltcNum = record.LTC_ID_NUMBER || record.ltc_no || 'LTC-PENDING';
+            document.getElementById('io-header-id').innerText = ltcNum;
+            document.getElementById('io-applicants').innerText = record.applicants || record.owner_name || '---';
+            document.getElementById('io-owner-body').innerText = record.owner_name || '---';
+            document.getElementById('io-tct').innerText = record.tct || record.registered_under || '---';
+            document.getElementById('io-lot').innerText = record.lot || record.lot_no || '---';
+            
+            // Format Area to square meters if stored in hectares
+            let areaVal = record.area || '';
+            let sqMeters = parseFloat(areaVal) * 10000;
+            document.getElementById('io-area').innerText = (!isNaN(sqMeters) && sqMeters > 0) ? sqMeters.toLocaleString('en-US') : areaVal;
+            document.getElementById('io-location').innerText = record.location || '---';
+
+            // Populate lacking list items
+            const lackingStr = record.interlocutory_details || record.remarks || 'No specific lacking documents listed.';
+            const listItems = lackingStr.split(/\n|,/).map(s => s.trim()).filter(s => s);
+            const listContainer = document.getElementById('io-remarks-list');
+            listContainer.innerHTML = listItems.length > 0 
+                ? listItems.map(item => `<li class="mb-1.5 font-bold">${item}</li>`).join('') 
+                : '<li>---</li>';
+
+            // Date formatting
+            const targetDate = record.interlocutory_date ? new Date(record.interlocutory_date) : new Date();
+            const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+            document.getElementById('io-today-date').innerText = `${monthNames[targetDate.getMonth()]} ${targetDate.getDate()}, ${targetDate.getFullYear()}`;
+
+            // Signatory & Legal Officer info
+            const loName = record.legalOfficer || record.legalofficer || currentUser.full_name || '---';
+            document.querySelectorAll('.preparedByName').forEach(el => el.innerText = loName);
+            document.querySelectorAll('.preparedByPosition').forEach(el => el.innerText = 'Legal Officer / Encoder');
+
+            // Generate Verification QR Code
+            const qrDiv = document.getElementById('qr-io');
+            if (qrDiv) {
+                qrDiv.innerHTML = '';
+                const currentPath = window.location.href.substring(0, window.location.href.lastIndexOf('/'));
+                const scanUrl = currentPath + "/verify.html?id=" + encodeURIComponent(ltcNum);
+                new QRCode(qrDiv, { text: scanUrl, width: 55, height: 55, correctLevel: QRCode.CorrectLevel.L });
+            }
+
+            // Execute PDF rendering overlay and download
+            const cleanFilename = `interlocutory_${ltcNum.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.pdf`;
+            generatePDFDocument('docInterlocutoryOrder', cleanFilename);
+        };
+
+        function generatePDFDocument(sourceId, filename) {
+            window.scrollTo(0, 0);
+            const overlay = document.createElement('div');
+            overlay.id = 'pdf-loading-overlay';
+            overlay.style.cssText = 'position: absolute; top: 0; left: 0; width: 100%; min-height: 100vh; background: #1F2937; z-index: 999999; display: flex; align-items: center; justify-content: flex-start; flex-direction: column; color: white; font-family: sans-serif; padding: 2rem 0; overflow: auto;';
+            overlay.innerHTML = '<div class="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-[#D4AF37] mb-4"></div><h2 class="text-2xl font-black tracking-widest uppercase mb-6">Rendering Interlocutory Order...</h2>';
+            
+            const wrapper = document.createElement('div');
+            wrapper.id = 'aiPrintWrapper';
+            wrapper.style.cssText = 'width: 8.5in; display: flex; flex-direction: column; align-items: center; background: transparent;';
+            
+            overlay.appendChild(wrapper);
+            document.body.appendChild(overlay);
+
+            const sourceContent = document.querySelector(`#${sourceId} .doc-content`);
+            const page = document.createElement('div');
+            page.style.cssText = 'width: 8.5in; height: 13in; min-height: 13in; max-height: 13in; position: relative; background: white; margin-bottom: 0px; overflow: hidden; flex-shrink: 0;';
+
+            const content = document.createElement('div');
+            content.style.cssText = 'position: absolute; top: 1.15in; left: 1in; right: 1in; bottom: 1.15in; z-index: 10; display: flex; flex-direction: column; font-family: Arial, sans-serif; font-size: 9pt; color: black; line-height: 1.5; overflow: hidden;';
+            
+            Array.from(sourceContent.children).forEach(child => {
+                if (!child.classList.contains('hidden')) {
+                    content.appendChild(child.cloneNode(true));
+                }
+            });
+
+            page.appendChild(content);
+            wrapper.appendChild(page);
+
+            const opt = {
+                margin: 0,
+                filename: filename,
+                image: { type: 'jpeg', quality: 1.0 },
+                html2canvas: { scale: 3, useCORS: true },
+                jsPDF: { unit: 'in', format: [8.5, 13], orientation: 'portrait' }
+            };
+
+            html2pdf().set(opt).from(wrapper).toPdf().save().then(() => {
+                document.body.removeChild(overlay);
+            }).catch(err => {
+                console.error(err);
+                alert("PDF Generation Error: " + err.message);
+                document.body.removeChild(overlay);
+            });
+        }
+
+        window.logout = function() {
+            sessionStorage.removeItem('currentUser');
+            window.location.href = 'index.html';
+        };
+
+        window.onload = async () => {
+            await fetchDynamicSignatories();
+            await fetchBackgroundImage();
+            fetchRequirementsData();
+            fetchClearanceRecords();
+        };
+    </script>
+</body>
+</html>
