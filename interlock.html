@@ -323,9 +323,9 @@
     <div id="docInterlocutoryOrder" class="doc-print-area mx-auto hidden pt-8 text-black">
         <div class="doc-content px-10 py-6" style="font-family: 'Roboto', sans-serif; font-size: 11pt; line-height: 1.5; color: #000000; background: transparent;">
             
-            <!-- Standard Legal Document Caption -->
-            <div class="flex justify-between items-start mb-8 font-bold uppercase">
-                <div class="flex w-[70%]">
+            <!-- Standard Legal Document Caption (LTC Number aligned between case title and applicants on right side) -->
+            <div class="flex justify-between items-start mb-8 font-bold uppercase relative">
+                <div class="flex w-[68%]">
                     <div class="w-20 shrink-0">IN RE:</div>
                     <div class="flex-1 leading-normal">
                         APPLICATION FOR LAND TRANSFER CLEARANCE PURSUANT TO DAR A. O. NO. 4, SERIES OF 2021,
@@ -334,7 +334,7 @@
                         <div>X - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - X</div>
                     </div>
                 </div>
-                <div class="w-[28%] text-right font-bold tracking-tight">
+                <div class="w-[30%] text-right font-bold tracking-tight pt-10">
                     <span id="io-header-id">LTC-PENDING</span>
                 </div>
             </div>
@@ -995,7 +995,7 @@
         }
 
         // ==========================================
-        // PDF / AUTOMATIC PRINT & DOWNLOAD GENERATION (WITH LTC BACKGROUND IMAGE)
+        // PDF / AUTOMATIC PRINT & DOWNLOAD GENERATION (HIGH-RES LTC BACKGROUND IMAGE + .5" TOP MARGIN)
         // ==========================================
         window.printInterlocutoryOrder = function(id) {
             const record = rawRecords.find(r => r.id === id);
@@ -1057,11 +1057,20 @@
             const sourceContent = document.querySelector(`#${sourceId} .doc-content`);
             const page = document.createElement('div');
             
-            // Apply ltc_bg.jpg background image directly to the PDF page container
-            page.style.cssText = `width: 8.5in; height: 13in; min-height: 13in; max-height: 13in; position: relative; background-color: white; background-image: url('${backgroundImageUrl}'); background-size: 100% 100%; background-position: center; background-repeat: no-repeat; margin-bottom: 0px; overflow: hidden; flex-shrink: 0;`;
+            // Set base container with crisp white base
+            page.style.cssText = 'width: 8.5in; height: 13in; min-height: 13in; max-height: 13in; position: relative; background-color: white; margin-bottom: 0px; overflow: hidden; flex-shrink: 0;';
 
+            // 1. Inject high-resolution official background template as explicit absolute image layer (z-index: 0)
+            if (backgroundImageUrl) {
+                const bgImg = document.createElement('img');
+                bgImg.src = backgroundImageUrl;
+                bgImg.style.cssText = 'position: absolute; top: 0; left: 0; width: 8.5in; height: 13in; object-fit: fill; z-index: 0; pointer-events: none;';
+                page.appendChild(bgImg);
+            }
+
+            // 2. Set text content layer (top: 1.65in adds .5 inches top margin from the original 1.15in margin)
             const content = document.createElement('div');
-            content.style.cssText = 'position: absolute; top: 1.15in; left: 1in; right: 1in; bottom: 1.15in; z-index: 10; display: flex; flex-direction: column; font-family: "Roboto", sans-serif; font-size: 11pt; color: black; line-height: 1.5; overflow: hidden; background: transparent;';
+            content.style.cssText = 'position: absolute; top: 1.65in; left: 1in; right: 1in; bottom: 1.15in; z-index: 10; display: flex; flex-direction: column; font-family: "Roboto", sans-serif; font-size: 11pt; color: black; line-height: 1.5; overflow: hidden; background: transparent;';
             
             Array.from(sourceContent.children).forEach(child => {
                 if (!child.classList.contains('hidden')) {
@@ -1072,11 +1081,12 @@
             page.appendChild(content);
             wrapper.appendChild(page);
 
+            // High-resolution html2canvas settings (scale: 4, quality: 1.0) for crystal clear background & typography
             const opt = {
                 margin: 0,
                 filename: filename,
                 image: { type: 'jpeg', quality: 1.0 },
-                html2canvas: { scale: 3, useCORS: true, backgroundColor: '#ffffff' },
+                html2canvas: { scale: 4, useCORS: true, allowTaint: true, letterRendering: true, backgroundColor: '#ffffff' },
                 jsPDF: { unit: 'in', format: [8.5, 13], orientation: 'portrait' }
             };
 
