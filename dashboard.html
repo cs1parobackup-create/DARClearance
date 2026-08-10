@@ -1324,6 +1324,11 @@
                         if (st === 'RECEIVED' || st === 'ASSIGNED TO LEGAL') {
                             actions += `<button onclick='processToNext("${item.id}", "FORWARDED TO LTSP", "${st}")' class="bg-indigo-600 text-white w-full py-1 mt-1 rounded shadow text-[9px] font-bold hover:bg-indigo-800 uppercase transition-colors text-center">Forward to LTSP</button>`;
                         }
+                        if (st === 'RETURNED TO LEGAL (SIGNED)') {
+                            actions += `<button onclick='openPrint("${item.id}", "rec")' class="bg-[#8b5cf6] text-white w-full py-1.5 mt-1 rounded shadow text-[10px] font-bold hover:bg-purple-800 uppercase transition-colors text-center mb-1">Print Reco</button>`;
+                            actions += `<button onclick='openPrint("${item.id}", "cert")' class="bg-[#d97706] text-white w-full py-1.5 rounded shadow text-[10px] font-bold hover:bg-amber-700 uppercase transition-colors text-center mb-1">Print Cert</button>`;
+                            actions += `<button onclick='processToNext("${item.id}", "FORWARDED TO RECORDS", "${st}")' class="bg-cyan-600 text-white w-full py-1.5 rounded shadow text-[10px] font-bold hover:bg-cyan-700 uppercase transition-colors text-center mb-1">Fwd to Records</button>`;
+                        }
                     }
                     if (isLTSP) {
                         if (st === 'FORWARDED TO LTSP') {
@@ -1350,7 +1355,8 @@
 
                         if (st === 'RETURNED TO LEGAL (SIGNED)') {
                             actions += `<button onclick='showReview("${item.id}", "VIEW")' class="bg-gray-500 text-white w-full py-1.5 mt-1 rounded shadow text-[10px] font-bold hover:bg-gray-600 uppercase transition-colors text-center mb-1">View</button>`;
-                            actions += `<button onclick='processToNext("${item.id}", "FORWARDED TO RECORDS", "${st}")' class="bg-cyan-600 text-white w-full py-1.5 rounded shadow text-[10px] font-bold hover:bg-cyan-700 uppercase transition-colors text-center mt-1">Fwd to Records</button>`;
+                            actions += `<button onclick='openPrint("${item.id}", "rec")' class="bg-[#8b5cf6] text-white w-full py-1.5 rounded shadow text-[10px] font-bold hover:bg-purple-800 uppercase transition-colors text-center mb-1">Print Reco</button>`;
+                            actions += `<button onclick='openPrint("${item.id}", "cert")' class="bg-[#d97706] text-white w-full py-1.5 rounded shadow text-[10px] font-bold hover:bg-amber-700 uppercase transition-colors text-center mb-1">Print Cert</button>`;
                         }
 
                         if (st === 'RELEASED TO CLIENT') {
@@ -1368,7 +1374,7 @@
                             actions += `<button onclick='showReview("${item.id}", "UPDATE")' class="bg-[#003811] text-white w-full py-1.5 rounded shadow text-[9px] font-black tracking-wide hover:bg-black uppercase transition-colors text-center mb-1">Review & Sign</button>`;
                             actions += `<button onclick='openPrint("${item.id}", "rec")' class="bg-[#8b5cf6] text-white w-full py-1 rounded shadow text-[9px] font-bold hover:bg-purple-800 uppercase transition-colors text-center mb-1">Print Reco</button>`;
                             actions += `<button onclick='openPrint("${item.id}", "cert")' class="bg-[#d97706] text-white w-full py-1 rounded shadow text-[9px] font-bold hover:bg-amber-700 uppercase transition-colors text-center mb-1">Print Cert</button>`;
-                            actions += `<button onclick="decideStatus('SIGNED BY PARPO')" class="flex-1 md:flex-none bg-orange-600 text-white px-4 py-2 rounded text-[10px] font-black shadow hover:bg-orange-700 transition-colors whitespace-nowrap">SIGN APPROVAL</button>`;
+                            actions += `<button onclick='processToNext("${item.id}", "SIGNED BY PARPO", "${st}")' class="bg-orange-600 text-white w-full py-1.5 rounded shadow text-[10px] font-black hover:bg-orange-700 uppercase transition-colors text-center mb-1">SIGN APPROVAL</button>`;
                         }
                         if (st === 'SIGNED BY PARPO') {
                             actions += `<button onclick='openPrint("${item.id}", "rec")' class="bg-[#8b5cf6] text-white w-full py-1 rounded shadow text-[9px] font-bold hover:bg-purple-800 uppercase transition-colors text-center mb-1">Print Reco</button>`;
