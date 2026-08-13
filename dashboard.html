@@ -710,12 +710,15 @@
             let cleanTotal = totalArea.replace(/hectares?|has\.?/gi, '').trim();
             let cleanPortion = portionArea.replace(/hectares?|has\.?/gi, '').trim();
 
-            // Helper to determine whether to append HECTARE (<= 1) or HECTARES (> 1)
+         // Helper to determine whether to append HECTARE (<= 1) or HECTARES (> 1)
             let getUnit = (valStr) => {
-                let num = parseFloat(String(valStr).replace(/,/g, ''));
+                let str = String(valStr).replace(/,/g, '');
+                // Check if the input contains a fraction pattern like "1/3 of 2.9089"
+                let match = str.match(/of\s+([0-9.]+)/i);
+                // If it finds "of [number]", parse that number. Otherwise, parse normally.
+                let num = match ? parseFloat(match[1]) : parseFloat(str);
                 return (num > 1) ? 'HECTARES' : 'HECTARE';
             };
-
             let formattedText = cleanTotal;
             if (isPortion && cleanPortion) {
                 formattedText = `${cleanPortion} ${getUnit(cleanPortion)} OF ${cleanTotal} ${getUnit(cleanTotal)} (PORTION)`;
