@@ -1399,7 +1399,11 @@
                     }
                     
                     if (isChief && st !== 'WITHDRAWN') {
-                        actions += `<button onclick='withdrawRecord("${item.id}")' class="bg-gray-400 text-white w-full py-1 mt-1 rounded shadow text-[9px] font-bold hover:bg-gray-600 uppercase transition-colors text-center">Withdraw</button>`;
+                        actions += `<button onclick='withdrawRecord("${item.id}")' class="bg-gray-400 text-white w-full py-1 mt-1 rounded shadow text-[9px] font-bold hover:bg-gray-600 uppercase transition-colors text-center mb-1">Withdraw</button>`;
+                    }
+
+                    if (st === 'FINALIZED' && (isChief || isEncoder)) {
+                        actions += `<button onclick='processToNext("${item.id}", "DRAFT", "${st}")' class="bg-red-600 text-white w-full py-1 mt-1 rounded shadow text-[9px] font-bold hover:bg-red-800 uppercase transition-colors text-center mb-1">Revert to Edit</button>`;
                     }
 
                     actions += `</div>`;
