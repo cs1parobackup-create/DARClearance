@@ -44,18 +44,6 @@
             white-space: pre-wrap;
             word-break: break-word;
         }
-
-        /* TD number lists can span several lines in the generated PDF.
-           Keep only this field on a stable multi-line layout so html2canvas
-           does not compress/paint wrapped lines over each other. */
-        #rec-td, #cert-td {
-            display: block !important;
-            width: 100% !important;
-            white-space: normal !important;
-            overflow-wrap: anywhere !important;
-            word-break: normal !important;
-            line-height: 1.8 !important;
-        }
         
         .page-break-avoid { 
             page-break-inside: avoid !important;
@@ -321,7 +309,7 @@
                             <div class="italic w-[260px] shrink-0">With an area (in has.) of</div> <div class="text-left flex-1"><span class="data-value" id="rec-area"> </span></div>
                         </div>
                         <div class="flex items-end mb-1.5 ml-12">
-                            <div class="italic w-[260px] shrink-0">Declared under T.D. No.</div> <div class="text-left flex-1"><span class="data-value" id="rec-td"> </span></div>
+                            <div class="italic w-[260px] shrink-0">Declared under T.D. No.</div> <div class="text-left flex-1 min-w-0"><div class="data-value block w-full" id="rec-td"> </div></div>
                         </div>
                         <div class="flex items-end mb-1.5 ml-12">
                             <div class="italic w-[260px] shrink-0">Located at</div> <div class="text-left flex-1"><span class="data-value" id="rec-location"> </span></div>
@@ -438,7 +426,7 @@
                             <div class="italic w-[260px] shrink-0">With an area (in has.) of</div> <div class="text-left flex-1"><span class="data-value" id="cert-area"> </span></div>
                         </div>
                         <div class="flex items-end mb-1.5 ml-12">
-                            <div class="italic w-[260px] shrink-0">Declared under T.D. No.</div> <div class="text-left flex-1"><span class="data-value" id="cert-td"> </span></div>
+                            <div class="italic w-[260px] shrink-0">Declared under T.D. No.</div> <div class="text-left flex-1 min-w-0"><div class="data-value block w-full" id="cert-td"> </div></div>
                         </div>
                         <div class="flex items-end mb-1.5 ml-12">
                             <div class="italic w-[260px] shrink-0">Located at</div> <div class="text-left flex-1"><span class="data-value" id="cert-location"> </span></div>
@@ -1665,6 +1653,15 @@
 
                 let pdfVal = currentSelection[dbCol] || ' ';
                 if (pdfVal === '---' || pdfVal === '') pdfVal = ' ';
+
+                // T.D. No. only: remove pasted CR/LF/tab/control spacing before PDF rendering.
+                // This prevents html2canvas from painting carriage-return fragments on the same line.
+                if (dbCol === 'td_no') {
+                    pdfVal = String(pdfVal)
+                        .replace(/[\r\n\t]+/g, ' ')
+                        .replace(/\s{2,}/g, ' ')
+                        .trim();
+                }
                 
                 let recEl = document.getElementById(`rec-${htmlSuffix}`);
                 let certEl = document.getElementById(`cert-${htmlSuffix}`);
