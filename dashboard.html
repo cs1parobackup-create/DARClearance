@@ -309,7 +309,7 @@
                             <div class="italic w-[260px] shrink-0">With an area (in has.) of</div> <div class="text-left flex-1"><span class="data-value" id="rec-area"> </span></div>
                         </div>
                         <div class="flex items-end mb-1.5 ml-12">
-                            <div class="italic w-[260px] shrink-0">Declared under T.D. No.</div> <div class="text-left flex-1 min-w-0"><div class="data-value block w-full" id="rec-td"> </div></div>
+                            <div class="italic w-[260px] shrink-0">Declared under T.D. No.</div> <div class="text-left flex-1"><span class="data-value" id="rec-td"> </span></div>
                         </div>
                         <div class="flex items-end mb-1.5 ml-12">
                             <div class="italic w-[260px] shrink-0">Located at</div> <div class="text-left flex-1"><span class="data-value" id="rec-location"> </span></div>
@@ -426,7 +426,7 @@
                             <div class="italic w-[260px] shrink-0">With an area (in has.) of</div> <div class="text-left flex-1"><span class="data-value" id="cert-area"> </span></div>
                         </div>
                         <div class="flex items-end mb-1.5 ml-12">
-                            <div class="italic w-[260px] shrink-0">Declared under T.D. No.</div> <div class="text-left flex-1 min-w-0"><div class="data-value block w-full" id="cert-td"> </div></div>
+                            <div class="italic w-[260px] shrink-0">Declared under T.D. No.</div> <div class="text-left flex-1"><span class="data-value" id="cert-td"> </span></div>
                         </div>
                         <div class="flex items-end mb-1.5 ml-12">
                             <div class="italic w-[260px] shrink-0">Located at</div> <div class="text-left flex-1"><span class="data-value" id="cert-location"> </span></div>
@@ -761,6 +761,65 @@
                     }
                 });
             }
+        }
+
+        // T.D. No. PDF renderer: build explicit single-line rows instead of letting
+        // html2canvas/browser auto-wrap one long text node. This avoids overlapped glyphs.
+        function renderTdNoForPrint(el, rawValue) {
+            if (!el) return;
+
+            let clean = String(rawValue || '')
+                // Strip control/zero-width characters that can come from pasted/OCR text.
+                .replace(/[\u0000-\u001F\u007F-\u009F\u00AD\u200B-\u200D\u2060\uFEFF]/g, ' ')
+                .replace(/\s*;\s*/g, '; ')
+                .replace(/\s+/g, ' ')
+                .trim();
+
+            el.innerHTML = '';
+            if (!clean) {
+                el.textContent = ' ';
+                return;
+            }
+
+            // T.D. numbers are naturally separated by semicolons. Keep each number intact,
+            // then group only as many entries as safely fit on one printed line.
+            let parts = clean.split(';').map(s => s.trim()).filter(Boolean).map(s => s + ';');
+            if (parts.length) {
+                // Remove the artificial final semicolon only when the original text did not have one.
+                if (!clean.endsWith(';')) parts[parts.length - 1] = parts[parts.length - 1].slice(0, -1);
+            } else {
+                parts = [clean];
+            }
+
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            // The PDF body is 9pt Roboto bold. 9pt ~= 12 CSS px.
+            ctx.font = '700 12px Roboto, Arial, sans-serif';
+            const maxLineWidth = 296; // safe width beside the 260px label in the 6.5in content area
+
+            const lines = [];
+            let current = '';
+            parts.forEach(part => {
+                const candidate = current ? current + ' ' + part : part;
+                if (current && ctx.measureText(candidate).width > maxLineWidth) {
+                    lines.push(current);
+                    current = part;
+                } else {
+                    current = candidate;
+                }
+            });
+            if (current) lines.push(current);
+
+            lines.forEach(line => {
+                const row = document.createElement('span');
+                row.textContent = line;
+                row.style.display = 'block';
+                row.style.whiteSpace = 'nowrap';
+                row.style.lineHeight = '18px';
+                row.style.height = '18px';
+                row.style.overflow = 'visible';
+                el.appendChild(row);
+            });
         }
 
         function getInitialStatus(role) {
@@ -1653,21 +1712,18 @@
 
                 let pdfVal = currentSelection[dbCol] || ' ';
                 if (pdfVal === '---' || pdfVal === '') pdfVal = ' ';
-
-                // T.D. No. only: remove pasted CR/LF/tab/control spacing before PDF rendering.
-                // This prevents html2canvas from painting carriage-return fragments on the same line.
-                if (dbCol === 'td_no') {
-                    pdfVal = String(pdfVal)
-                        .replace(/[\r\n\t]+/g, ' ')
-                        .replace(/\s{2,}/g, ' ')
-                        .trim();
-                }
                 
                 let recEl = document.getElementById(`rec-${htmlSuffix}`);
                 let certEl = document.getElementById(`cert-${htmlSuffix}`);
                 let ioEl = document.getElementById(`io-${htmlSuffix}`); 
-                if(recEl && dbCol !== 'area' && dbCol !== 'portion_area') recEl.innerText = pdfVal;
-                if(certEl && dbCol !== 'area' && dbCol !== 'portion_area') certEl.innerText = pdfVal;
+                if(recEl && dbCol !== 'area' && dbCol !== 'portion_area') {
+                    if (dbCol === 'td_no') renderTdNoForPrint(recEl, pdfVal);
+                    else recEl.innerText = pdfVal;
+                }
+                if(certEl && dbCol !== 'area' && dbCol !== 'portion_area') {
+                    if (dbCol === 'td_no') renderTdNoForPrint(certEl, pdfVal);
+                    else certEl.innerText = pdfVal;
+                }
                 
                 if (ioEl) {
                     if (htmlSuffix === 'area' && pdfVal.trim() !== '') {
