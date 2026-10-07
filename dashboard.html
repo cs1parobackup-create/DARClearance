@@ -39,7 +39,7 @@
             display: inline-block; 
             min-width: 40px; 
             text-transform: uppercase; 
-            line-height: 1.1; 
+            line-height: 1.4; 
             padding-bottom: 1px;
             white-space: pre-wrap;
             word-break: break-word;
@@ -649,6 +649,16 @@
     </div>
 
     <script>
+        // HELPER FUNCTION: Replaces \n with <br> for safe html2canvas rendering
+        function formatForPrint(str) {
+            if (!str) return ' ';
+            return String(str)
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/\n/g, '<br>');
+        }
+
         const userData = sessionStorage.getItem('currentUser');
         if (!userData) { window.location.href = 'index.html'; }
         const currentUser = JSON.parse(userData);
@@ -728,10 +738,11 @@
                 formattedText = `${cleanTotal} ${getUnit(cleanTotal)}`;
             }
 
+            let safeHTML = formatForPrint(formattedText);
             let recEl = document.getElementById('rec-area');
             let certEl = document.getElementById('cert-area');
-            if (recEl) recEl.innerText = formattedText;
-            if (certEl) certEl.innerText = formattedText;
+            if (recEl) recEl.innerHTML = safeHTML;
+            if (certEl) certEl.innerHTML = safeHTML;
         }
 
         window.togglePortionField = function() {
@@ -1124,12 +1135,14 @@
                         updateData[dbCol] = newVal; currentSelection[dbCol] = newVal; hasChanges = true;
                         if(dbCol === 'area' || dbCol === 'portion_area') areaChanged = true;
                         
+                        let safeHTML = formatForPrint(newVal);
+
                         let recEl = document.getElementById(`rec-${htmlSuffix}`);
                         let certEl = document.getElementById(`cert-${htmlSuffix}`);
                         let ioEl = document.getElementById(`io-${htmlSuffix}`); 
-                        if(recEl && dbCol !== 'area' && dbCol !== 'portion_area') recEl.innerText = newVal;
-                        if(certEl && dbCol !== 'area' && dbCol !== 'portion_area') certEl.innerText = newVal;
-                        if(ioEl) ioEl.innerText = newVal; 
+                        if(recEl && dbCol !== 'area' && dbCol !== 'portion_area') recEl.innerHTML = safeHTML;
+                        if(certEl && dbCol !== 'area' && dbCol !== 'portion_area') certEl.innerHTML = safeHTML;
+                        if(ioEl) ioEl.innerHTML = safeHTML; 
                     }
                 }
             }
@@ -1654,18 +1667,20 @@
                 let pdfVal = currentSelection[dbCol] || ' ';
                 if (pdfVal === '---' || pdfVal === '') pdfVal = ' ';
                 
+                let safeHTML = formatForPrint(pdfVal);
+                
                 let recEl = document.getElementById(`rec-${htmlSuffix}`);
                 let certEl = document.getElementById(`cert-${htmlSuffix}`);
                 let ioEl = document.getElementById(`io-${htmlSuffix}`); 
-                if(recEl && dbCol !== 'area' && dbCol !== 'portion_area') recEl.innerText = pdfVal;
-                if(certEl && dbCol !== 'area' && dbCol !== 'portion_area') certEl.innerText = pdfVal;
+                if(recEl && dbCol !== 'area' && dbCol !== 'portion_area') recEl.innerHTML = safeHTML;
+                if(certEl && dbCol !== 'area' && dbCol !== 'portion_area') certEl.innerHTML = safeHTML;
                 
                 if (ioEl) {
-                    if (htmlSuffix === 'area' && pdfVal.trim() !== '') {
+                    if (htmlSuffix === 'area' && String(pdfVal).trim() !== '') {
                         let sqMeters = parseFloat(pdfVal) * 10000;
-                        ioEl.innerText = (!isNaN(sqMeters)) ? sqMeters.toLocaleString('en-US') : pdfVal;
+                        ioEl.innerHTML = (!isNaN(sqMeters)) ? sqMeters.toLocaleString('en-US') : safeHTML;
                     } else {
-                        ioEl.innerText = pdfVal;
+                        ioEl.innerHTML = safeHTML;
                     }
                 } 
             }
