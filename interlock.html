@@ -320,69 +320,73 @@
     <!-- ========================================================= -->
     <!-- PRINT AREA: INTERLOCUTORY ORDER FORMAL DOCUMENT -->
     <!-- ========================================================= -->
-    <div id="docInterlocutoryOrder" class="doc-print-area mx-auto hidden pt-8 text-black">
-        <div class="doc-content px-10 py-6" style="font-family: 'Roboto', sans-serif; font-size: 11pt; line-height: 1.5; color: #000000; background: transparent;">
-            
-            <!-- Standard Legal Document Caption (LTC Number aligned between case title and applicants on right side) -->
-            <div class="flex justify-between items-start mb-8 font-bold uppercase relative">
-                <div class="flex w-[68%]">
-                    <div class="w-20 shrink-0">IN RE:</div>
-                    <div class="flex-1 leading-normal">
-                        APPLICATION FOR LAND TRANSFER CLEARANCE PURSUANT TO DAR A. O. NO. 4, SERIES OF 2021,
-                        <div class="mt-8 mb-2 font-black" id="io-applicants">---</div>
-                        <div class="text-center font-normal italic lowercase mb-2">Applicants.</div>
-                        <div>X - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - X</div>
+            <div id="docInterlocutoryOrder" class="doc-print-area mx-auto hidden pt-8">
+                <!-- Content same as original, hidden for print generator -->
+                <div class="doc-content px-8">
+                    <div class="flex justify-between items-start mb-10 text-[10pt] font-bold uppercase tracking-tight">
+                        <div class="w-[300px] leading-tight">
+                            IN RE: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;APPLICATION FOR LAND TRANSFER CLEARANCE PURSUANT TO DAR A. O. NO. 4, SERIES OF 2021,
+                            <br><br><br>
+                            <span id="io-owner" class="underline underline-offset-4"> </span>,
+                            <br>
+                            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Applicants.
+                            <br>
+                            x - - - - - - - - - - - - - x
+                        </div>
+                        <div class="text-right">
+                            <span class="underline underline-offset-4 font-bold" id="io-header-id">LTC-PENDING</span>
+                        </div>
+                    </div>
+
+                    <div class="text-center mb-8 page-break-avoid">
+                        <div class="font-black text-[13pt] tracking-widest uppercase">INTERLOCUTORY ORDER</div>
+                    </div>
+                    
+                    <!-- Titled applications retain the original Interlocutory Order wording. -->
+                    <p id="io-titled-landholding" class="mb-4 text-justify indent-12 page-break-avoid leading-relaxed">
+                        For review and resolution by this Office is the above-mentioned application for DAR Land Transfer Clearance involving a parcel of agricultural land declared in the name of <span class="font-bold" id="io-owner-body"> </span>, embraced by TCT No. <span class="font-bold" id="io-tct"> </span>, Lot <span class="font-bold" id="io-lot"> </span>, with an area of <span class="font-bold" id="io-area"> </span> square meters and located at <span class="font-bold" id="io-location"> </span>.
+                    </p>
+
+                    <!-- UT / untitled: state the TOTAL property area, not a portion, and the deed used for the application. -->
+                    <p id="io-untitled-landholding" class="mb-4 text-justify indent-12 page-break-avoid leading-relaxed hidden">
+                        For review and resolution by this Office is the above-mentioned application for Land Transfer Clearance involving a real property declared in the name of <span class="font-bold" id="io-ut-owner"> </span>, located in <span class="font-bold" id="io-ut-location"> </span>, with a total area of <span class="font-bold" id="io-ut-total-area"> </span> square meters<span id="io-ut-deed-clause" class="hidden"> and is subject of <span id="io-ut-deed-article">a </span><span class="font-bold" id="io-ut-deed"> </span><span id="io-ut-deed-date-clause" class="hidden"> dated <span class="font-bold" id="io-ut-deed-date"> </span></span></span>.
+                    </p>
+
+                    <p class="mb-4 text-justify indent-12 page-break-avoid leading-relaxed">
+                        However, upon evaluation of the submitted documents, the following document is lacking, to wit:
+                    </p>
+
+                    <ul id="io-remarks" class="mb-6 ml-16 list-disc list-outside text-justify leading-relaxed page-break-avoid pr-8 font-bold">
+                        <li> </li>
+                    </ul>
+
+                    <p class="mb-8 text-justify indent-12 page-break-avoid leading-relaxed">
+                        <span class="font-bold">IN VIEW OF THE FOREGOING</span>, Order is hereby issued DENYING the instant application without prejudice. Let the entire records be returned to the applicant.
+                    </p>
+
+                    <div class="mb-16 font-bold page-break-avoid">
+                        SO ORDERED. <span class="pdf-today-ordinal">---</span>; Naga City.
+                    </div>
+
+                    <div class="w-full flex justify-end mb-16 page-break-avoid">
+                        <div class="flex flex-col items-center">
+                            <div class="text-center w-60">
+                                <p class="sys-parpo-name font-bold uppercase inline-block text-[11pt]">---</p>
+                                <p class="text-[10pt]">PARPO II</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="w-full mt-10 page-break-avoid text-[8pt] leading-tight italic text-gray-700">
+                        <p class="mb-2">Copy Furnished:</p>
+                        <p class="font-bold uppercase preparedByName">---</p>
+                        <p class="uppercase preparedByPosition">---</p>
+                        <p>DAR Municipal Office</p>
+                        <p>Camarines Sur</p>
+                        <p class="mt-4">File/Records</p>
                     </div>
                 </div>
-                <div class="w-[30%] text-right font-bold tracking-tight pt-10">
-                    <span id="io-header-id">LTC-PENDING</span>
-                </div>
             </div>
-
-            <!-- Centered Spaced Legal Title (Made Larger: 16pt, bold, extra spacing) -->
-            <div class="text-center my-10 page-break-avoid">
-                <div class="font-black text-[16pt] tracking-[0.3em] uppercase">O R D E R</div>
-            </div>
-            
-            <!-- Body Paragraph 1 -->
-            <p class="mb-4 text-justify indent-12 page-break-avoid leading-relaxed">
-                For review and resolution by this Office is the instant application for issuance of Land Transfer Clearance (LTC) pursuant to DAR Administrative Order No. 4, series of 2021. The subject property is embraced by TCT No. <span class="font-bold uppercase" id="io-tct">---</span>, registered in the name of <span class="font-bold uppercase" id="io-owner-body">---</span>, with an area of <span class="font-bold uppercase" id="io-area">---</span> square meters and located at <span class="font-bold uppercase" id="io-location">---</span>.
-            </p>
-
-            <!-- Body Paragraph 2 -->
-            <p class="mb-4 text-justify indent-12 page-break-avoid leading-relaxed">
-                Upon review of the instant application it was found out that the following documents were not submitted, to wit;
-            </p>
-
-            <!-- Numbered List of Requirements (Legal Standard 1, 2, 3...) -->
-            <ol id="io-remarks-list" class="mb-6 ml-16 list-decimal list-outside text-justify leading-relaxed page-break-avoid pr-6">
-                <li>---</li>
-            </ol>
-
-            <!-- Body Paragraph 3 (Closing Order Clause) -->
-            <p class="mb-8 text-justify indent-12 page-break-avoid leading-relaxed">
-                <span class="font-bold">IN VIEW OF THE FOREGOING</span>, Order is hereby issued <span class="font-bold">DENYING</span> the instant application for issuance of Land Transfer Clearance (LTC) without prejudice. Let the entire records be returned to the applicant.
-            </p>
-
-            <!-- SO ORDERED Date Line -->
-            <div class="mb-14 page-break-avoid indent-12">
-                <span class="font-bold">SO ORDERED.</span> <span id="io-today-date">---</span>. Naga City.
-            </div>
-
-            <!-- PARPO Signatory Right-Aligned -->
-            <div class="w-full flex justify-end mb-16 page-break-avoid pr-8">
-                <div class="text-center min-w-[240px]">
-                    <p class="sys-parpo-name font-bold uppercase inline-block text-[11pt]">---</p>
-                    <p class="text-[11pt]">PARPO II</p>
-                </div>
-            </div>
-
-            <!-- Footer / Copy Furnished (CC details completely removed) -->
-            <div class="w-full mt-10 page-break-avoid text-[9pt] leading-tight italic text-gray-700 flex justify-end items-end">
-                <div id="qr-io" class="w-[55px] h-[55px] shrink-0"></div>
-            </div>
-        </div>
-    </div>
 
     <script>
         // Authentication & Session Validation
@@ -986,132 +990,190 @@
             } catch (e) { console.error(e); }
         }
 
+        // Uses the same untitled-property rule and document fields as dashboard.html.
+        // The whole property area comes from land_records.area (never portion_area).
+        function isUntitledLandholding(record) {
+            const title = String(record?.registered_under || record?.tct || '').trim();
+            return /\b(?:UT|UNTITLED)\b/i.test(title);
+        }
+
+        function formatPropertyTotalSqMeters(areaInHectares) {
+            const raw = String(areaInHectares ?? '').trim();
+            if (!raw || raw === '---') return '---';
+            const squareMeters = /(?:square\s*met(?:ers?|res?)|sq\.?\s*m(?:\.?|eters?)|m[²2])/i.test(raw);
+            const numeric = raw.replace(/,/g, '').match(/\d+(?:\.\d+)?/);
+            if (!numeric) return raw;
+            const value = Number(numeric[0]);
+            if (!Number.isFinite(value)) return raw;
+            return Number((squareMeters ? value : value * 10000).toFixed(4))
+                .toLocaleString('en-US', { maximumFractionDigits: 4 });
+        }
+
+        function refreshInterlocutoryLandholding(record) {
+            const ut = isUntitledLandholding(record);
+            document.getElementById('io-titled-landholding').classList.toggle('hidden', ut);
+            document.getElementById('io-untitled-landholding').classList.toggle('hidden', !ut);
+            document.getElementById('io-owner-body').textContent = record.owner_name || '---';
+            document.getElementById('io-tct').textContent = record.registered_under || record.tct || '---';
+            document.getElementById('io-lot').textContent = record.lot_no || record.lot || '---';
+            document.getElementById('io-area').textContent = formatPropertyTotalSqMeters(record.area);
+            document.getElementById('io-location').textContent = record.location || '---';
+            if (!ut) return;
+
+            document.getElementById('io-ut-owner').textContent = record.owner_name || '---';
+            document.getElementById('io-ut-location').textContent = record.location || '---';
+            document.getElementById('io-ut-total-area').textContent = formatPropertyTotalSqMeters(record.area);
+
+            const deed = String(record.deed_type || '').trim();
+            document.getElementById('io-ut-deed-clause').classList.toggle('hidden', !deed || deed === '---');
+            document.getElementById('io-ut-deed').textContent = deed;
+            document.getElementById('io-ut-deed-article').textContent = /^(a|an|the)\s+/i.test(deed) ? ''
+                : (/^[aeiou]/i.test(deed) ? 'an ' : 'a ');
+            const deedDate = String(record.dated || '').trim();
+            document.getElementById('io-ut-deed-date-clause').classList.toggle(
+                'hidden', !deed || deed === '---' || !deedDate || deedDate === '---' || /\bdated\b/i.test(deed)
+            );
+            document.getElementById('io-ut-deed-date').textContent = deedDate;
+        }
+
+        // Use DOM text nodes, not HTML interpolation, for applicant-supplied remarks.
+        function renderInterlocutoryRequirements(remarks) {
+            const target = document.getElementById('io-remarks');
+            target.replaceChildren();
+            const items = String(remarks || '').split(/\r?\n/).map(v => v.trim()).filter(Boolean);
+            for (const item of items.length ? items : ['---']) {
+                const li = document.createElement('li');
+                li.className = 'mb-1';
+                li.textContent = item;
+                target.appendChild(li);
+            }
+        }
+
         // ==========================================
         // PDF / AUTOMATIC PRINT & DOWNLOAD GENERATION (HIGH-RES LTC BACKGROUND IMAGE + .5" TOP MARGIN)
         // ==========================================
         window.printInterlocutoryOrder = function(id) {
-            const record = rawRecords.find(r => r.id === id);
-            if (!record) return;
+            const record = rawRecords.find(r => String(r.id) === String(id));
+            if (!record) return alert('Unable to find the Interlocutory Order record. Please refresh.');
 
             const ltcNum = record.LTC_ID_NUMBER || record.ltc_no || 'LTC-PENDING';
-            document.getElementById('io-header-id').innerText = ltcNum;
-            document.getElementById('io-applicants').innerText = record.applicants || record.owner_name || '---';
-            document.getElementById('io-owner-body').innerText = record.owner_name || '---';
-            document.getElementById('io-tct').innerText = record.tct || record.registered_under || '---';
-            
-            let areaVal = record.area || '';
-            let sqMeters = parseFloat(areaVal) * 10000;
-            document.getElementById('io-area').innerText = (!isNaN(sqMeters) && sqMeters > 0) ? sqMeters.toLocaleString('en-US') : areaVal;
-            document.getElementById('io-location').innerText = record.location || '---';
+            document.getElementById('io-header-id').textContent = ltcNum;
+            document.getElementById('io-owner').textContent = record.applicants || record.owner_name || '---';
+            refreshInterlocutoryLandholding(record);
+            renderInterlocutoryRequirements(record.interlocutory_details || record.Remarks || record.remarks || '');
 
-            // Numbered list format (1, 2, 3...) per legal document standard
-            const lackingStr = record.interlocutory_details || record.Remarks || record.remarks || 'No specific lacking documents listed.';
-            const listItems = lackingStr.split(/\r?\n/).map(s => s.trim()).filter(s => s);
-            const listContainer = document.getElementById('io-remarks-list');
-            listContainer.innerHTML = listItems.length > 0 
-                ? listItems.map(item => `<li class="mb-1.5 pl-1">${item}</li>`).join('') 
-                : '<li>---</li>';
-
-            const targetDate = record.interlocutory_date ? new Date(record.interlocutory_date) : new Date();
-            const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
-            document.getElementById('io-today-date').innerText = `${monthNames[targetDate.getMonth()]} ${targetDate.getDate()}, ${targetDate.getFullYear()}`;
+            const date = record.interlocutory_date ? new Date(record.interlocutory_date) : new Date();
+            const issuedOn = Number.isNaN(date.getTime()) ? new Date() : date;
+            const localDate = new Intl.DateTimeFormat('en-US', {
+                timeZone: 'Asia/Manila', year: 'numeric', month: 'long', day: 'numeric'
+            }).format(issuedOn);
+            document.querySelectorAll('.pdf-today-ordinal').forEach(el => el.textContent = localDate);
 
             const loName = record.legalOfficer || record.legalofficer || currentUser.full_name || '---';
-            document.querySelectorAll('.preparedByName').forEach(el => el.innerText = loName);
-            document.querySelectorAll('.preparedByPosition').forEach(el => el.innerText = 'Legal Officer / Encoder');
+            document.querySelectorAll('.preparedByName').forEach(el => el.textContent = loName);
+            document.querySelectorAll('.preparedByPosition').forEach(el => el.textContent = 'Legal Officer');
+            document.querySelectorAll('.sys-parpo-name').forEach(el => el.textContent = parpoName);
 
-            const qrDiv = document.getElementById('qr-io');
-            if (qrDiv) {
-                qrDiv.innerHTML = '';
-                const currentPath = window.location.href.substring(0, window.location.href.lastIndexOf('/'));
-                const scanUrl = currentPath + "/verify.html?id=" + encodeURIComponent(ltcNum);
-                new QRCode(qrDiv, { text: scanUrl, width: 55, height: 55, correctLevel: QRCode.CorrectLevel.L });
-            }
-
-            const cleanFilename = `interlocutory_${ltcNum.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.pdf`;
-            generatePDFDocument('docInterlocutoryOrder', cleanFilename);
+            const safeLtc = String(ltcNum).replace(/[^a-z0-9]/gi, '_').toLowerCase();
+            generatePDFDocument('docInterlocutoryOrder', `interlocutory_${safeLtc}.pdf`);
         };
 
         function generatePDFDocument(sourceId, filename) {
             window.scrollTo(0, 0);
+            const existingOverlay = document.getElementById('pdf-loading-overlay');
+            if (existingOverlay) return;
             const overlay = document.createElement('div');
             overlay.id = 'pdf-loading-overlay';
-            overlay.style.cssText = 'position: absolute; top: 0; left: 0; width: 100%; min-height: 100vh; background: #1F2937; z-index: 999999; display: flex; align-items: center; justify-content: flex-start; flex-direction: column; color: white; font-family: sans-serif; padding: 2rem 0; overflow: auto;';
-            overlay.innerHTML = '<div class="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-[#D4AF37] mb-4"></div><h2 class="text-2xl font-black tracking-widest uppercase mb-6">Rendering Legal Order...</h2>';
-            
+            overlay.style.cssText = 'position:fixed;inset:0;background:#1F2937;z-index:999999;display:flex;align-items:center;flex-direction:column;color:white;font-family:sans-serif;padding:2rem 0;overflow:auto;';
+            overlay.innerHTML = '<div class="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-[#D4AF37] mb-4"></div><h2 class="text-2xl font-black uppercase mb-6">Rendering Interlocutory Order...</h2>';
             const wrapper = document.createElement('div');
             wrapper.id = 'aiPrintWrapper';
-            wrapper.style.cssText = 'width: 8.5in; display: flex; flex-direction: column; align-items: center; background: white;';
-            
+            wrapper.style.cssText = 'width:8.5in;display:flex;flex-direction:column;align-items:center;background:white;';
             overlay.appendChild(wrapper);
             document.body.appendChild(overlay);
 
-            const sourceContent = document.querySelector(`#${sourceId} .doc-content`);
-            const page = document.createElement('div');
-            
-            // Set base container with crisp white base
-            page.style.cssText = 'width: 8.5in; height: 13in; min-height: 13in; max-height: 13in; position: relative; background-color: white; margin-bottom: 0px; overflow: hidden; flex-shrink: 0;';
+            const originalContent = document.querySelector(`#${sourceId} .doc-content`);
+            const blocks = Array.from(originalContent.children)
+                .filter(el => !el.classList.contains('hidden'));
+            const renderedPages = [];
+            let activeContent;
 
-            // 1. Inject high-resolution official background template as explicit absolute image layer (z-index: 0)
-            if (backgroundImageUrl) {
-                const bgImg = document.createElement('img');
-                bgImg.src = backgroundImageUrl;
-                bgImg.style.cssText = 'position: absolute; top: 0; left: 0; width: 8.5in; height: 13in; object-fit: fill; z-index: 0; pointer-events: none;';
-                page.appendChild(bgImg);
+            function addPage() {
+                const page = document.createElement('div');
+                page.style.cssText = 'width:8.5in;height:13in;min-height:13in;max-height:13in;position:relative;background:white;overflow:hidden;flex-shrink:0;';
+                if (backgroundImageUrl) {
+                    const bg = document.createElement('img');
+                    bg.src = backgroundImageUrl;
+                    bg.crossOrigin = 'anonymous';
+                    bg.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;object-fit:fill;z-index:0;pointer-events:none;';
+                    page.appendChild(bg);
+                }
+                const content = document.createElement('div');
+                // Match the dashboard's Interlocutory Order print type size and margins.
+                content.style.cssText = 'position:absolute;top:1.15in;left:1in;right:1in;bottom:1.15in;z-index:10;display:flex;flex-direction:column;font-family:Arial,sans-serif;font-size:9pt;color:#000;line-height:1.5;overflow:hidden;';
+                page.appendChild(content);
+                wrapper.appendChild(page);
+                renderedPages.push(page);
+                activeContent = content;
+                return content;
+            }
+            function overflows(content) { return content.scrollHeight > content.clientHeight + 2; }
+            addPage();
+            for (const sourceBlock of blocks) {
+                // Preserve every requirement, even when the list exceeds one page.
+                if (sourceBlock.id === 'io-remarks' && sourceBlock.children.length) {
+                    let list = sourceBlock.cloneNode(false);
+                    activeContent.appendChild(list);
+                    for (const requirement of Array.from(sourceBlock.children)) {
+                        const li = requirement.cloneNode(true);
+                        list.appendChild(li);
+                        if (overflows(activeContent)) {
+                            list.removeChild(li);
+                            if (!list.children.length) list.remove();
+                            addPage();
+                            list = sourceBlock.cloneNode(false);
+                            activeContent.appendChild(list);
+                            list.appendChild(li);
+                        }
+                    }
+                    continue;
+                }
+                const block = sourceBlock.cloneNode(true);
+                activeContent.appendChild(block);
+                if (overflows(activeContent)) {
+                    activeContent.removeChild(block);
+                    addPage();
+                    activeContent.appendChild(block);
+                }
             }
 
-            // 2. Set text content layer (top: 1.65in adds .5 inches top margin from the original 1.15in margin)
-            const content = document.createElement('div');
-            content.style.cssText = 'position: absolute; top: 1.65in; left: 1in; right: 1in; bottom: 1.15in; z-index: 10; display: flex; flex-direction: column; font-family: "Roboto", sans-serif; font-size: 11pt; color: black; line-height: 1.5; overflow: hidden; background: transparent;';
-            
-            Array.from(sourceContent.children).forEach(child => {
-                if (!child.classList.contains('hidden')) {
-                    content.appendChild(child.cloneNode(true));
-                }
-            });
-
-            page.appendChild(content);
-            wrapper.appendChild(page);
-
-            // High-resolution html2canvas settings (scale: 4, quality: 1.0) for crystal clear background & typography
-            const opt = {
+            const options = {
                 margin: 0,
-                filename: filename,
-                image: { type: 'jpeg', quality: 1.0 },
-                html2canvas: { scale: 4, useCORS: true, allowTaint: true, letterRendering: true, backgroundColor: '#ffffff' },
-                jsPDF: { unit: 'in', format: [8.5, 13], orientation: 'portrait' }
+                filename,
+                image: { type:'jpeg', quality:1.0 },
+                html2canvas: { scale:3, useCORS:true, backgroundColor:'#ffffff' },
+                jsPDF: { unit:'in', format:[8.5,13], orientation:'portrait' }
             };
-
-            // Automatic DOWNLOAD and PRINT
-            html2pdf().set(opt).from(wrapper).toPdf().output('bloburl').then(function(pdfUrl) {
-                // 1. Automatically download the file
-                const link = document.createElement('a');
-                link.href = pdfUrl;
-                link.download = filename;
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-
-                // 2. Automatically trigger system print dialog
-                const iframe = document.createElement('iframe');
-                iframe.style.display = 'none';
-                iframe.src = pdfUrl;
-                document.body.appendChild(iframe);
-                iframe.onload = function() {
-                    setTimeout(function() {
-                        iframe.contentWindow.focus();
-                        iframe.contentWindow.print();
-                        if (document.body.contains(overlay)) {
-                            document.body.removeChild(overlay);
-                        }
-                    }, 500);
-                };
-            }).catch(err => {
-                console.error(err);
-                alert("PDF Generation Error: " + err.message);
-                if (document.body.contains(overlay)) {
-                    document.body.removeChild(overlay);
+            html2pdf().set(options).from(wrapper).toPdf().get('pdf').then(pdf => {
+                // Avoid extra html2pdf-created blank pages caused by rounding.
+                while (pdf.internal.getNumberOfPages() > renderedPages.length) {
+                    pdf.deletePage(pdf.internal.getNumberOfPages());
                 }
+                pdf.autoPrint();
+                const blobURL = pdf.output('bloburl');
+                const a = document.createElement('a');
+                a.href = blobURL;
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+                const printWindow = window.open(blobURL, '_blank');
+                if (!printWindow) alert('PDF saved. Please open the downloaded PDF to print (pop-up blocked).');
+            }).catch(err => {
+                console.error('Interlocutory Order PDF generation failed:',err);
+                alert('PDF Generation Error: '+err.message);
+            }).finally(() => {
+                overlay.remove();
             });
         }
 
