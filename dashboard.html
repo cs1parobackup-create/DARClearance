@@ -537,8 +537,14 @@
                         <div class="font-black text-[13pt] tracking-widest uppercase">INTERLOCUTORY ORDER</div>
                     </div>
                     
-                    <p class="mb-4 text-justify indent-12 page-break-avoid leading-relaxed">
+                    <!-- Titled applications retain the original Interlocutory Order wording. -->
+                    <p id="io-titled-landholding" class="mb-4 text-justify indent-12 page-break-avoid leading-relaxed">
                         For review and resolution by this Office is the above-mentioned application for DAR Land Transfer Clearance involving a parcel of agricultural land declared in the name of <span class="font-bold" id="io-owner-body"> </span>, embraced by TCT No. <span class="font-bold" id="io-tct"> </span>, Lot <span class="font-bold" id="io-lot"> </span>, with an area of <span class="font-bold" id="io-area"> </span> square meters and located at <span class="font-bold" id="io-location"> </span>.
+                    </p>
+
+                    <!-- UT / untitled: state the TOTAL property area, not a portion, and the deed used for the application. -->
+                    <p id="io-untitled-landholding" class="mb-4 text-justify indent-12 page-break-avoid leading-relaxed hidden">
+                        For review and resolution by this Office is the above-mentioned application for Land Transfer Clearance involving a real property declared in the name of <span class="font-bold" id="io-ut-owner"> </span>, located in <span class="font-bold" id="io-ut-location"> </span>, with a total area of <span class="font-bold" id="io-ut-total-area"> </span> square meters<span id="io-ut-deed-clause" class="hidden"> and is subject of <span id="io-ut-deed-article">a </span><span class="font-bold" id="io-ut-deed"> </span><span id="io-ut-deed-date-clause" class="hidden"> dated <span class="font-bold" id="io-ut-deed-date"> </span></span></span>.
                     </p>
 
                     <p class="mb-4 text-justify indent-12 page-break-avoid leading-relaxed">
@@ -686,6 +692,68 @@
             sidebar.classList.toggle('-translate-x-full');
             overlay.classList.toggle('hidden');
         };
+
+        // ==========================================
+        // UNTITLED (UT) INTERLOCUTORY ORDER: TOTAL AREA AND DEED
+        // Only the Interlocutory Order introduction changes for UT records.
+        // Uses EXISTING land_records fields; no database changes required.
+        // ==========================================
+        function isUntitledLandholding(record) {
+            const registeredUnder = String((record && record.registered_under) || '').trim();
+            return /\b(?:UT|UNTITLED)\b/i.test(registeredUnder);
+        }
+
+        function formatPropertyTotalSqMeters(areaInHectares) {
+            const raw = String(areaInHectares ?? '').trim();
+            if (!raw || raw === '---') return '---';
+
+            const sqMetersAlready = /(?:square\s*met(?:ers?|res?)|sq\.?\s*m(?:\.?|eters?)|m[²2])/i.test(raw);
+            const withoutSeparators = raw.replace(/,/g, '');
+            const numMatch = withoutSeparators.match(/\d+(?:\.\d+)?/);
+            if (!numMatch) return raw;
+            const number = Number(numMatch[0]);
+            if (!Number.isFinite(number)) return raw;
+            const inSqMeters = sqMetersAlready ? number : number * 10000;
+            // Keep a meaningful fractional square meter, without floating-point artifacts.
+            return Number(inSqMeters.toFixed(4)).toLocaleString('en-US', { maximumFractionDigits: 4 });
+        }
+
+        function refreshInterlocutoryLandholding() {
+            if (!currentSelection) return;
+            const titled = document.getElementById('io-titled-landholding');
+            const untitled = document.getElementById('io-untitled-landholding');
+            if (!titled || !untitled) return;
+
+            const ut = isUntitledLandholding(currentSelection);
+            titled.classList.toggle('hidden', ut);
+            untitled.classList.toggle('hidden', !ut);
+
+            // Preserve the original titled paragraph, including its usual square-meter area.
+            const titledArea = document.getElementById('io-area');
+            if (titledArea) titledArea.textContent = formatPropertyTotalSqMeters(currentSelection.area);
+            if (!ut) return;
+
+            document.getElementById('io-ut-owner').textContent = currentSelection.owner_name || '---';
+            document.getElementById('io-ut-location').textContent = currentSelection.location || '---';
+            // Always use the ENTIRE property area (land_records.area), not portion_area.
+            document.getElementById('io-ut-total-area').textContent = formatPropertyTotalSqMeters(currentSelection.area);
+
+            const deed = String(currentSelection.deed_type || '').trim();
+            const deedClause = document.getElementById('io-ut-deed-clause');
+            deedClause.classList.toggle('hidden', !deed || deed === '---');
+            if (!deed || deed === '---') return;
+
+            document.getElementById('io-ut-deed').textContent = deed;
+            const articleEl = document.getElementById('io-ut-deed-article');
+            // Avoid "a an Extrajudicial Settlement" or "Deed of Deed of Sale".
+            articleEl.textContent = /^(a|an|the)\s+/i.test(deed) ? '' : (/^[aeiou]/i.test(deed) ? 'an ' : 'a ');
+
+            const deedDate = String(currentSelection.dated || '').trim();
+            const dateClause = document.getElementById('io-ut-deed-date-clause');
+            const alreadyDated = /\bdated\b/i.test(deed);
+            dateClause.classList.toggle('hidden', !deedDate || deedDate === '---' || alreadyDated);
+            document.getElementById('io-ut-deed-date').textContent = deedDate;
+        }
 
         // ==========================================
         // AUTOMATED AREA & PORTION FORMATTING
@@ -1192,6 +1260,9 @@
                     }
                 }
             }
+
+            // Recompute UT/titled wording after any saved owner, title, area, location or deed edit.
+            refreshInterlocutoryLandholding();
 
             const remarksEl = document.getElementById('reviewRemarks');
             if (remarksEl && !remarksEl.disabled) {
@@ -1754,6 +1825,7 @@
             portionToggle.disabled = !isEditable;
 
             updatePrintAreaDisplay();
+            refreshInterlocutoryLandholding();
 
             const recHeaderId = document.getElementById('rec-header-id-top');
             const certHeaderId = document.getElementById('cert-header-id');
