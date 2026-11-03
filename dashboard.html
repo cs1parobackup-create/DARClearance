@@ -65,6 +65,17 @@
         .form-label { display: block; font-size: 0.75rem; font-weight: 700; color: var(--dar-green); margin-bottom: 0.25rem; text-transform: uppercase; }
         .form-input { width: 100%; background: #F9FAFB; border: 1px solid #D1D5DB; border-radius: 0.375rem; padding: 0.6rem; font-size: 0.875rem; transition: border-color 0.2s; }
         .form-input:focus { outline: none; border-color: var(--dar-green); ring: 1px solid var(--dar-green); }
+
+        /* Consistent, text-width underlines in Recommendation / Certification PDF footers. */
+        .footer-fixed-underline {
+            display: inline-block;
+            width: max-content;
+            max-width: 100%;
+            border-bottom: 1px solid #000;
+            text-decoration: none !important;
+            line-height: 1.2;
+            padding-bottom: 1px;
+        }
     </style>
 </head>
 <body class="flex h-screen overflow-hidden text-[#1F2937]">
@@ -382,11 +393,11 @@
                             <div id="qr-rec" class="w-[55px] h-[55px] shrink-0"></div>
                             <div class="flex-1 h-[55px] flex flex-col justify-between">
                                 <div class="flex flex-col gap-0.5">
-                                    <div class="flex"><span class="w-[80px]">OR No:</span> <span class="font-bold underline underline-offset-2" id="rec-or_number"> </span></div>
-                                    <div class="flex"><span class="w-[80px]">Date issued:</span> <span class="font-bold underline underline-offset-2" id="rec-or_date"> </span></div>
+                                    <div class="flex"><span class="w-[80px]">OR No:</span> <span class="font-bold footer-fixed-underline" id="rec-or_number"> </span></div>
+                                    <div class="flex"><span class="w-[80px]">Date issued:</span> <span class="font-bold footer-fixed-underline" id="rec-or_date"> </span></div>
                                 </div>
                                 <p>Copy distribution: &nbsp;Original-Applicant; &nbsp;Duplicate-LTC Folder; &nbsp;Records Section; &nbsp;Registry of Deeds-Camarines Sur</p>
-                                <p class="font-bold underline underline-offset-2" id="rec-footer-id">LTC-PENDING</p>
+                                <p class="font-bold footer-fixed-underline" id="rec-footer-id">LTC-PENDING</p>
                             </div>
                         </div>
                     </div>
@@ -504,11 +515,11 @@
                             <div id="qr-cert" class="w-[55px] h-[55px] shrink-0"></div>
                             <div class="flex-1 h-[55px] flex flex-col justify-between">
                                 <div class="flex flex-col gap-0.5">
-                                    <div class="flex"><span class="w-[80px]">OR No:</span> <span class="font-bold underline underline-offset-2" id="cert-or_number"> </span></div>
-                                    <div class="flex"><span class="w-[80px]">Date issued:</span> <span class="font-bold underline underline-offset-2" id="cert-or_date"> </span></div>
+                                    <div class="flex"><span class="w-[80px]">OR No:</span> <span class="font-bold footer-fixed-underline" id="cert-or_number"> </span></div>
+                                    <div class="flex"><span class="w-[80px]">Date issued:</span> <span class="font-bold footer-fixed-underline" id="cert-or_date"> </span></div>
                                 </div>
                                 <p>Copy distribution: &nbsp;Original-Applicant; &nbsp;Duplicate-LTC Folder; &nbsp;Records Section; &nbsp;Registry of Deeds-Camarines Sur</p>
-                                <p class="font-bold underline underline-offset-2" id="cert-footer-id">LTC-PENDING</p>
+                                <p class="font-bold footer-fixed-underline" id="cert-footer-id">LTC-PENDING</p>
                             </div>
                         </div>
                     </div>
