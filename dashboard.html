@@ -622,16 +622,10 @@
                         </label>
                     </div>
                 </div>
-                <!-- For OTHERS, the Legal Officer supplies both the title and the exact text. -->
-                <div id="otherExecutedDocumentFields" class="md:col-span-2 hidden space-y-4">
-                    <div>
-                        <label class="form-label" for="m_other_title">Exact Document Title</label>
-                        <input type="text" id="m_other_title" class="form-input" placeholder="e.g. Undertaking, Sworn Declaration, Deed of Waiver">
-                    </div>
-                    <div>
-                        <label class="form-label" for="m_other_details">Document Details (To Appear in the Certification)</label>
-                        <textarea id="m_other_details" class="form-input" rows="6" placeholder="Enter the complete statement exactly as it should appear in the certification. The system will not add or change its wording."></textarea>
-                    </div>
+                <!-- For OTHERS: same editable executed/notarial details as other documents; final certification wording is below. -->
+                <div id="otherExecutedDocumentTitle" class="md:col-span-2 hidden">
+                    <label class="form-label" for="m_other_title">Exact Document Title</label>
+                    <input type="text" id="m_other_title" class="form-input" placeholder="e.g. Undertaking, Sworn Declaration, Deed of Waiver">
                 </div>
                 <div id="standardAffidavitFields" class="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-5">
                 <div><label class="form-label">Excess Area</label><input type="text" id="m_excess_area" class="form-input" placeholder="e.g. 1,273 square meters"></div>
@@ -641,6 +635,13 @@
                 <div><label class="form-label">Book No.</label><input type="text" id="m_book_no" class="form-input" placeholder="e.g. V"></div>
                 <div><label class="form-label">Date Executed</label><input type="text" id="m_date" class="form-input" placeholder="e.g. May 11, 2026"></div>
                 <div class="md:col-span-2"><label class="form-label">Notary Public</label><input type="text" id="m_notary" class="form-input" placeholder="e.g. Atty. Chelsea Audrey P. Masuhay, RPh."></div>
+                </div>
+                <!-- Review and edit the entire wording BEFORE including the document in the DAR Clearance. -->
+                <div id="otherExecutedDocumentFields" class="md:col-span-2 hidden border-t border-gray-200 pt-4 mt-1">
+                    <label class="form-label" for="m_other_details">Final Wording for DAR Clearance Certification (Editable)</label>
+                    <p class="text-xs text-gray-600 mb-3">All the execution and notarization fields above remain editable for Other documents. Prepare the text from those fields, then edit the wording below before saving. Only the text in this box is included in the Certification.</p>
+                    <button type="button" onclick="buildOtherDocumentDraft()" class="w-full md:w-auto mb-3 px-4 py-2 rounded border border-[#003811] bg-green-50 text-[#003811] font-bold text-xs hover:bg-green-100">PREPARE TEXT USING ENTERED DETAILS</button>
+                    <textarea id="m_other_details" class="form-input" rows="8" placeholder="Enter or edit the complete wording to be included in the DAR Clearance Certification. It will be saved exactly as you write it."></textarea>
                 </div>
             </div>
             <div class="flex flex-col md:flex-row justify-end gap-3 mt-8 pt-4 border-t">
@@ -1154,8 +1155,45 @@
         function toggleOtherDocumentFields() {
             const selected = document.querySelector('input[name="m_doc_type"]:checked');
             const isOther = selected && selected.value === 'OTHERS';
+            document.getElementById('otherExecutedDocumentTitle').classList.toggle('hidden', !isOther);
             document.getElementById('otherExecutedDocumentFields').classList.toggle('hidden', !isOther);
-            document.getElementById('standardAffidavitFields').classList.toggle('hidden', !!isOther);
+            // Execution, area, and notarization fields apply to ALL document types.
+            document.getElementById('standardAffidavitFields').classList.remove('hidden');
+        }
+
+        // Neutral factual draft. It is never included automatically: the Legal Officer
+        // must review/edit the text and click SAVE & APPEND.
+        function buildOtherDocumentDraft() {
+            const value = id => document.getElementById(id).value.trim();
+            const title = value('m_other_title');
+            if (!title) {
+                alert('Enter the exact document title first.');
+                document.getElementById('m_other_title').focus();
+                return;
+            }
+            const finalText = document.getElementById('m_other_details');
+            if (finalText.value.trim() && !confirm('Replace the current Certification wording with a new draft using the fields above? Your existing text will be replaced.')) return;
+            const executedBy = value('m_executed_by');
+            const date = value('m_date');
+            const docNo = value('m_doc_no');
+            const pageNo = value('m_page_no');
+            const bookNo = value('m_book_no');
+            const year = value('m_series');
+            const notary = value('m_notary');
+            const area = value('m_excess_area');
+            const parts = ['The document entitled "' + title + '" was executed'];
+            if (executedBy) parts.push('by ' + executedBy);
+            if (date) parts.push('on ' + date);
+            const references = [];
+            if (docNo) references.push('Doc. No. ' + docNo);
+            if (pageNo) references.push('Page No. ' + pageNo);
+            if (bookNo) references.push('Book No. ' + bookNo);
+            if (year) references.push('Series of ' + year);
+            const referenceText = references.length ? ' under ' + references.join(', ') : '';
+            const notaryText = notary ? ', notarized by ' + notary : '';
+            const areaText = area ? ' The document concerns an excess area of ' + area + '.' : '';
+            finalText.value = parts.join(' ') + notaryText + referenceText + '.' + areaText;
+            finalText.focus();
         }
 
         function openAffidavitModal() {
@@ -1209,13 +1247,13 @@
             try {
                 const executed_by = document.getElementById('m_executed_by').value;
                 const document_type = isOther ? customTitle : selectedType;
-                const excess_area = isOther ? '' : document.getElementById('m_excess_area').value;
+                const excess_area = document.getElementById('m_excess_area').value;
                 const series_year = document.getElementById('m_series').value;
-                const doc_no = isOther ? '' : document.getElementById('m_doc_no').value;
-                const page_no = isOther ? '' : document.getElementById('m_page_no').value;
-                const book_no = isOther ? '' : document.getElementById('m_book_no').value;
-                const date_executed = isOther ? '' : document.getElementById('m_date').value;
-                const notary_public = isOther ? '' : document.getElementById('m_notary').value;
+                const doc_no = document.getElementById('m_doc_no').value;
+                const page_no = document.getElementById('m_page_no').value;
+                const book_no = document.getElementById('m_book_no').value;
+                const date_executed = document.getElementById('m_date').value;
+                const notary_public = document.getElementById('m_notary').value;
 
                 // Existing Undertaking / No Opposition wording remains unchanged.
                 // For Others, save the Legal Officer's statement exactly as written.
