@@ -398,6 +398,7 @@
                                 </div>
                                 <p>Copy distribution: &nbsp;Original-Applicant; &nbsp;Duplicate-LTC Folder; &nbsp;Records Section; &nbsp;Registry of Deeds-Camarines Sur</p>
                                 <p class="font-bold footer-fixed-underline" id="rec-footer-id">LTC-PENDING</p>
+                                <p class="font-bold" style="font-size:6.5pt;line-height:1.1;white-space:nowrap;" id="rec-security-ref">REC-LTC-PENDING • QR: RECORD LOOKUP</p>
                             </div>
                         </div>
                     </div>
@@ -520,6 +521,7 @@
                                 </div>
                                 <p>Copy distribution: &nbsp;Original-Applicant; &nbsp;Duplicate-LTC Folder; &nbsp;Records Section; &nbsp;Registry of Deeds-Camarines Sur</p>
                                 <p class="font-bold footer-fixed-underline" id="cert-footer-id">LTC-PENDING</p>
+                                <p class="font-bold" style="font-size:6.5pt;line-height:1.1;white-space:nowrap;" id="cert-security-ref">CERT-LTC-PENDING • QR: RECORD LOOKUP</p>
                             </div>
                         </div>
                     </div>
@@ -1403,6 +1405,7 @@
                         if(recFooterId) recFooterId.innerText = newLtc;
                         if(certFooterId) certFooterId.innerText = newLtc;
                         if(ioHeaderId) ioHeaderId.innerText = newLtc;
+                        updateDocumentSecurityRefs(newLtc);
                     }
                     if (areaChanged) updateAffidavitUI(false);
                 }
@@ -1780,15 +1783,31 @@
             if(newIndex >= 0 && newIndex < currentNavList.length) { showReview(currentNavList[newIndex].id, currentReviewMode); }
         }
 
-        function generateQRs(identifier) {
+        // Different QR destinations for RECOMMENDATION and CERTIFICATION.
+        // Existing verify.html?id=... is preserved for backwards compatibility.
+        // NOTE: verify.html must validate the &doc= parameter server-side
+        // before the document type itself can be treated as authenticated.
+        function makeDocumentVerificationUrl(identifier, type) {
             const currentPath = window.location.href.substring(0, window.location.href.lastIndexOf('/'));
-            const scanUrl = currentPath + "/verify.html?id=" + encodeURIComponent(identifier || 'NO-ID');
+            const docType = type === 'cert' ? 'CERT' : 'RECO';
+            return currentPath + '/verify.html?id=' + encodeURIComponent(identifier || 'NO-ID') + '&doc=' + docType;
+        }
 
-            ['qr-rec', 'qr-cert'].forEach(id => {
-                const el = document.getElementById(id);
+        function updateDocumentSecurityRefs(identifier) {
+            const ltc = String(identifier || 'LTC-PENDING').trim();
+            const reco = document.getElementById('rec-security-ref');
+            const cert = document.getElementById('cert-security-ref');
+            if (reco) reco.textContent = 'RECO-' + ltc + ' • QR: RECORD LOOKUP';
+            if (cert) cert.textContent = 'CERT-' + ltc + ' • QR: RECORD LOOKUP';
+        }
+
+        function generateQRs(identifier) {
+            updateDocumentSecurityRefs(identifier);
+            [['qr-rec','rec'], ['qr-cert','cert']].forEach(([elementId, type]) => {
+                const el = document.getElementById(elementId);
                 if (el) {
                     el.innerHTML = '';
-                    new QRCode(el, { text: scanUrl, width: 55, height: 55, correctLevel: QRCode.CorrectLevel.L });
+                    new QRCode(el, { text: makeDocumentVerificationUrl(identifier, type), width: 55, height: 55, correctLevel: QRCode.CorrectLevel.L });
                 }
             });
         }
@@ -1931,6 +1950,7 @@
             if(recFooterId) recFooterId.innerText = headerVal;
             if(certFooterId) certFooterId.innerText = headerVal;
             if(ioHeaderId) ioHeaderId.innerText = headerVal;
+            updateDocumentSecurityRefs(headerVal);
 
             document.querySelectorAll('.sys-chief-name').forEach(el => el.innerText = chiefLegalName && chiefLegalName !== "---" ? chiefLegalName : "ATTY. JAIME G. RESOCO, JR.");
             document.querySelectorAll('.sys-parpo-name').forEach(el => el.innerText = parpoName);
@@ -2056,6 +2076,14 @@
                 bg.crossOrigin = "anonymous";
                 bg.style.cssText = 'position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; object-fit: fill; display: block; pointer-events: none;';
                 page.appendChild(bg);
+
+                // Upper edge of dynamically configured paper background: cover only the 3px border.
+                // Do not add an upper security microtext strip or any watermark.
+                if (type === 'rec' || type === 'cert') {
+                    const upperEdgeMask = document.createElement('div');
+                    upperEdgeMask.style.cssText = 'position:absolute;top:0;left:0;right:0;height:3px;background:#fff;z-index:2;pointer-events:none;';
+                    page.appendChild(upperEdgeMask);
+                }
                 
                 const content = document.createElement('div');
                 content.style.cssText = `position: absolute; top: 1.15in; left: 1in; right: 1in; bottom: 1.15in; z-index: 10; display: flex; flex-direction: column; font-family: ${type === 'io' ? 'Arial, sans-serif' : '"Roboto", sans-serif'}; font-size: 9pt; color: black; line-height: 1.5; overflow: hidden;`;
@@ -2080,8 +2108,8 @@
                 const qrDivs = block.querySelectorAll('[id^="qr-"]');
                 qrDivs.forEach(qrDiv => {
                     qrDiv.innerHTML = '';
-                    const currentPath = window.location.href.substring(0, window.location.href.lastIndexOf('/'));
-                    const scanUrl = currentPath + "/verify.html?id=" + encodeURIComponent(currentSelection.LTC_ID_NUMBER || currentSelection.ltc_no || 'NO-ID');
+                    const docType = qrDiv.id === 'qr-cert' ? 'cert' : 'rec';
+                    const scanUrl = makeDocumentVerificationUrl(currentSelection.LTC_ID_NUMBER || currentSelection.ltc_no || 'NO-ID', docType);
                     new QRCode(qrDiv, { text: scanUrl, width: 55, height: 55, correctLevel: QRCode.CorrectLevel.L });
                 });
             });
