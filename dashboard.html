@@ -155,6 +155,14 @@
                 </div>
             </div>
 
+            <!-- Display only the selected dashboard status, without changing the counters. -->
+            <div id="activeStatusFilterBanner" class="hidden bg-white border border-green-200 rounded-lg px-4 py-3 flex flex-wrap items-center justify-between gap-3 shadow-sm" role="status" aria-live="polite">
+                <p class="text-xs font-bold text-[#003811]">
+                    Showing <span id="activeStatusFilterCount">0</span> DAR Clearances — <span id="activeStatusFilterLabel"></span>
+                </p>
+                <button type="button" onclick="clearStatusFilter()" class="bg-[#003811] hover:bg-[#006400] text-white rounded px-3 py-1.5 font-bold text-xs uppercase">Show All Statuses</button>
+            </div>
+
             <div class="bg-white rounded-lg shadow-sm overflow-hidden border border-gray-200 w-full overflow-x-auto">
                 <table class="w-full text-left border-collapse text-[11px] compact-table min-w-[800px]">
                     <thead class="bg-gray-50 border-b uppercase font-bold text-[#003811] tracking-wider">
@@ -697,6 +705,19 @@
         let currentNavIndex = -1;
         let currentReviewMode = 'REVIEW';
         let allUsers = [];
+        // Optional dashboard status filter; the counts remain based on all search-visible records.
+        let activeDashboardStatusFilter = null;
+        const DASHBOARD_STATUS_CARDS = [
+            { id: 'stat-received', group: 'rec', label: 'Received / Assigned' },
+            { id: 'stat-ltsp', group: 'ltsp', label: 'LTSP Processing' },
+            { id: 'stat-recommended', group: 'rev', label: 'Draft / Finalized' },
+            { id: 'stat-certified', group: 'cer', label: 'Fwd to PARPO' },
+            { id: 'stat-signed', group: 'sig', label: 'Signed by PARPO' },
+            { id: 'stat-legal', group: 'leg', label: 'Returned to Legal' },
+            { id: 'stat-records', group: 'recd', label: 'Fwd to Records' },
+            { id: 'stat-released', group: 'rel', label: 'Released' },
+            { id: 'stat-disapproved', group: 'dis', label: 'Disapproved / Block' }
+        ];
 
         let chiefLegalName = "---";
         let parpoName = "---";
@@ -1500,6 +1521,71 @@
             openPrint(currentSelection.id, 'io');
         }
 
+        // Match the original nine dashboard categories exactly, including their combined statuses.
+        function dashboardStatusGroup(status) {
+            const st = String(status || 'RECEIVED').trim().toUpperCase();
+            if (st === 'RECEIVED' || st === 'ASSIGNED TO LEGAL') return 'rec';
+            if (st === 'FORWARDED TO LTSP' || st === 'RETURNED FROM LTSP') return 'ltsp';
+            if (['DRAFT', 'WITH INTERLOCK', 'COMPLIED', 'FINALIZED'].includes(st)) return 'rev';
+            if (st === 'FORWARDED TO PARPO') return 'cer';
+            if (st === 'SIGNED BY PARPO') return 'sig';
+            if (st === 'RETURNED TO LEGAL (SIGNED)') return 'leg';
+            if (st === 'FORWARDED TO RECORDS') return 'recd';
+            if (st === 'RELEASED TO CLIENT') return 'rel';
+            if (st === 'DISAPPROVED') return 'dis';
+            return null;
+        }
+
+        function setupDashboardStatusCards() {
+            DASHBOARD_STATUS_CARDS.forEach(({ id, group, label }) => {
+                const number = document.getElementById(id);
+                const card = number && number.parentElement;
+                if (!card) return;
+                card.setAttribute('role', 'button');
+                card.setAttribute('tabindex', '0');
+                card.setAttribute('aria-label', 'Show DAR Clearances: ' + label);
+                card.setAttribute('aria-pressed', 'false');
+                card.title = 'Click to show DAR Clearances in this status';
+                card.classList.add('cursor-pointer', 'hover:shadow-md', 'focus:outline-none', 'focus:ring-2', 'focus:ring-[#003811]', 'transition-all');
+                card.addEventListener('click', () => toggleStatusFilter(group));
+                card.addEventListener('keydown', (event) => {
+                    if (event.key === 'Enter' || event.key === ' ') {
+                        event.preventDefault();
+                        toggleStatusFilter(group);
+                    }
+                });
+            });
+        }
+
+        function toggleStatusFilter(group) {
+            activeDashboardStatusFilter = activeDashboardStatusFilter === group ? null : group;
+            refreshDashboard();
+        }
+
+        function clearStatusFilter() {
+            activeDashboardStatusFilter = null;
+            refreshDashboard();
+        }
+
+        function updateStatusFilterDisplay(visibleCount) {
+            DASHBOARD_STATUS_CARDS.forEach(({ id, group }) => {
+                const card = document.getElementById(id)?.parentElement;
+                if (!card) return;
+                const isActive = activeDashboardStatusFilter === group;
+                card.classList.toggle('ring-2', isActive);
+                card.classList.toggle('ring-[#003811]', isActive);
+                card.classList.toggle('ring-offset-1', isActive);
+                card.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+            });
+            const banner = document.getElementById('activeStatusFilterBanner');
+            const selected = DASHBOARD_STATUS_CARDS.find(c => c.group === activeDashboardStatusFilter);
+            banner.classList.toggle('hidden', !selected);
+            if (selected) {
+                document.getElementById('activeStatusFilterCount').textContent = visibleCount;
+                document.getElementById('activeStatusFilterLabel').textContent = selected.label;
+            }
+        }
+
         function refreshDashboard() {
             const query = document.getElementById('searchInput').value.toLowerCase();
             const tbody = document.getElementById('clearanceTableBody');
@@ -1530,15 +1616,10 @@
                 if (matchesSearch) {
                     let st = (item.status || 'RECEIVED').trim().toUpperCase();
                     
-                    if (st === 'RECEIVED' || st === 'ASSIGNED TO LEGAL') { stats.rec++; }
-                    else if (st === 'FORWARDED TO LTSP' || st === 'RETURNED FROM LTSP') { stats.ltsp++; }
-                    else if (['DRAFT', 'WITH INTERLOCK', 'COMPLIED', 'FINALIZED'].includes(st)) { stats.rev++; }
-                    else if (st === 'FORWARDED TO PARPO') { stats.cer++; }
-                    else if (st === 'SIGNED BY PARPO') { stats.sig++; }
-                    else if (st === 'RETURNED TO LEGAL (SIGNED)') { stats.leg++; }
-                    else if (st === 'FORWARDED TO RECORDS') { stats.recd++; }
-                    else if (st === 'RELEASED TO CLIENT') { stats.rel++; }
-                    else if (st === 'DISAPPROVED') { stats.dis++; }
+                    const statusGroup = dashboardStatusGroup(st);
+                    if (statusGroup) stats[statusGroup]++;
+                    // Status selection filters table rows only, not the dashboard totals.
+                    if (activeDashboardStatusFilter && statusGroup !== activeDashboardStatusFilter) return;
 
                     let daysPassed = item.updated_at ? getWorkingDays(new Date(item.updated_at), new Date()) : 0;
                     let warningHTML = daysPassed > 5 ? `<span class="text-red-600 font-black ml-2 text-[12px]" title="Exceeded 5 working days!">⚠️</span>` : '';
@@ -1636,7 +1717,7 @@
                     let legalOfficerName = item.legalOfficer || item.legalofficer || '---'; 
                     let ownerNameDisplay = item.owner_name || '<span class="text-gray-400 italic">Pending Encoding</span>';
 
-                    if (query !== '' || displayCount < 30) {
+                    if (activeDashboardStatusFilter || query !== '' || displayCount < 30) {
                         tbody.innerHTML += `
                             <tr class="hover:bg-gray-50 transition-colors">
                                 <td class="font-bold">${item.LTC_ID_NUMBER || item.ltc_no || '---'}</td>
@@ -1651,6 +1732,11 @@
                 }
             });
             
+            if (activeDashboardStatusFilter && displayCount === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" class="text-center py-8 text-gray-500 font-semibold">No DAR Clearances found in this status.</td></tr>';
+            }
+            updateStatusFilterDisplay(displayCount);
+
             const actionDiv = document.getElementById('actionButtons');
             if (currentSelection) {
                 let currentSt = (currentSelection.status || 'RECEIVED').trim().toUpperCase();
@@ -1813,8 +1899,16 @@
                     if (loName !== userFullName) matchesSearch = false;
                 }
 
+                if (activeDashboardStatusFilter && dashboardStatusGroup(item.status) !== activeDashboardStatusFilter) {
+                    matchesSearch = false;
+                }
                 return matchesSearch;
             });
+            // A record can change status while open; keep it accessible after saving.
+            if (!currentNavList.some(r => r.id === id)) {
+                const selectedRecord = rawData.find(r => r.id === id);
+                if (selectedRecord) currentNavList.push(selectedRecord);
+            }
             currentNavIndex = currentNavList.findIndex(r => r.id === id);
             currentSelection = currentNavList[currentNavIndex];
 
@@ -2209,6 +2303,7 @@
             await fetchBackgroundImage();
             await fetchDynamicSignatories();
             loadMenu(); 
+            setupDashboardStatusCards();
             fetchClearanceData(); 
         };
     </script>
